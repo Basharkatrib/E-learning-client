@@ -44,7 +44,7 @@ function Navbar() {
                                 >
                                     <a 
                                         href={item.href}
-                                        className="text-gray-700 hover:bg-gray-100 p-2 rounded-[4px]  hover:text-[#5856D6] dark:text-white transition-all duration-200"
+                                        className="text-gray-700 hover:bg-gray-100 p-2 rounded-[4px]  hover:text-primary dark:text-white transition-all duration-200"
                                     >
                                         {item.name}
                                     </a>
@@ -94,9 +94,8 @@ function Navbar() {
                                 Sign Up
                             </motion.button>
                             <motion.button 
-                                whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className='bg-[#5856D6] text-white font-bold px-4 py-2 rounded-md transition-colors duration-200'
+                                className='bg-primary text-white font-bold px-4 py-2 rounded-md transition-colors duration-200'
                             >
                                 Login
                             </motion.button>
@@ -150,7 +149,7 @@ function Navbar() {
                                     </motion.button>
                                     <motion.button 
                                         whileTap={{ scale: 0.95 }}
-                                        className='bg-[#5856D6] text-center text-white font-bold px-4 py-2 rounded-md w-full '
+                                        className='bg-primary text-center text-white font-bold px-4 py-2 rounded-md w-full '
                                     >
                                         Login
                                     </motion.button>

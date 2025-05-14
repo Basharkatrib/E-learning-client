@@ -7,12 +7,16 @@
 /* Class based dark mode */
 @custom-variant dark (&:where(.dark, .dark *));
 
-
+/* Custom font */
 @font-face {
-  font-family: 'Poppins ';
-  src: local('Poppins'), url(./assets/fonts/Poppins/Poppins-Regular.ttf) format('truetype');
+  font-family: 'Poppins';
+  src: local('Poppins'), url('./assets/fonts/Poppins/Poppins-Regular.ttf') format('truetype');
 }
 
-*{
-  font-family: 'Poppins';
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+@theme {
+  --color-primary: #5856D6;
 }

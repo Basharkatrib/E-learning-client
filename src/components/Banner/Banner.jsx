@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import banner1 from '../../assets/images/banner/image-1.jpg';
-import banner2 from '../../assets/images/banner/image-2.jpg';
-import banner3 from '../../assets/images/banner/image-3.jpg';
+import banner2 from '../../assets/images/banner/image-2.avif';
+import banner3 from '../../assets/images/banner/image-3.avif';
+import banner1 from '../../assets/images/banner/image-1.avif';
 
 
 
@@ -49,7 +49,7 @@ const Banner = () => {
                     <img 
                         src={images[currentImageIndex].url}
                         alt="education"
-                        className="w-full h-full object-cover  md:object-center"
+                        className="w-full h-screen md:h-full object-cover object-top md:object-center"
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
                 </motion.div>
@@ -79,7 +79,7 @@ const Banner = () => {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="bg-primary hover:bg-primary/90 text-white  py-4 rounded-full font-semibold text-lg transition-all duration-300 flex items-center gap-2"
+                                className="bg-primary px-8 py-4  text-white  rounded-full font-semibold text-lg transition-all duration-300 flex items-center gap-2"
                             >
                                 Start Learning
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
