@@ -1,21 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSelector, useDispatch } from 'react-redux';
+import { toggleTheme, selectTheme } from '../../redux/features/themeSlice';
 import logo from '../../assets/images/navbar/Logo.svg';
 import UAE from '../../assets/images/navbar/UAE.png';
 import USA from '../../assets/images/navbar/USA.jpeg';
 
 function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
-    const [darkMode, setDarkMode] = useState(false);
     const [currentLang, setCurrentLang] = useState('En');
-
-    useEffect(() => {
-        if (darkMode) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    }, [darkMode]);
+    const dispatch = useDispatch();
+    const theme = useSelector(selectTheme);
 
     const navItems = [
         { id: 1, name: 'Home', href: '/' },
@@ -26,9 +21,8 @@ function Navbar() {
     ];
 
     return (
-        // Desktop Menu
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-md transition-colors duration-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav className={`fixed top-0 left-0 right-0 z-50 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} shadow-md transition-colors duration-200`}>
+            <div className="mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center py-4 w-full">
                     <div className="flex items-center gap-2">
                         <motion.img 
@@ -37,14 +31,16 @@ function Navbar() {
                             src={logo} 
                             alt="logo" 
                         />
-                        <ul className='hidden md:flex items-center gap-6 '>
+                        <ul className='hidden md:flex items-center gap-6'>
                             {navItems.map((item) => (
-                                <motion.li 
-                                    key={item.id}
-                                >
+                                <motion.li key={item.id}>
                                     <a 
                                         href={item.href}
-                                        className="text-gray-700 hover:bg-gray-100 p-2 rounded-[4px]  hover:text-primary dark:text-white transition-all duration-200"
+                                        className={`p-2 rounded-[4px] transition-all duration-200 ${
+                                            theme === 'dark' 
+                                            ? 'text-white hover:bg-gray-700' 
+                                            : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
+                                        }`}
                                     >
                                         {item.name}
                                     </a>
@@ -57,10 +53,14 @@ function Navbar() {
                         <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => setDarkMode(!darkMode)}
-                            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                            onClick={() => dispatch(toggleTheme())}
+                            className={`p-2 rounded-full transition-colors duration-200 ${
+                                theme === 'dark' 
+                                ? 'hover:bg-gray-700' 
+                                : 'hover:bg-gray-100'
+                            }`}
                         >
-                            {darkMode ? (
+                            {theme === 'dark' ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                                 </svg>
@@ -77,7 +77,9 @@ function Navbar() {
                             className='flex items-center gap-2 cursor-pointer'
                             onClick={() => setCurrentLang(currentLang === 'En' ? 'Ar' : 'En')}
                         >
-                            <span className="text-gray-700 dark:text-gray-200">{currentLang}</span>
+                            <span className={theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}>
+                                {currentLang}
+                            </span>
                             <img 
                                 src={currentLang === 'En' ? USA : UAE} 
                                 alt="language" 
@@ -89,7 +91,11 @@ function Navbar() {
                             <motion.button 
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className='px-4 py-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200'
+                                className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+                                    theme === 'dark'
+                                    ? 'text-gray-200 hover:bg-gray-700'
+                                    : 'text-gray-700 hover:bg-gray-100'
+                                }`}
                             >
                                 Sign Up
                             </motion.button>
@@ -103,7 +109,11 @@ function Navbar() {
 
                         <button
                             onClick={() => setIsOpen(!isOpen)}
-                            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400"
+                            className={`md:hidden inline-flex items-center justify-center p-2 rounded-md ${
+                                theme === 'dark'
+                                ? 'text-gray-200 hover:text-purple-400'
+                                : 'text-gray-700 hover:text-purple-600'
+                            }`}
                         >
                             <span className="sr-only">Open main menu</span>
                             {!isOpen ? (
@@ -129,13 +139,17 @@ function Navbar() {
                             transition={{ duration: 0.2 }}
                             className="md:hidden flex justify-center items-center"
                         >
-                            <div className="px-2 pt-2 pb-3 space-y-1 ">
+                            <div className="px-2 pt-2 pb-3 space-y-1">
                                 {navItems.map((item) => (
                                     <motion.a
                                         key={item.id}
                                         href={item.href}
                                         whileHover={{ x: 10 }}
-                                        className="block text-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400"
+                                        className={`block text-center px-3 py-2 rounded-md text-base font-medium ${
+                                            theme === 'dark'
+                                            ? 'text-gray-200 hover:text-purple-400'
+                                            : 'text-gray-700 hover:text-purple-600'
+                                        }`}
                                     >
                                         {item.name}
                                     </motion.a>
@@ -143,13 +157,17 @@ function Navbar() {
                                 <div className="mt-4 flex flex-col gap-2 px-3 w-fit">
                                     <motion.button 
                                         whileTap={{ scale: 0.95 }}
-                                        className='px-4 py-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 w-full text-left'
+                                        className={`px-4 py-2 rounded-md w-full text-left ${
+                                            theme === 'dark'
+                                            ? 'text-gray-200 hover:bg-gray-700'
+                                            : 'text-gray-700 hover:bg-gray-100'
+                                        }`}
                                     >
                                         Sign Up
                                     </motion.button>
                                     <motion.button 
                                         whileTap={{ scale: 0.95 }}
-                                        className='bg-primary text-center text-white font-bold px-4 py-2 rounded-md w-full '
+                                        className='bg-primary text-center text-white font-bold px-4 py-2 rounded-md w-full'
                                     >
                                         Login
                                     </motion.button>

@@ -12,7 +12,7 @@ const Banner = () => {
     const images = [
         {
             url: banner1,
-            title: "Transform Your Future",
+            title: "Transform Future",
             subtitle: "Join our community of learners and achieve your goals"
         },
         {
@@ -56,7 +56,7 @@ const Banner = () => {
             </AnimatePresence>
 
             <div className="relative z-10 h-full flex items-center">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="container px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl">
                         <AnimatePresence mode='wait'>
                             <motion.div
