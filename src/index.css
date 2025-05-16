@@ -1,13 +1,10 @@
 @import "tailwindcss";
 
-/* Plugins */
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-/* Class based dark mode */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Custom font */
 @font-face {
   font-family: 'Poppins';
   src: local('Poppins'), url('./assets/fonts/Poppins/Poppins-Regular.ttf') format('truetype');
@@ -19,4 +16,59 @@
 
 @theme {
   --color-primary: #5856D6;
+}
+
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 8px;
+  margin: 4px 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #5856D6, #7a77e6);
+  border: 3px solid #f1f1f1;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #4745ac, #6865e0);
+  border: 2px solid #f1f1f1;
+}
+
+::-webkit-scrollbar-corner {
+  background: #f1f1f1;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1a1f2b;
+  border-radius: 8px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #6865e0, #8b89ff);
+  border: 3px solid #1a1f2b;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #7a77e6, #9e9cff);
+  border: 2px solid #1a1f2b;
+}
+
+.dark ::-webkit-scrollbar-corner {
+  background: #1a1f2b;
+}
+
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #5856D6 #f1f1f1;
+}
+
+.dark * {
+  scrollbar-color: #6865e0 #1a1f2b;
 }
