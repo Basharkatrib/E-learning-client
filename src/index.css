@@ -14,8 +14,10 @@
   font-family: 'Poppins', sans-serif;
 }
 
+
+
 @theme {
-  --color-primary: #5856D6;
+  --color-primary: #6D28D9;
 }
 
 ::-webkit-scrollbar {
@@ -71,4 +73,81 @@
 
 .dark * {
   scrollbar-color: #6865e0 #1a1f2b;
+}
+
+/* Swiper Custom Styling */
+.testimonials-swiper {
+  padding: 20px 10px !important;
+  position: relative;
+}
+
+.testimonials-swiper .swiper-slide {
+  opacity: 0.4;
+  transform: scale(0.9);
+  transition: all 0.3s ease;
+}
+
+.testimonials-swiper .swiper-slide-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Custom Pagination */
+.swiper-pagination-bullet {
+  width: 8px !important;
+  height: 8px !important;
+  background: #cbd5e1 !important;
+  opacity: 0.5 !important;
+  transition: all 0.3s ease !important;
+}
+
+.swiper-pagination-bullet-active {
+  width: 24px !important;
+  background: #5856D6 !important;
+  border-radius: 4px !important;
+  opacity: 1 !important;
+}
+
+/* Dark mode pagination */
+.swiper-pagination-bullet.dark {
+  background: #4b5563 !important;
+}
+
+.swiper-pagination-bullet-active.dark {
+  background: #6865e0 !important;
+}
+
+/* Custom Navigation Buttons */
+.custom-prev,
+.custom-next {
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.custom-prev:hover,
+.custom-next:hover {
+  transform: scale(1.1);
+}
+
+.custom-prev:active,
+.custom-next:active {
+  transform: scale(0.95);
+}
+
+/* Testimonial Card Animation */
+.testimonials-swiper .swiper-slide-active .motion-div {
+  animation: fadeInScale 0.5s ease forwards;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
