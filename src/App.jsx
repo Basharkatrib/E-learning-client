@@ -5,6 +5,7 @@ import { Routes, Route } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectTheme } from './redux/features/themeSlice';
 import Footer from './components/Footer/Footer';
+import ContactUs from './components/ContactUs/ContactUs';
 function App() {
   const theme = useSelector(selectTheme);
 
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<Home />} />
       </Routes>
       <Footer />
+      <ContactUs />
     </div>
   );
 }
