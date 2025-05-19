@@ -10,6 +10,9 @@ import Login from './pages/login/login';
 import ForgetPassword from './pages/ForgetPassword/ForgetPassword';
 import ResetPassword from './pages/RessetPassword/RessetPassword';
 import ProfilePage from './pages/Profile/Profile';
+import ContactUs from './components/ContactUs/ContactUs';
+
+
 function App() {
   const theme = useSelector(selectTheme);
 
@@ -25,6 +28,7 @@ function App() {
         <Route path="/me" element={<ProfilePage />} />
       </Routes>
       <Footer />
+      <ContactUs />
     </div>
   );
 }
