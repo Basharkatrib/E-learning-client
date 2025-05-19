@@ -10,7 +10,7 @@ import Login from './pages/login/login';
 import ForgetPassword from './pages/ForgetPassword/ForgetPassword';
 import ResetPassword from './pages/RessetPassword/RessetPassword';
 import ProfilePage from './pages/Profile/Profile';
-import ContactUs from './components/ContactUs/ContactUs';
+import Contact from './pages/Contact/Contact';
 
 
 function App() {
@@ -26,9 +26,9 @@ function App() {
         <Route path="/forget" element={<ForgetPassword />} />
         <Route path="/resset" element={<ResetPassword />} />
         <Route path="/me" element={<ProfilePage />} />
+        <Route path="/contactus" element={<Contact />} />
       </Routes>
       <Footer />
-      <ContactUs />
     </div>
   );
 }
