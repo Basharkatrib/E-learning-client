@@ -11,6 +11,7 @@ import ForgetPassword from './pages/ForgetPassword/ForgetPassword';
 import ResetPassword from './pages/RessetPassword/RessetPassword';
 import ProfilePage from './pages/Profile/Profile';
 import Contact from './pages/Contact/Contact';
+import Courses from './pages/Courses/Courses';
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
         <Route path="/resset" element={<ResetPassword />} />
         <Route path="/me" element={<ProfilePage />} />
         <Route path="/contactus" element={<Contact />} />
+        <Route path="/courses" element={<Courses />} />
       </Routes>
       <Footer />
     </div>
