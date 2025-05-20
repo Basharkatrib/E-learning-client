@@ -23,6 +23,7 @@ function App() {
         <Route path="/forget" element={<ForgetPassword />} />
         <Route path="/resset" element={<ResetPassword />} />
         <Route path="/me" element={<ProfilePage />} />
+
       </Routes>
       <Footer />
     </div>
