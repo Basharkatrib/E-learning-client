@@ -18,7 +18,7 @@ const Loading = () => {
                     transition={{ delay: 0.3, duration: 0.6 }}
                     className={`text-2xl font-bold ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
                 >
-                    Please wait for loading
+                    Please wait for loading...
                 </motion.p>
             </div>
         </div>

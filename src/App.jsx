@@ -12,6 +12,8 @@ import ResetPassword from './pages/RessetPassword/RessetPassword';
 import ProfilePage from './pages/Profile/Profile';
 import Contact from './pages/Contact/Contact';
 import Courses from './pages/Courses/Courses';
+import ErrorPage from './pages/ErrorPage/ErrorPage';
+import LoadingPage from './pages/LoadingPage/LoadingPage';
 
 
 function App() {
@@ -29,6 +31,8 @@ function App() {
         <Route path="/me" element={<ProfilePage />} />
         <Route path="/contactus" element={<Contact />} />
         <Route path="/courses" element={<Courses />} />
+        <Route path="/error" element={<ErrorPage />} />
+        <Route path="/loading" element={<LoadingPage />} />
       </Routes>
       <Footer />
     </div>

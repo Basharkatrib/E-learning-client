@@ -9,7 +9,7 @@ const Error = () => {
 
     return (
         <div
-            className={`min-h-screen flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 text-center 
+            className={`min-h-screen flex flex-col mt-10 justify-center items-center px-4 sm:px-6 lg:px-8 text-center 
                 ${theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : 'bg-white text-black border-gray-100'}
                 border-t`}
         >
