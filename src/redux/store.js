@@ -1,28 +1,34 @@
-import { configureStore } from '@reduxjs/toolkit'
-import themeReducer from './features/themeSlice'
-import { persistStore, persistReducer } from 'redux-persist'
-import storage from 'redux-persist/lib/storage'
+import { configureStore } from '@reduxjs/toolkit';
+import { combineReducers } from 'redux';
+import themeReducer from './features/themeSlice';
+import authReducer from './features/authSlice';
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+import { apiSlice } from './features/apiSlice';
+
+const rootReducer = combineReducers({
+  theme: themeReducer,
+  auth: authReducer,
+  [apiSlice.reducerPath]: apiSlice.reducer,
+});
 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['theme']
-}
+  whitelist: ['theme', 'auth'],
+};
 
-const persistedReducer = persistReducer(persistConfig, themeReducer)
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
-  reducer: {
-    theme: persistedReducer,
-  },
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE']
-      }
-    })
-})
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
+    }).concat(apiSlice.middleware),
+});
 
-export const persistor = persistStore(store)
-
-export default store 
+export const persistor = persistStore(store);
+export default store;

@@ -1,292 +1,222 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Autoplay, Pagination } from 'swiper/modules';
 import { motion } from 'framer-motion';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
-import per1 from '../../assets/images/testimonials/image-1.png'
-import per2 from '../../assets/images/testimonials/image-2.png'
-import per3 from '../../assets/images/testimonials/image-3.png'
-
-// Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
-
-const testimonials = [
-    {
-        id: 1,
-        name: "Sarah L.",
-        avatar: per1,
-        text: "The web design course provided a solid foundation for me. The instructors were knowledgeable and supportive, and the interactive learning environment was engaging. I highly recommend it!",
-        role: "Web Developer"
-    },
-    {
-        id: 2,
-        name: "John M.",
-        avatar: per2,
-        text: "The course content was comprehensive and well-structured. I particularly enjoyed the practical projects that helped reinforce the concepts we learned.",
-        role: "UX Designer"
-    },
-    {
-        id: 3,
-        name: "Emily R.",
-        avatar: per3,
-        text: "This platform has transformed my learning experience. The quality of instruction and the supportive community have been invaluable to my growth.",
-        role: "Frontend Developer"
-    }
-];
+import {
+  useRegisterMutation,
+  useResendVerificationMutation
+} from '../../redux/features/apiSlice';
+import { setEmail, selectEmail } from '../../redux/features/authSlice';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { toast } from 'react-hot-toast';
 
 function Register() {
-    const [showPassword, setShowPassword] = useState(false);
-    const theme = useSelector(selectTheme);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showResend, setShowResend] = useState(false);
+  const theme = useSelector(selectTheme);
+  const [registerUser, { isLoading }] = useRegisterMutation();
+  const [resendVerification, { isLoading: isResending }] = useResendVerificationMutation();
+  const dispatch = useDispatch();
+  const email = useSelector(selectEmail);
 
-    return (
-        <div className="min-h-screen pt-16 pb-8 flex items-center justify-center mt-10">
-            <div className="container mx-auto px-4">
-                <div className="flex flex-col-reverse lg:flex-row gap-8 items-center lg:items-start">
-                    {/* Testimonials Section */}
-                    <div className="w-full lg:w-1/2 space-y-4">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
-                        >
-                            <h2 className={`text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                                }`}>
-                                Students Testimonials
-                            </h2>
-                            <p className={`text-base mb-6 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                                }`}>
-                                Hear what our students say about their learning experience with us
-                            </p>
-                        </motion.div>
+  useEffect(() => {
+    console.log(email);
+  }, [email]);
 
-                        <div className="relative">
-                            <Swiper
-                                modules={[Navigation, Autoplay, Pagination]}
-                                spaceBetween={30}
-                                slidesPerView={1}
-                                navigation={{
-                                    prevEl: '.custom-prev',
-                                    nextEl: '.custom-next',
-                                }}
-                                pagination={{
-                                    el: '.custom-pagination',
-                                    clickable: true,
-                                    bulletClass: `swiper-pagination-bullet ${theme === 'dark' ? 'dark' : ''
-                                        }`,
-                                    bulletActiveClass: 'swiper-pagination-bullet-active'
-                                }}
-                                autoplay={{
-                                    delay: 5000,
-                                    disableOnInteraction: false,
-                                }}
-                                className="testimonials-swiper pb-12"
-                            >
-                                {testimonials.map((testimonial) => (
-                                    <SwiperSlide key={testimonial.id}>
-                                        <motion.div
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ duration: 0.5 }}
-                                            className={`p-6 rounded-xl ${theme === 'dark'
-                                                    ? 'bg-gray-800/50 backdrop-blur-sm'
-                                                    : 'bg-white/80 backdrop-blur-sm shadow-lg'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-4 mb-4">
-                                                <img
-                                                    src={testimonial.avatar}
-                                                    alt={testimonial.name}
-                                                    className="w-12 h-12 rounded-full object-cover ring-2 ring-primary/20"
-                                                />
-                                                <div>
-                                                    <h4 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                                                        }`}>
-                                                        {testimonial.name}
-                                                    </h4>
-                                                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                                                        }`}>
-                                                        {testimonial.role}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <p className={`text-base italic ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                                                }`}>
-                                                "{testimonial.text}"
-                                            </p>
-                                        </motion.div>
-                                    </SwiperSlide>
-                                ))}
-                            </Swiper>
+  const formik = useFormik({
+    initialValues: {
+      fullName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      terms: false
+    },
+    validationSchema: Yup.object({
+      fullName: Yup.string().required('Full name is required'),
+      email: Yup.string().email('Invalid email').required('Email is required'),
+      password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+      confirmPassword: Yup.string()
+        .oneOf([Yup.ref('password'), null], 'Passwords must match')
+        .required('Please confirm your password'),
+      terms: Yup.boolean().oneOf([true], 'You must accept the terms and privacy policy')
+    }),
+    onSubmit: async (values) => {
+      try {
+        const userData = {
+          name: values.fullName,
+          email: values.email,
+          password: values.password,
+          password_confirmation: values.confirmPassword,
+        };
 
-                            {/* Custom Navigation Buttons */}
-                            <div className="flex justify-center gap-4 mt-4">
-                                <button
-                                    className={`custom-prev w-10 h-10 rounded-full flex items-center justify-center transition-all ${theme === 'dark'
-                                            ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
-                                            : 'bg-white hover:bg-gray-100 text-gray-600 shadow-md'
-                                        }`}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                </button>
-                                <button
-                                    className={`custom-next w-10 h-10 rounded-full flex items-center justify-center transition-all ${theme === 'dark'
-                                            ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
-                                            : 'bg-white hover:bg-gray-100 text-gray-600 shadow-md'
-                                        }`}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                </button>
-                            </div>
+        const res = await registerUser(userData).unwrap();
+        dispatch(setEmail(values.email));
+        toast.success('Registration successful. Please check your email for account verification. A verification link has been sent.');
+        setShowResend(true); // Show the resend button
+        console.log('Response:', res);
+      } catch (err) {
+        console.error('Registration failed:', err);
+        toast.error(err?.data?.message || 'Registration failed. Please try again.');
+      }
+    }
+  });
 
-                            {/* Custom Pagination */}
-                            <div className="custom-pagination flex justify-center gap-2 mt-4"></div>
-                        </div>
-                    </div>
+  const handleResend = async () => {
+    try {
+      await resendVerification(email).unwrap();
+      toast.success('Verification email has been resent.');
+    } catch (err) {
+      toast.error(err?.data?.message || 'Failed to resend verification email.');
+    }
+  };
 
-                    {/* Sign Up Form */}
-                    <div className="w-full lg:w-1/2 ">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.2 }}
-                            className={`p-4 lg:p-8 rounded-2xl ${theme === 'dark'
-                                    ? 'bg-gray-800'
-                                    : 'bg-white shadow-xl'
-                                }`}
-                        >
-                            <h2 className={`text-2xl font-bold text-center mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                                }`}>
-                                Sign Up
-                            </h2>
-                            <p className={`text-center mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                                }`}>
-                                Create an account to unlock exclusive features
-                            </p>
+  return (
+    <div className="min-h-screen pt-16 pb-8 flex items-center justify-center mt-10">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-center">
+          <div className="w-full lg:w-1/2">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className={`p-4 lg:p-8 rounded-2xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-white shadow-xl'}`}
+            >
+              <h2 className={`text-2xl font-bold text-center mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                Sign Up
+              </h2>
+              <p className={`text-center mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                Create an account to unlock exclusive features
+              </p>
 
-                            <form className="space-y-4">
-                                <div>
-                                    <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                                        }`}>
-                                        Full Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="Enter your Name"
-                                        className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark'
-                                                ? 'bg-gray-700 border-gray-600 text-white'
-                                                : 'bg-gray-50 border-gray-300 text-gray-900'
-                                            } focus:ring-2 focus:ring-primary focus:border-transparent`}
-                                    />
-                                </div>
+              <form onSubmit={formik.handleSubmit} className="space-y-4">
+                {/* Full Name */}
+                <div>
+                  <input
+                    type="text"
+                    name="fullName"
+                    placeholder="Full Name"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.fullName}
+                    className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} focus:ring-2 focus:ring-primary`}
+                  />
+                  {formik.touched.fullName && formik.errors.fullName && (
+                    <p className="text-red-500 text-sm">{formik.errors.fullName}</p>
+                  )}
+                </div>
 
-                                <div>
-                                    <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                                        }`}>
-                                        Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        placeholder="Enter your Email"
-                                        className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark'
-                                                ? 'bg-gray-700 border-gray-600 text-white'
-                                                : 'bg-gray-50 border-gray-300 text-gray-900'
-                                            } focus:ring-2 focus:ring-primary focus:border-transparent`}
-                                    />
-                                </div>
+                {/* Email */}
+                <div>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.email}
+                    className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} focus:ring-2 focus:ring-primary`}
+                  />
+                  {formik.touched.email && formik.errors.email && (
+                    <p className="text-red-500 text-sm">{formik.errors.email}</p>
+                  )}
+                </div>
 
-                                <div>
-                                    <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                                        }`}>
-                                        Password
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type={showPassword ? "text" : "password"}
-                                            placeholder="Enter your Password"
-                                            className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark'
-                                                    ? 'bg-gray-700 border-gray-600 text-white'
-                                                    : 'bg-gray-50 border-gray-300 text-gray-900'
-                                                } focus:ring-2 focus:ring-primary focus:border-transparent`}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                                        >
-                                            {showPassword ? (
-                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                                                    }`} viewBox="0 0 20 20" fill="currentColor">
-                                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                                </svg>
-                                            ) : (
-                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                                                    }`} viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
-                                                    <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-                                                </svg>
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
+                {/* Password */}
+                <div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    placeholder="Password"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.password}
+                    className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} focus:ring-2 focus:ring-primary`}
+                  />
+                  {formik.touched.password && formik.errors.password && (
+                    <p className="text-red-500 text-sm">{formik.errors.password}</p>
+                  )}
+                </div>
 
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        id="terms"
-                                        className="rounded border-gray-300 text-primary focus:ring-primary"
-                                    />
-                                    <label htmlFor="terms" className={`ml-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                                        }`}>
-                                        I agree with{' '}
-                                        <Link to="/terms" className="text-primary hover:underline">
-                                            Terms of Use
-                                        </Link>
-                                        {' '}and{' '}
-                                        <Link to="/privacy" className="text-primary hover:underline">
-                                            Privacy Policy
-                                        </Link>
-                                    </label>
-                                </div>
+                {/* Confirm Password */}
+                <div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    placeholder="Confirm Password"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.confirmPassword}
+                    className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} focus:ring-2 focus:ring-primary`}
+                  />
+                  {formik.touched.confirmPassword && formik.errors.confirmPassword && (
+                    <p className="text-red-500 text-sm">{formik.errors.confirmPassword}</p>
+                  )}
+                </div>
 
-                                <button
-                                    type="submit"
-                                    className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200"
-                                >
-                                    Sign Up
-                                </button>
+                {/* Terms */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="terms"
+                    onChange={formik.handleChange}
+                    checked={formik.values.terms}
+                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <label className={`ml-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                    I agree with{' '}
+                    <Link to="/terms" className="text-primary hover:underline">Terms of Use</Link> and{' '}
+                    <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+                  </label>
+                </div>
+                {formik.touched.terms && formik.errors.terms && (
+                  <p className="text-red-500 text-sm">{formik.errors.terms}</p>
+                )}
 
-                                <div className="relative my-6">
-                                    <div className={`absolute inset-0 flex items-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-                                        }`}>
-                                        <div className={`w-full border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'
-                                            }`}></div>
-                                    </div>
-                                    <div className="relative flex justify-center text-sm">
-                                        <span className={`px-2 ${theme === 'dark' ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-500'
-                                            }`}>
-                                            OR
-                                        </span>
-                                    </div>
-                                </div>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {isLoading ? 'Signing Up...' : 'Sign Up'}
+                </button>
 
-                                <button
-                                    type="button"
-                                    className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg border ${theme === 'dark'
-                                            ? 'border-gray-600 hover:bg-gray-700'
-                                            : 'border-gray-300 hover:bg-gray-50'
-                                        } transition-colors duration-200`}
-                                >
-                                    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <g clip-path="url(#clip0_38_3273)">
+                {/* Resend Verification Button */}
+                {showResend && (
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={isResending}
+                    className="w-full mt-2 bg-secondary text-white py-2 rounded-lg hover:bg-secondary/90 disabled:opacity-50"
+                  >
+                    {isResending ? 'Resending...' : 'Resend Verification Link'}
+                  </button>
+                )}
+
+                {/* OR divider */}
+                <div className="relative my-6">
+                  <div className={`absolute inset-0 flex items-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+                    <div className={`w-full border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className={`px-2 ${theme === 'dark' ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-500'}`}>
+                      OR
+                    </span>
+                  </div>
+                </div>
+
+                {/* Google Login */}
+                <button
+                  type="button"
+                  className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg border ${theme === 'dark'
+                    ? 'border-gray-600 hover:bg-gray-700'
+                    : 'border-gray-300 hover:bg-gray-50'
+                    } transition-colors duration-200`}
+                >
+                                                     <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <g clipPath="url(#clip0_38_3273)">
                                             <path d="M29.7083 15.3456C29.7083 14.3259 29.6256 13.3007 29.4493 12.2976H15.3008V18.0738H23.4029C23.0667 19.9368 21.9864 21.5848 20.4046 22.632V26.3799H25.2383C28.0768 23.7674 29.7083 19.9092 29.7083 15.3456Z" fill="#4285F4" />
                                             <path d="M15.2989 30.001C19.3445 30.001 22.7562 28.6727 25.242 26.3799L20.4082 22.6319C19.0634 23.5469 17.3272 24.065 15.3044 24.065C11.3911 24.065 8.07311 21.4249 6.88259 17.8754H1.89453V21.739C4.44092 26.8043 9.6274 30.001 15.2989 30.001Z" fill="#34A853" />
                                             <path d="M6.87895 17.8753C6.25063 16.0124 6.25063 13.9951 6.87895 12.1322V8.26849H1.89641C-0.231095 12.507 -0.231095 17.5005 1.89641 21.739L6.87895 17.8753Z" fill="#FBBC04" />
@@ -298,25 +228,26 @@ function Register() {
                                             </clipPath>
                                         </defs>
                                     </svg>
-                                    <span className={theme === 'dark' ? 'text-white' : 'text-gray-700'}>
-                                        Sign Up with Google
-                                    </span>
-                                </button>
+                  <span className={theme === 'dark' ? 'text-white' : 'text-gray-700'}>
+                    Login with Google
+                  </span>
+                </button>
 
-                                <p className={`text-center text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                                    }`}>
-                                    Already have an account?{' '}
-                                    <Link to="/login" className="text-primary hover:underline">
-                                        Login
-                                    </Link>
-                                </p>
-                            </form>
-                        </motion.div>
-                    </div>
-                </div>
-            </div>
+                {/* Login Link */}
+                <p className={`text-center text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600 '}`}>
+                  Do you have an account?{' '}
+                  <Link to="/login" className="text-primary hover:underline">
+                    Login
+                  </Link>
+                </p>
+
+              </form>
+            </motion.div>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
-export default Register; 
+export default Register;

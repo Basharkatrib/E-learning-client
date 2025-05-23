@@ -66,8 +66,8 @@ function Testimonials() {
         <div className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-16 ${
             theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
         }`}>
-            <div className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-20 left-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl" />
+            {/* <div className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-20 left-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl" /> */}
 
             <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative">
                 <div className="w-full flex flex-col gap-4">

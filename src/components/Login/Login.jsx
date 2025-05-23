@@ -1,150 +1,63 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Autoplay, Pagination } from 'swiper/modules';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
+import { useLoginMutation } from '../../redux/features/apiSlice';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import Cookies from 'js-cookie';
 import per1 from '../../assets/images/testimonials/image-1.png'
 import per2 from '../../assets/images/testimonials/image-2.png'
 import per3 from '../../assets/images/testimonials/image-3.png'
+import { toast } from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../../redux/features/authSlice';
+import { useLocation } from 'react-router-dom';
 
-// Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
-
-const testimonials = [
-    {
-        id: 1,
-        name: "Sarah L.",
-        avatar: per1,
-        text: "The web design course provided a solid foundation for me. The instructors were knowledgeable and supportive, and the interactive learning environment was engaging. I highly recommend it!",
-        role: "Web Developer"
-    },
-    {
-        id: 2,
-        name: "John M.",
-        avatar: per2,
-        text: "The course content was comprehensive and well-structured. I particularly enjoyed the practical projects that helped reinforce the concepts we learned.",
-        role: "UX Designer"
-    },
-    {
-        id: 3,
-        name: "Emily R.",
-        avatar: per3,
-        text: "This platform has transformed my learning experience. The quality of instruction and the supportive community have been invaluable to my growth.",
-        role: "Frontend Developer"
-    }
-];
 
 function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const theme = useSelector(selectTheme);
+    const navigate = useNavigate();
+    const [loginUser, { isLoading, isError, error }] = useLoginMutation();
+    const dispatch = useDispatch();
+
+    const formik = useFormik({
+        initialValues: {
+            email: '',
+            password: '',
+            remember: false
+        },
+        validationSchema: Yup.object({
+            email: Yup.string().email('Invalid email').required('Email is required'),
+            password: Yup.string().required('Password is required'),
+        }),
+        onSubmit: async (values) => {
+            try {
+                const res = await loginUser({
+                    email: values.email,
+                    password: values.password,
+                }).unwrap();
+        
+                dispatch(setCredentials({
+                    user: res.user,
+                    token: res.token
+                }));
+                toast.success('You are logged in successfully');
+                navigate('/'); 
+            } catch (err) {
+                console.error('Login failed:', err);
+                toast.error(err?.data?.message || 'Login failed. Please try again.');
+            }
+        }
+        
+    });
 
     return (
         <div className="min-h-screen pt-16 pb-8 flex items-center justify-center mt-10">
             <div className="container mx-auto px-4">
-                <div className="flex flex-col-reverse lg:flex-row gap-8 items-center lg:items-start">
-                    {/* Testimonials Section */}
-                    <div className="w-full lg:w-1/2 space-y-4">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
-                        >
-                            <h2 className={`text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                Welcome Back!
-                            </h2>
-                            <p className={`text-base mb-6 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                Join our community of learners and continue your educational journey
-                            </p>
-                        </motion.div>
-
-                        <div className="relative">
-                            <Swiper
-                                modules={[Navigation, Autoplay, Pagination]}
-                                spaceBetween={30}
-                                slidesPerView={1}
-                                navigation={{
-                                    prevEl: '.custom-prev',
-                                    nextEl: '.custom-next',
-                                }}
-                                pagination={{
-                                    el: '.custom-pagination',
-                                    clickable: true,
-                                    bulletClass: `swiper-pagination-bullet ${theme === 'dark' ? 'dark' : ''}`,
-                                    bulletActiveClass: 'swiper-pagination-bullet-active'
-                                }}
-                                autoplay={{
-                                    delay: 5000,
-                                    disableOnInteraction: false,
-                                }}
-                                className="testimonials-swiper pb-12"
-                            >
-                                {testimonials.map((testimonial) => (
-                                    <SwiperSlide key={testimonial.id}>
-                                        <motion.div
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ duration: 0.5 }}
-                                            className={`p-6 rounded-xl ${theme === 'dark'
-                                                ? 'bg-gray-800/50 backdrop-blur-sm'
-                                                : 'bg-white/80 backdrop-blur-sm shadow-lg'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-4 mb-4">
-                                                <img
-                                                    src={testimonial.avatar}
-                                                    alt={testimonial.name}
-                                                    className="w-12 h-12 rounded-full object-cover ring-2 ring-primary/20"
-                                                />
-                                                <div>
-                                                    <h4 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                                        {testimonial.name}
-                                                    </h4>
-                                                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                        {testimonial.role}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <p className={`text-base italic ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                                "{testimonial.text}"
-                                            </p>
-                                        </motion.div>
-                                    </SwiperSlide>
-                                ))}
-                            </Swiper>
-
-                            {/* Custom Navigation Buttons */}
-                            <div className="flex justify-center gap-4 mt-4">
-                                <button
-                                    className={`custom-prev w-10 h-10 rounded-full flex items-center justify-center transition-all ${theme === 'dark'
-                                        ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
-                                        : 'bg-white hover:bg-gray-100 text-gray-600 shadow-md'
-                                        }`}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                </button>
-                                <button
-                                    className={`custom-next w-10 h-10 rounded-full flex items-center justify-center transition-all ${theme === 'dark'
-                                        ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
-                                        : 'bg-white hover:bg-gray-100 text-gray-600 shadow-md'
-                                        }`}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            {/* Custom Pagination */}
-                            <div className="custom-pagination flex justify-center gap-2 mt-4"></div>
-                        </div>
-                    </div>
-
+                <div className="flex items-center justify-center">
                     {/* Login Form */}
                     <div className="w-full lg:w-1/2">
                         <motion.div
@@ -163,19 +76,26 @@ function Login() {
                                 Welcome back! Please login to your account
                             </p>
 
-                            <form className="space-y-4">
+                            <form onSubmit={formik.handleSubmit} className="space-y-4">
                                 <div>
                                     <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                                         Email
                                     </label>
                                     <input
                                         type="email"
+                                        name="email"
                                         placeholder="Enter your Email"
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        value={formik.values.email}
                                         className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark'
                                             ? 'bg-gray-700 border-gray-600 text-white'
                                             : 'bg-gray-50 border-gray-300 text-gray-900'
                                             } focus:ring-2 focus:ring-primary focus:border-transparent`}
                                     />
+                                    {formik.touched.email && formik.errors.email && (
+                                        <p className="text-red-500 text-sm">{formik.errors.email}</p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -185,7 +105,11 @@ function Login() {
                                     <div className="relative">
                                         <input
                                             type={showPassword ? "text" : "password"}
+                                            name="password"
                                             placeholder="Enter your Password"
+                                            onChange={formik.handleChange}
+                                            onBlur={formik.handleBlur}
+                                            value={formik.values.password}
                                             className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark'
                                                 ? 'bg-gray-700 border-gray-600 text-white'
                                                 : 'bg-gray-50 border-gray-300 text-gray-900'
@@ -209,30 +133,42 @@ function Login() {
                                             )}
                                         </button>
                                     </div>
+                                    {formik.touched.password && formik.errors.password && (
+                                        <p className="text-red-500 text-sm">{formik.errors.password}</p>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
                                         <input
                                             type="checkbox"
-                                            id="remember"
+                                            name="remember"
+                                            onChange={formik.handleChange}
+                                            checked={formik.values.remember}
                                             className="rounded border-gray-300 text-primary focus:ring-primary"
                                         />
                                         <label htmlFor="remember" className={`ml-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                                             Remember me
                                         </label>
                                     </div>
-                                    <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                                    <Link to="/forget" className="text-sm text-primary hover:underline">
                                         Forgot Password?
                                     </Link>
                                 </div>
 
                                 <button
                                     type="submit"
-                                    className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200"
+                                    disabled={isLoading}
+                                    className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50"
                                 >
-                                    Login
+                                    {isLoading ? 'Logging in...' : 'Login'}
                                 </button>
+
+                                {isError && (
+                                    <p className="text-red-500 text-sm text-center mt-2">
+                                        {error?.data?.message || 'Something went wrong. Please try again.'}
+                                    </p>
+                                )}
 
                                 <div className="relative my-6">
                                     <div className={`absolute inset-0 flex items-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
@@ -272,7 +208,7 @@ function Login() {
 
                                 <p className={`text-center text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                                     Don't have an account?{' '}
-                                    <Link to="/register" className="text-primary hover:underline">
+                                    <Link to="/signup" className="text-primary hover:underline">
                                         Sign Up
                                     </Link>
                                 </p>
