@@ -18,6 +18,7 @@ import Courses from './pages/Courses/Courses';
 import ErrorPage from './pages/ErrorPage/ErrorPage';
 import LoadingPage from './pages/LoadingPage/LoadingPage';
 import VerifyEmail from './pages/VerifyEmail/VerifyEmail';
+import VedioPage from './pages/VideoPage/VideoPage';
 
 import { useGetCurrentUserQuery } from './redux/features/apiSlice';
 import { setCredentials } from './redux/features/authSlice';
@@ -43,6 +44,7 @@ function App() {
         <Route path="/error" element={<ErrorPage />} />
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/course" element={<VedioPage />} />
         <Route path="*" element={<ErrorPage />} />
       </Routes>
       <Footer />
