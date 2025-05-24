@@ -5,7 +5,7 @@ import { toggleTheme, selectTheme } from '../../redux/features/themeSlice';
 import logo from '../../assets/images/navbar/Logo.svg';
 import UAE from '../../assets/images/navbar/UAE.png';
 import USA from '../../assets/images/navbar/USA.jpeg';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useLogoutMutation } from '../../redux/features/apiSlice';
 import { toast } from 'react-hot-toast';
 import { logout as logoutAction, selectToken, selectCurrentUser } from '../../redux/features/authSlice';
@@ -20,6 +20,8 @@ function Navbar() {
     const token = useSelector(selectToken);
     const user = useSelector(selectCurrentUser);
     const [logout, { isLoading: logoutLoading }] = useLogoutMutation();
+    const location = useLocation()
+    const currentPath = location.pathname
 
     useEffect(() => {
         console.log(token);
@@ -27,10 +29,10 @@ function Navbar() {
 
     const navItems = [
         { id: 1, name: 'Home', href: '/' },
-        { id: 2, name: 'Courses', href: '/' },
-        { id: 3, name: 'About Us', href: '/' },
-        { id: 4, name: 'Pricing', href: '/about' },
-        { id: 5, name: 'Contact', href: '/contact' }
+        { id: 2, name: 'Courses', href: '/courses' },
+        { id: 3, name: 'About Us', href: '/aboutus' },
+        { id: 4, name: 'Pricing', href: '/pricing' },
+        { id: 5, name: 'Contact', href: '/contactus' }
     ];
 
     const handleLogout = async () => {
@@ -61,19 +63,26 @@ function Navbar() {
                             alt="logo"
                         />
                         <ul className='hidden md:flex items-center gap-6'>
-                            {navItems.map((item) => (
-                                <motion.li key={item.id}>
-                                    <a
-                                        href={item.href}
-                                        className={`p-2 rounded-[4px] transition-all duration-200 ${theme === 'dark'
-                                            ? 'text-white hover:bg-gray-700'
-                                            : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
-                                            }`}
-                                    >
-                                        {item.name}
-                                    </a>
-                                </motion.li>
-                            ))}
+                            {navItems.map((item) => {
+                                const isActive = currentPath === item.href
+                                return (
+                                    <motion.li key={item.id}>
+                                        <a
+                                            href={item.href}
+                                            className={`p-2 rounded-[4px] transition-all duration-200 ${theme === 'dark'
+                                                    ? isActive
+                                                        ? 'bg-gray-700 text-white'
+                                                        : 'text-white hover:bg-gray-700'
+                                                    : isActive
+                                                        ? 'bg-gray-100 text-primary'
+                                                        : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
+                                                }`}
+                                        >
+                                            {item.name}
+                                        </a>
+                                    </motion.li>
+                                )
+                            })}
                         </ul>
                     </div>
 
@@ -161,8 +170,8 @@ function Navbar() {
                                                     <button
                                                         onClick={handleProfileClick}
                                                         className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 ${theme === 'dark'
-                                                                ? 'text-gray-200 hover:bg-gray-700'
-                                                                : 'text-gray-700 hover:bg-gray-100'
+                                                            ? 'text-gray-200 hover:bg-gray-700'
+                                                            : 'text-gray-700 hover:bg-gray-100'
                                                             }`}
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -175,8 +184,8 @@ function Navbar() {
                                                     onClick={handleLogout}
                                                     disabled={logoutLoading}
                                                     className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 ${theme === 'dark'
-                                                            ? 'text-red-400 hover:bg-gray-700'
-                                                            : 'text-red-600 hover:bg-gray-100'
+                                                        ? 'text-red-400 hover:bg-gray-700'
+                                                        : 'text-red-600 hover:bg-gray-100'
                                                         }`}
                                                 >
                                                     {logoutLoading ? (
@@ -207,8 +216,8 @@ function Navbar() {
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
                                             className={`px-4 py-2 rounded-md transition-colors cursor-pointer duration-200 ${theme === 'dark'
-                                                    ? 'text-gray-200 hover:bg-gray-700'
-                                                    : 'text-gray-700 hover:bg-gray-100'
+                                                ? 'text-gray-200 hover:bg-gray-700'
+                                                : 'text-gray-700 hover:bg-gray-100'
                                                 }`}
                                         >
                                             Sign Up
@@ -253,72 +262,94 @@ function Navbar() {
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="md:hidden flex justify-center items-center"
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className={`md:hidden absolute top-full left-0 right-0 ${theme === 'dark' ? 'bg-gray-800/95 backdrop-blur-lg' : 'bg-white/95 backdrop-blur-lg'} shadow-lg border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}
                         >
-                            <div className="px-2 pt-2 pb-3 space-y-1">
-                                {navItems.map((item) => (
-                                    <motion.a
-                                        key={item.id}
-                                        href={item.href}
-                                        whileHover={{ x: 10 }}
-                                        className={`block text-center px-3 py-2 rounded-md text-base font-medium ${theme === 'dark'
-                                            ? 'text-gray-200 hover:text-purple-400'
-                                            : 'text-gray-700 hover:text-purple-600'
-                                            }`}
-                                    >
-                                        {item.name}
-                                    </motion.a>
-                                ))}
-                                {!user ? (
-                                    <div className="mt-4 flex flex-col gap-2 px-3 w-fit">
-                                        <Link to="/signup">
-                                            <motion.button
-                                                whileTap={{ scale: 0.95 }}
-                                                className={`px-4 py-2 rounded-md w-full text-left ${theme === 'dark'
-                                                    ? 'text-gray-200 hover:bg-gray-700'
+                            <div className="px-4 py-6 max-w-md mx-auto">
+                                <div className="space-y-4">
+                                    {navItems.map((item) => {
+                                        const isActive = currentPath === item.href
+
+                                       return <motion.div>
+                                            <Link
+                                                to={item.href}
+                                                onClick={() => setIsOpen(false)}
+                                                className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
+                                                    ? 'text-gray-200 hover:bg-gray-700/50'
                                                     : 'text-gray-700 hover:bg-gray-100'
-                                                    }`}
+                                                    } ${isActive ? 'text-primary' : 'text-white'}`}
                                             >
-                                                Sign Up
-                                            </motion.button>
-                                        </Link>
-                                        <Link to="/login">
+                                                <span className="font-medium">{item.name}</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                                </svg>
+                                            </Link>
+                                        </motion.div>
+                                    })}
+                                </div>
+
+                                <div className={`mt-6 pt-6 ${theme === 'dark' ? 'border-t border-gray-700' : 'border-t border-gray-200'}`}>
+                                    {!user ? (
+                                        <div className="space-y-3">
+                                            <Link to="/signup" className="block">
+                                                <motion.button
+                                                    whileTap={{ scale: 0.95 }}
+                                                    className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 ${theme === 'dark'
+                                                        ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                        }`}
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6z" />
+                                                        <path d="M16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                                                    </svg>
+                                                    Sign Up
+                                                </motion.button>
+                                            </Link>
+                                            <Link to="/login" className="block">
+                                                <motion.button
+                                                    whileTap={{ scale: 0.95 }}
+                                                    className="w-full px-4 py-3 rounded-lg bg-primary text-white font-medium flex items-center justify-center gap-2 hover:bg-primary/90"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                    Login
+                                                </motion.button>
+                                            </Link>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <Link to="/me" className="block">
+                                                <motion.button
+                                                    whileTap={{ scale: 0.95 }}
+                                                    className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 ${theme === 'dark'
+                                                        ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                        }`}
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                                    </svg>
+                                                    Profile
+                                                </motion.button>
+                                            </Link>
                                             <motion.button
                                                 whileTap={{ scale: 0.95 }}
-                                                className='bg-primary text-center text-white font-bold px-4 py-2 rounded-md w-full'
+                                                onClick={handleLogout}
+                                                className="w-full px-4 py-3 rounded-lg bg-red-500 text-white font-medium flex items-center justify-center gap-2 hover:bg-red-600"
                                             >
-                                                Login
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+                                                </svg>
+                                                Logout
                                             </motion.button>
-                                        </Link>
-                                    </div>
-                                ) : (
-                                    <div className="mt-4 flex flex-col gap-2 px-3 w-fit">
-                                        <Link to="/me">
-                                            <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                className={`px-4 py-2 rounded-md w-full text-left ${theme === 'dark'
-                                                    ? 'text-gray-200 hover:bg-gray-700'
-                                                    : 'text-gray-700 hover:bg-gray-100'
-                                                    }`}
-                                            >
-                                                Profile
-                                            </motion.button>
-                                        </Link>
-                                        <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={handleLogout} 
-                                            className='bg-red-500 text-white font-bold px-4 py-2 rounded-md w-full'
-                                        >
-                                            Logout
-                                        </motion.button>
-                                    </div>
-                                )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </motion.div>
                     )}
