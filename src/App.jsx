@@ -23,6 +23,7 @@ import VedioPage from './pages/VideoPage/VideoPage';
 import { useGetCurrentUserQuery } from './redux/features/apiSlice';
 import { setCredentials } from './redux/features/authSlice';
 import { selectTheme } from './redux/features/themeSlice';
+import Chat from './components/Chat/Chat';
 
 function App() {
   const theme = useSelector(selectTheme);
@@ -48,6 +49,7 @@ function App() {
         <Route path="*" element={<ErrorPage />} />
       </Routes>
       <Footer />
+      <Chat />
     </div>
   );
 }
