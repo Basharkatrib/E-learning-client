@@ -70,12 +70,12 @@ function Navbar() {
                                         <a
                                             href={item.href}
                                             className={`p-2 rounded-[4px] transition-all duration-200 ${theme === 'dark'
-                                                    ? isActive
-                                                        ? 'bg-gray-700 text-white'
-                                                        : 'text-white hover:bg-gray-700'
-                                                    : isActive
-                                                        ? 'bg-gray-100 text-primary'
-                                                        : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
+                                                ? isActive
+                                                    ? 'bg-gray-700 text-white'
+                                                    : 'text-white hover:bg-gray-700'
+                                                : isActive
+                                                    ? 'bg-gray-100 text-primary'
+                                                    : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
                                                 }`}
                                         >
                                             {item.name}
@@ -273,14 +273,16 @@ function Navbar() {
                                     {navItems.map((item) => {
                                         const isActive = currentPath === item.href
 
-                                       return <motion.div>
+                                        return <motion.div>
                                             <Link
                                                 to={item.href}
                                                 onClick={() => setIsOpen(false)}
+                                                // ... existing code ...
                                                 className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
-                                                    ? 'text-gray-200 hover:bg-gray-700/50'
-                                                    : 'text-gray-700 hover:bg-gray-100'
-                                                    } ${isActive ? 'text-primary' : 'text-white'}`}
+                                                        ? `text-gray-200 hover:bg-gray-700/50 ${isActive ? 'bg-gray-700 text-primary' : ''}`
+                                                        : `text-gray-700 hover:bg-gray-100 ${isActive ? 'bg-gray-200 text-primary' : ''}`
+                                                    }`}
+                                            
                                             >
                                                 <span className="font-medium">{item.name}</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
