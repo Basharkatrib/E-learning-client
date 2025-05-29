@@ -61,4 +61,12 @@ export const apiSlice = createApi({
   }),
 });
 
-export const { useRegisterMutation, useLoginMutation, useForgotPasswordMutation, useResetPasswordMutation, useGetCurrentUserQuery, useLogoutMutation, useResendVerificationMutation } = apiSlice;
+export const { 
+  useRegisterMutation, 
+  useLoginMutation, 
+  useForgotPasswordMutation, 
+  useResetPasswordMutation, 
+  useGetCurrentUserQuery, 
+  useLogoutMutation, 
+  useResendVerificationMutation 
+} = apiSlice;

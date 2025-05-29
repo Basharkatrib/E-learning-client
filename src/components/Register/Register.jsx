@@ -15,6 +15,8 @@ import { toast } from 'react-hot-toast';
 function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showResend, setShowResend] = useState(false);
+  const [isTeacher, setIsTeacher] = useState(false);
+const [certificate, setCertificate] = useState(null);
   const theme = useSelector(selectTheme);
   const [registerUser, { isLoading }] = useRegisterMutation();
   const [resendVerification, { isLoading: isResending }] = useResendVerificationMutation();
@@ -54,7 +56,7 @@ function Register() {
         const res = await registerUser(userData).unwrap();
         dispatch(setEmail(values.email));
         toast.success('Registration successful. Please check your email for account verification. A verification link has been sent.');
-        setShowResend(true); // Show the resend button
+        setShowResend(true);
         console.log('Response:', res);
       } catch (err) {
         console.error('Registration failed:', err);
@@ -90,6 +92,30 @@ function Register() {
                 Create an account to unlock exclusive features
               </p>
 
+              {/* Add Account Type Selection */}
+              <div className="mb-6">
+                <div className={`flex gap-4 p-2 rounded-lg ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                  <button
+                    type="button"
+                    onClick={() => setIsTeacher(false)}
+                    className={`flex-1 py-2 rounded-lg transition-all ${
+                      !isTeacher ? 'bg-primary text-white' : ''
+                    }`}
+                  >
+                    Student
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsTeacher(true)}
+                    className={`flex-1 py-2 rounded-lg transition-all ${
+                      isTeacher ? 'bg-primary text-white' : ''
+                    }`}
+                  >
+                    Teacher
+                  </button>
+                </div>
+              </div>
+
               <form onSubmit={formik.handleSubmit} className="space-y-4">
                 {/* Full Name */}
                 <div>
@@ -122,6 +148,20 @@ function Register() {
                     <p className="text-red-500 text-sm">{formik.errors.email}</p>
                   )}
                 </div>
+                {isTeacher && (
+  <div>
+    <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+      Upload Certificate
+    </label>
+    <input
+      type="file"
+      accept=".pdf,.jpg,.jpeg,.png"
+      onChange={(e) => setCertificate(e.target.files[0])}
+      className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
+    />
+  </div>
+)}
+
 
                 {/* Password */}
                 <div>

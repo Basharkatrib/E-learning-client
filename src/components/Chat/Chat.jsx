@@ -21,8 +21,7 @@ const Chat = () => {
     try {
       const client = new InferenceClient(import.meta.env.VITE_HUGGINGFACE_API_KEY);
       const chatCompletion = await client.chatCompletion({
-        provider: "nebius",
-        model: "mistralai/Mistral-Nemo-Instruct-2407",
+        model: "HuggingFaceH4/zephyr-7b-beta",
         messages: [{ role: "user", content: userMessage }],
       });
       const botResponse = chatCompletion.choices[0].message.content;
