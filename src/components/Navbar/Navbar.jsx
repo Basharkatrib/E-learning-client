@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme, selectTheme } from '../../redux/features/themeSlice';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { useTranslation } from 'react-i18next';
 import logo from '../../assets/images/navbar/Logo.svg';
 import UAE from '../../assets/images/navbar/UAE.png';
 import USA from '../../assets/images/navbar/USA.jpeg';
@@ -17,11 +19,20 @@ function Navbar() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const theme = useSelector(selectTheme);
+    const lang = useSelector(selectTranslate);
+    const { t, i18n } = useTranslation();
     const token = useSelector(selectToken);
     const user = useSelector(selectCurrentUser);
     const [logout, { isLoading: logoutLoading }] = useLogoutMutation();
     const location = useLocation()
     const currentPath = location.pathname
+
+    function changeLanguage() {
+        const newLang = lang === 'en' ? 'ar' : 'en';
+        dispatch(toggleLanguage());
+        i18n.changeLanguage(newLang);
+    }
+
 
     useEffect(() => {
         console.log(token);
@@ -78,7 +89,7 @@ function Navbar() {
                                                     : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
                                                 }`}
                                         >
-                                            {item.name}
+                                            {t(item.name)}
                                         </a>
                                     </motion.li>
                                 )
@@ -111,13 +122,13 @@ function Navbar() {
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             className='flex items-center gap-2 cursor-pointer'
-                            onClick={() => setCurrentLang(currentLang === 'En' ? 'Ar' : 'En')}
+                            onClick={() => changeLanguage()}
                         >
                             <span className={theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}>
-                                {currentLang}
+                                {lang === 'en' ? 'العربية' : 'English'}
                             </span>
                             <img
-                                src={currentLang === 'En' ? USA : UAE}
+                                src={lang === 'en' ? UAE : USA}
                                 alt="language"
                                 className='w-7 h-5 object-cover rounded'
                             />
@@ -279,12 +290,12 @@ function Navbar() {
                                                 onClick={() => setIsOpen(false)}
                                                 // ... existing code ...
                                                 className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
-                                                        ? `text-gray-200 hover:bg-gray-700/50 ${isActive ? 'bg-gray-700 text-primary' : ''}`
-                                                        : `text-gray-700 hover:bg-gray-100 ${isActive ? 'bg-gray-200 text-primary' : ''}`
+                                                    ? `text-gray-200 hover:bg-gray-700/50 ${isActive ? 'bg-gray-700 text-primary' : ''}`
+                                                    : `text-gray-700 hover:bg-gray-100 ${isActive ? 'bg-gray-200 text-primary' : ''}`
                                                     }`}
-                                            
+
                                             >
-                                                <span className="font-medium">{item.name}</span>
+                                                <span className="font-medium">{t(item.name)}</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                                 </svg>
