@@ -4,9 +4,7 @@ import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
 import { useForgotPasswordMutation } from '../../redux/features/apiSlice';
-import per1 from '../../assets/images/testimonials/image-1.png';
-import per2 from '../../assets/images/testimonials/image-2.png';
-import per3 from '../../assets/images/testimonials/image-3.png';
+
 
 function ForgetPassword() {
   const theme = useSelector(selectTheme);

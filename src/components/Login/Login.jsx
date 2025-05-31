@@ -7,9 +7,6 @@ import { useLoginMutation } from '../../redux/features/apiSlice';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Cookies from 'js-cookie';
-import per1 from '../../assets/images/testimonials/image-1.png'
-import per2 from '../../assets/images/testimonials/image-2.png'
-import per3 from '../../assets/images/testimonials/image-3.png'
 import { toast } from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../redux/features/authSlice';

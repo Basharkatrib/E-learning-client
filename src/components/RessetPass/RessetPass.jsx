@@ -5,9 +5,7 @@ import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
 import { useResetPasswordMutation } from '../../redux/features/apiSlice';
 import Cookies from 'js-cookie';
-import per1 from '../../assets/images/testimonials/image-1.png';
-import per2 from '../../assets/images/testimonials/image-2.png';
-import per3 from '../../assets/images/testimonials/image-3.png';
+
 
 function ResetPassword() {
   const theme = useSelector(selectTheme);
