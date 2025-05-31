@@ -103,7 +103,7 @@ function FAQ() {
                                         theme === 'dark' ? 'hover:bg-gray-700/30' : 'hover:bg-gray-50'
                                     } transition-colors duration-200`}
                                 >
-                                    <span className={`text-left font-medium ${
+                                    <span className={`${lang === "ar"? "text-right" : "text-left"} font-medium ${
                                         theme === 'dark' ? 'text-white' : 'text-gray-900'
                                     }`}>
                                         {t(faq.question)}
