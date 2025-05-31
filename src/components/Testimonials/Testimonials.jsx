@@ -2,10 +2,10 @@ import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
 import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
-import image1 from '../../assets/images/testimonials/image-1.png';
-import image2 from '../../assets/images/testimonials/image-2.png';
-import image3 from '../../assets/images/testimonials/image-3.png';
-import image4 from '../../assets/images/testimonials/image-4.png';
+import image1 from '../../assets/images/testimonials/Image-1.png';
+import image2 from '../../assets/images/testimonials/Image-2.png';
+import image3 from '../../assets/images/testimonials/Image-3.png';
+import image4 from '../../assets/images/testimonials/Image-4.png';
 import { useTranslation } from 'react-i18next';
 
 function Testimonials() {
