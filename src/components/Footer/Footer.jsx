@@ -10,7 +10,7 @@ import twitter from '../../assets/images/footer/Twitter.svg';
 import linkedin from '../../assets/images/footer/linkedin.svg';
 import phone from '../../assets/images/footer/phone.svg';
 import location from '../../assets/images/footer/location.svg';
-import logo from '../../assets/images/footer/logo.svg';
+import logo from '../../assets/images/footer/Logo.svg';
 
 // Dark mode icons
 import email_w from '../../assets/images/footer-white/email_w.svg';
