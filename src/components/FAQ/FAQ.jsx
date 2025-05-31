@@ -2,10 +2,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { useTranslation } from 'react-i18next';
 
 function FAQ() {
     const theme = useSelector(selectTheme);
+    const { t } = useTranslation();
     const [openQuestion, setOpenQuestion] = useState(1);
+    const lang = useSelector(selectTranslate);
+
 
     const faqs = [
         {
@@ -40,7 +45,7 @@ function FAQ() {
     ];
 
     return (
-        <div className={`w-full py-16 ${
+        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full py-16 ${
             theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
         }`}>
             <div className="px-4 sm:px-6 lg:px-8">
@@ -54,7 +59,7 @@ function FAQ() {
                                     theme === 'dark' ? 'text-white' : 'text-gray-900'
                                 }`}
                             >
-                                Frequently<br />Asked Questions
+                                {t('Frequently Asked Questions')}
                             </motion.h2>
                             <motion.p 
                                 initial={{ opacity: 0, y: -20 }}
@@ -64,8 +69,7 @@ function FAQ() {
                                     theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                                 }`}
                             >
-                                Still you have any questions? Contact our<br />
-                                Team via support@skillforge.com
+                                {t('Still you have any questions? Contact our Team via support@skillforge.com')}
                             </motion.p>
                             <motion.button
                                 initial={{ opacity: 0, y: -20 }}
@@ -75,7 +79,7 @@ function FAQ() {
                                     theme === 'dark' ? 'text-white' : 'text-gray-900'
                                 } hover:text-primary transition-colors duration-200`}
                             >
-                                See All FAQs
+                                {t('See All FAQs')}
                             </motion.button>
                         </div>
                     </div>
@@ -102,7 +106,7 @@ function FAQ() {
                                     <span className={`text-left font-medium ${
                                         theme === 'dark' ? 'text-white' : 'text-gray-900'
                                     }`}>
-                                        {faq.question}
+                                        {t(faq.question)}
                                     </span>
                                     <motion.span
                                         animate={{ rotate: openQuestion === faq.id ? 45 : 0 }}
@@ -129,14 +133,14 @@ function FAQ() {
                                             <div className={`p-6 text-sm ${
                                                 theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                                             }`}>
-                                                <p className="mb-4">{faq.answer}</p>
+                                                <p className="mb-4">{t(faq.answer)}</p>
                                                 {faq.link && (
                                                     <motion.a
                                                         href={faq.link.url}
                                                         className="flex items-center gap-2 text-primary font-medium hover:text-primary/80 transition-colors duration-200 group"
                                                         whileHover={{ x: 5 }}
                                                     >
-                                                        <span>{faq.link.text}</span>
+                                                        <span>{t(faq.link.text)}</span>
                                                         <svg 
                                                             xmlns="http://www.w3.org/2000/svg" 
                                                             className="h-4 w-4 transform transition-transform duration-200 group-hover:translate-x-1" 

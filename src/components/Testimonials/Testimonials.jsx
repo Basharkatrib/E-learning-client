@@ -1,13 +1,18 @@
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
 import image1 from '../../assets/images/testimonials/image-1.png';
 import image2 from '../../assets/images/testimonials/image-2.png';
 import image3 from '../../assets/images/testimonials/image-3.png';
 import image4 from '../../assets/images/testimonials/image-4.png';
+import { useTranslation } from 'react-i18next';
 
 function Testimonials() {
+    const { t } = useTranslation();
     const theme = useSelector(selectTheme);
+    const lang = useSelector(selectTranslate);
+
 
     const testimonials = [
         {
@@ -63,7 +68,7 @@ function Testimonials() {
     };
 
     return (
-        <div className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-16 ${
+        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-16 ${
             theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
         }`}>
             {/* <div className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
@@ -78,7 +83,7 @@ function Testimonials() {
                             theme === 'dark' ? 'text-white' : 'text-gray-900'
                         }`}
                     >
-                        Our Testimonials
+                        {t('Our Testimonials')}
                     </motion.h2>
                     <motion.p 
                         initial={{ opacity: 0, x: -20 }}
@@ -88,7 +93,7 @@ function Testimonials() {
                             theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                         } md:w-3/4`}
                     >
-                        Lorem ipsum dolor sit amet consectetur. Tempus tincidunt etiam eget elit id imperdiet et. Cras eu sit dignissim lorem nibh et. Ac cum eget habitasse in velit fringilla feugiat senectus in.
+                        {t('Hear what our learners have to say about their experience with LearNova. Real stories, real results.')}
                     </motion.p>
                 </div>
                 <motion.button 
@@ -96,7 +101,7 @@ function Testimonials() {
                     whileTap={{ scale: 0.95 }}
                     className="bg-primary text-white px-6 py-3 rounded-md whitespace-nowrap hover:bg-primary/90 transition-all duration-200 font-medium shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40"
                 >
-                    View All
+                    {t('View All')}
                 </motion.button>
             </div>
 
@@ -124,7 +129,7 @@ function Testimonials() {
                         <p className={`text-base leading-relaxed ${
                             theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                         }`}>
-                            {testimonial.text}
+                            {t(testimonial.text)}
                         </p>
                         
                         <div className="flex items-center justify-between mt-4">
@@ -140,12 +145,12 @@ function Testimonials() {
                                     <span className={`font-medium ${
                                         theme === 'dark' ? 'text-white' : 'text-gray-900'
                                     }`}>
-                                        {testimonial.name}
+                                        {t(testimonial.name)}
                                     </span>
                                     <span className={`text-sm ${
                                         theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                                     }`}>
-                                        {testimonial.role}
+                                        {t(testimonial.role)}
                                     </span>
                                 </div>
                             </div>
@@ -154,7 +159,7 @@ function Testimonials() {
                                 whileTap={{ scale: 0.95 }}
                                 className={`text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200 flex items-center gap-2`}
                             >
-                                Read Full Story
+                                {t('Read Full Story')}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>

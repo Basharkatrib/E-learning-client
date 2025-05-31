@@ -1,5 +1,8 @@
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { useTranslation } from 'react-i18next';
+
 
 import email from '../../assets/images/footer/email.svg';
 import facebook from '../../assets/images/footer/facebook.svg';
@@ -21,6 +24,10 @@ import { motion } from 'framer-motion';
 
 function Footer() {
   const theme = useSelector(selectTheme);
+  const { t } = useTranslation();
+  const lang = useSelector(selectTranslate);
+
+
 
   const navigation = {
     home: [
@@ -61,6 +68,7 @@ function Footer() {
 
   return (
     <footer
+    dir={lang === 'ar' ? 'rtl' : 'ltr'}
       className={`${
         theme === 'dark' ? 'bg-gray-900' : 'bg-white'
       } border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}
@@ -85,7 +93,7 @@ function Footer() {
               <div className="flex items-center gap-2">
                 <img src={theme === 'dark' ? location_w : location} alt="location" className="w-5 h-5" />
                 <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Somewhere in the World
+                  {t('Somewhere in the World')}
                 </span>
               </div>
             </div>
@@ -93,7 +101,7 @@ function Footer() {
 
           <div className="md:col-span-3">
             <h3 className={`text-sm font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              Home
+              {t('Home')}
             </h3>
             <ul className="space-y-3">
               {navigation.home.map((item) => (
@@ -104,7 +112,7 @@ function Footer() {
                       theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                     }`}
                   >
-                    {item.name}
+                    {t(item.name)}
                   </a>
                 </li>
               ))}
@@ -113,7 +121,7 @@ function Footer() {
 
           <div className="md:col-span-3">
             <h3 className={`text-sm font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              About Us
+              {t('About Us')}
             </h3>
             <ul className="space-y-3">
               {navigation.about.map((item) => (
@@ -124,7 +132,7 @@ function Footer() {
                       theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                     }`}
                   >
-                    {item.name}
+                    {t(item.name)}
                   </a>
                 </li>
               ))}
@@ -133,7 +141,7 @@ function Footer() {
 
           <div className="md:col-span-3">
             <h3 className={`text-sm font-semibold mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              Social Profiles
+              {t('Social Profiles')}
             </h3>
             <div className="flex flex-col gap-4">
               {navigation.social.map((item) => (
@@ -159,7 +167,7 @@ function Footer() {
                     />
                   </div>
                   <span className="text-sm group-hover:text-primary transition-colors duration-200">
-                    {item.name}
+                    {t(item.name)}
                   </span>
                 </motion.a>
               ))}
@@ -169,7 +177,7 @@ function Footer() {
 
         <div className="mt-12 pt-8 border-t border-gray-100 dark:border-gray-800">
           <p className={`text-sm text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            © 2023 SkillForge. All rights reserved.
+            {t('© 2023 SkillForge. All rights reserved.')}
           </p>
         </div>
       </div>

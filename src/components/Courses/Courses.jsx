@@ -4,10 +4,14 @@ import { selectTheme } from '../../redux/features/themeSlice';
 import image1 from '../../assets/images/courses/image-1.png';
 import image2 from '../../assets/images/courses/image-2.png';
 import image3 from '../../assets/images/courses/image-3.png';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+
 
 
 function Courses() {
     const theme = useSelector(selectTheme);
+    const lang = useSelector(selectTranslate);
+
 
     const courses = [
         {
@@ -126,7 +130,7 @@ function Courses() {
     };
 
     return (
-        <div className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-12 ${
+        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-12 ${
             theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'
         }`}>
             <motion.div 

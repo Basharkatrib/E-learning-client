@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme, selectTheme } from '../../redux/features/themeSlice';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { useTranslation } from 'react-i18next';
 import logo from '../../assets/images/navbar/Logo.svg';
 import UAE from '../../assets/images/navbar/UAE.png';
 import USA from '../../assets/images/navbar/USA.jpeg';
@@ -13,19 +15,27 @@ import { logout as logoutAction, selectToken, selectCurrentUser } from '../../re
 function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-    const [currentLang, setCurrentLang] = useState('En');
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const theme = useSelector(selectTheme);
+    const lang = useSelector(selectTranslate);
+    const { t, i18n } = useTranslation();
     const token = useSelector(selectToken);
     const user = useSelector(selectCurrentUser);
     const [logout, { isLoading: logoutLoading }] = useLogoutMutation();
     const location = useLocation()
     const currentPath = location.pathname
 
-    useEffect(() => {
-        console.log(token);
-    }, [token]);
+    function changeLanguage() {
+        dispatch(toggleLanguage());
+    }
+    useEffect(()=>{
+        i18n.changeLanguage(lang);
+    },[lang])
+
+    // useEffect(() => {
+    //     document.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    // }, [lang]);
 
     const navItems = [
         { id: 1, name: 'Home', href: '/' },
@@ -78,7 +88,7 @@ function Navbar() {
                                                     : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
                                                 }`}
                                         >
-                                            {item.name}
+                                            {t(item.name)}
                                         </a>
                                     </motion.li>
                                 )
@@ -111,13 +121,13 @@ function Navbar() {
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             className='flex items-center gap-2 cursor-pointer'
-                            onClick={() => setCurrentLang(currentLang === 'En' ? 'Ar' : 'En')}
+                            onClick={() => changeLanguage()}
                         >
                             <span className={theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}>
-                                {currentLang}
+                                {lang === 'en' ? 'Ar' : 'En'}
                             </span>
                             <img
-                                src={currentLang === 'En' ? USA : UAE}
+                                src={lang === 'en' ? UAE : USA}
                                 alt="language"
                                 className='w-7 h-5 object-cover rounded'
                             />
@@ -201,7 +211,7 @@ function Navbar() {
                                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                                             </svg>
-                                                            <span>Logout</span>
+                                                            <span>{t('Logout')}</span>
                                                         </>
                                                     )}
                                                 </button>
@@ -220,7 +230,7 @@ function Navbar() {
                                                 : 'text-gray-700 hover:bg-gray-100'
                                                 }`}
                                         >
-                                            Sign Up
+                                            {t('Sign Up')}
                                         </motion.button>
                                     </Link>
                                     <Link to="/login">
@@ -229,7 +239,7 @@ function Navbar() {
                                             whileTap={{ scale: 0.95 }}
                                             className='bg-primary text-white cursor-pointer font-bold px-4 py-2 rounded-md transition-colors duration-200'
                                         >
-                                            Login
+                                            {t('Login')}
                                         </motion.button>
                                     </Link>
                                 </div>
@@ -279,12 +289,12 @@ function Navbar() {
                                                 onClick={() => setIsOpen(false)}
                                                 // ... existing code ...
                                                 className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
-                                                        ? `text-gray-200 hover:bg-gray-700/50 ${isActive ? 'bg-gray-700 text-primary' : ''}`
-                                                        : `text-gray-700 hover:bg-gray-100 ${isActive ? 'bg-gray-200 text-primary' : ''}`
+                                                    ? `text-gray-200 hover:bg-gray-700/50 ${isActive ? 'bg-gray-700 text-primary' : ''}`
+                                                    : `text-gray-700 hover:bg-gray-100 ${isActive ? 'bg-gray-200 text-primary' : ''}`
                                                     }`}
-                                            
+
                                             >
-                                                <span className="font-medium">{item.name}</span>
+                                                <span className="font-medium">{t(item.name)}</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                                 </svg>
@@ -308,7 +318,7 @@ function Navbar() {
                                                         <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6z" />
                                                         <path d="M16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
                                                     </svg>
-                                                    Sign Up
+                                                    {t('Sign Up')}
                                                 </motion.button>
                                             </Link>
                                             <Link to="/login" className="block">
@@ -319,7 +329,7 @@ function Navbar() {
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                         <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
                                                     </svg>
-                                                    Login
+                                                    {t('Login')}
                                                 </motion.button>
                                             </Link>
                                         </div>
@@ -336,7 +346,7 @@ function Navbar() {
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                                                     </svg>
-                                                    Profile
+                                                    {t('Profile')}
                                                 </motion.button>
                                             </Link>
                                             <motion.button
@@ -347,7 +357,7 @@ function Navbar() {
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
                                                 </svg>
-                                                Logout
+                                                {t('Logout')}
                                             </motion.button>
                                         </div>
                                     )}

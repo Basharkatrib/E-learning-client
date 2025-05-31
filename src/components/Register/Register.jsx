@@ -16,7 +16,7 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showResend, setShowResend] = useState(false);
   const [isTeacher, setIsTeacher] = useState(false);
-const [certificate, setCertificate] = useState(null);
+  const [certificate, setCertificate] = useState(null);
   const theme = useSelector(selectTheme);
   const [registerUser, { isLoading }] = useRegisterMutation();
   const [resendVerification, { isLoading: isResending }] = useResendVerificationMutation();

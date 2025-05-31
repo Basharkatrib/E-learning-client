@@ -2,15 +2,20 @@ import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
 import Vector from '../../assets/images/benefits/Vector.svg'
+import { useTranslation } from 'react-i18next';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+
 
 function Benefits() {
     const theme = useSelector(selectTheme);
+    const lang = useSelector(selectTranslate);
+    const { t } = useTranslation();
 
     const benefits = [
         {
             id: 1,
             title: "Flexible Learning",
-            description: "Learn at your own pace with 24/7 access to courses. Set your own schedule and learn when it's most convenient for you.",
+            description: "Learn at your own pace with 24/7 access to courses. Set your own schedule and learn when it's most convenient for you",
             icon: "📚"
         },
         {
@@ -68,7 +73,7 @@ function Benefits() {
     };
 
     return (
-        <div className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-12 ${
+        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-12 ${
             theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'
         }`}>
             <motion.div 
@@ -85,7 +90,7 @@ function Benefits() {
                             theme === 'dark' ? 'text-white' : 'text-gray-900'
                         }`}
                     >
-                        Why Choose Us
+                        {t('Why Choose Us')}
                     </motion.h2>
                     <motion.p 
                         initial={{ opacity: 0, x: -20 }}
@@ -95,7 +100,7 @@ function Benefits() {
                             theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                         }`}
                     >
-                        Discover the advantages that set our learning platform apart and help you achieve your educational goals.
+                        {t('Discover the advantages that set our learning platform apart and help you achieve your educational goals.')}
                     </motion.p>
                 </div>
                 <motion.button 
@@ -103,7 +108,7 @@ function Benefits() {
                     whileTap={{ scale: 0.95 }}
                     className="bg-primary text-white px-6 py-3 rounded-md whitespace-nowrap hover:bg-primary/90 transition-all duration-200 font-medium shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40"
                 >
-                    Explore All Benefits
+                    {t('Explore All Benefits')}
                 </motion.button>
             </motion.div>
 
@@ -136,12 +141,12 @@ function Benefits() {
                         <h2 className={`text-2xl font-bold ${
                             theme === 'dark' ? 'text-white' : 'text-gray-900'
                         }`}>
-                            {benefit.title}
+                            {t(benefit.title)}
                         </h2>
                         <p className={`${
                             theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                         }`}>
-                            {benefit.description}
+                            {t(benefit.description)}
                         </p>
                         <motion.div 
                             className="w-full flex justify-end"

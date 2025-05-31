@@ -1,13 +1,20 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import banner2 from '../../assets/images/banner/image-2.avif';
 import banner3 from '../../assets/images/banner/image-3.avif';
 import banner1 from '../../assets/images/banner/image-1.avif';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { useSelector } from 'react-redux';
+
 
 
 
 const Banner = () => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const { t, i18n } = useTranslation();
+    const lang = useSelector(selectTranslate);
+
     
     const images = [
         {
@@ -36,7 +43,7 @@ const Banner = () => {
     }, []);
 
     return (
-        <div className="relative h-[calc(100vh-72px)]  overflow-hidden mt-18">
+        <div className="relative h-[calc(100vh-72px)] overflow-hidden mt-18">
             <AnimatePresence mode='wait'>
                 <motion.div
                     key={currentImageIndex}
@@ -56,8 +63,9 @@ const Banner = () => {
             </AnimatePresence>
 
             <div className="relative z-10 h-full flex items-center">
-                <div className="container px-4 sm:px-6 lg:px-8">
-                    <div className="max-w-3xl">
+                {/* Remove the container class and use padding directly */}
+                <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className={`w-full ${lang === 'ar' ? "flex flex-col items-end text-right" : ""}`}>
                         <AnimatePresence mode='wait'>
                             <motion.div
                                 key={currentImageIndex}
@@ -67,21 +75,21 @@ const Banner = () => {
                                 transition={{ duration: 0.5 }}
                             >
                                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-                                    {images[currentImageIndex].title}
+                                    {t(images[currentImageIndex].title)}
                                 </h1>
                                 <p className="text-xl md:text-2xl text-gray-200 mb-10">
-                                    {images[currentImageIndex].subtitle}
+                                    {t(images[currentImageIndex].subtitle)}
                                 </p>
                             </motion.div>
                         </AnimatePresence>
 
-                        <div className="flex flex-wrap gap-6">
+                        <div className={`flex flex-wrap gap-6 ${lang === "ar"? "items-end justify-end" : ""}`}>
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 className="bg-primary px-8 py-4  text-white  rounded-full font-semibold text-lg transition-all duration-300 flex items-center gap-2"
                             >
-                                Start Learning
+                                {t('Start Learning')}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                 </svg>
@@ -91,7 +99,7 @@ const Banner = () => {
                                 whileTap={{ scale: 0.95 }}
                                 className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300"
                             >
-                                View Courses
+                                {t('View Courses')}
                             </motion.button>
                         </div>
 
@@ -121,4 +129,4 @@ const Banner = () => {
     );
 };
 
-export default Banner; 
+export default Banner;
