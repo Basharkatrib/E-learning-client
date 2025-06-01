@@ -5,7 +5,7 @@ import { toggleTheme, selectTheme } from '../../redux/features/themeSlice';
 import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
 import logo from '../../assets/images/navbar/Logo.svg';
-import UAE from '../../assets/images/navbar/UAE.png';
+import SYR from '../../assets/images/navbar/SYR.png';
 import USA from '../../assets/images/navbar/USA.jpeg';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useLogoutMutation } from '../../redux/features/apiSlice';
@@ -125,9 +125,9 @@ function Navbar() {
                                 {lang === 'en' ? 'Ar' : 'En'}
                             </span>
                             <img
-                                src={lang === 'en' ? UAE : USA}
+                                src={lang === 'en' ? SYR : USA}
                                 alt="language"
-                                className='w-7 h-5 object-cover rounded'
+                                className='w-9 h-7 object-cover rounded'
                             />
                         </motion.div>
 
