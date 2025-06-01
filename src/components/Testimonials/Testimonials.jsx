@@ -160,7 +160,7 @@ function Testimonials() {
                                 className={`text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200 flex items-center gap-2`}
                             >
                                 {t('Read Full Story')}
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ltr:rotate-0 rtl:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                             </motion.button>

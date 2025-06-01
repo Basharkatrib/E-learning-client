@@ -152,7 +152,7 @@ function Benefits() {
                             className="w-full flex justify-end"
                             
                         >
-                            <img src={Vector} alt="Learn more" className={`w-6 h-6 cursor-pointer ${
+                            <img src={Vector} alt="Learn more" className={`w-6 h-6 cursor-pointer ltr:rotate-0 rtl:rotate-270 transition-transform duration-300 ${
                                 theme === 'dark' ? 'brightness-200' : ''
                             }`} />
                         </motion.div>

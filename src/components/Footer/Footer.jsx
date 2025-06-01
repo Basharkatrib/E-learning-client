@@ -76,12 +76,12 @@ function Footer() {
       <div className="px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-3 flex flex-col gap-6 items-start">
-            <img src={logo} alt="SkillForge" className="h-10 w-auto" />
+            <img src={logo} alt="LearNova" className="h-10 w-auto" />
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <img src={theme === 'dark' ? email_w : email} alt="email" className="w-5 h-5" />
                 <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                  hello@skillforge.com
+                  hello@LearNova.com
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -177,7 +177,7 @@ function Footer() {
 
         <div className="mt-12 pt-8 border-t border-gray-100 dark:border-gray-800">
           <p className={`text-sm text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            {t('© 2023 SkillForge. All rights reserved.')}
+            {t('© 2023 LearNova. All rights reserved.')}
           </p>
         </div>
       </div>

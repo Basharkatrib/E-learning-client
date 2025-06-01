@@ -69,7 +69,7 @@ function FAQ() {
                                     theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                                 }`}
                             >
-                                {t('Still you have any questions? Contact our Team via support@skillforge.com')}
+                                {t('Still you have any questions? Contact our Team via support@LearNova.com')}
                             </motion.p>
                             <motion.button
                                 initial={{ opacity: 0, y: -20 }}
@@ -143,7 +143,7 @@ function FAQ() {
                                                         <span>{t(faq.link.text)}</span>
                                                         <svg 
                                                             xmlns="http://www.w3.org/2000/svg" 
-                                                            className="h-4 w-4 transform transition-transform duration-200 group-hover:translate-x-1" 
+                                                            className="h-4 w-4 ltr:rotate-0 rtl:rotate-180  transform transition-transform duration-200 group-hover:translate-x-1" 
                                                             fill="none" 
                                                             viewBox="0 0 24 24" 
                                                             stroke="currentColor"

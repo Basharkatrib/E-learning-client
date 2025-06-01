@@ -31,8 +31,8 @@ function Login() {
             remember: false
         },
         validationSchema: Yup.object({
-            email: Yup.string().email('Invalid email').required('Email is required'),
-            password: Yup.string().required('Password is required'),
+            email: Yup.string().email(t('Invalid email')).required(t('Email is required')),
+            password: Yup.string().required(t('Password is required')),
         }),
         onSubmit: async (values) => {
             try {
@@ -45,11 +45,11 @@ function Login() {
                     user: res.user,
                     token: res.token
                 }));
-                toast.success('You are logged in successfully');
+                toast.success(t('You are logged in successfully'));
                 navigate('/');
             } catch (err) {
                 console.error('Login failed:', err);
-                toast.error(err?.data?.message || 'Login failed. Please try again.');
+                toast.error(err?.data?.message || t('Login failed. Please try again.'));
             }
         }
 
@@ -85,7 +85,7 @@ function Login() {
                                     <input
                                         type="email"
                                         name="email"
-                                        placeholder={t("Enter your Email")}
+                                        placeholder={t("Enter Your Email")}
                                         onChange={formik.handleChange}
                                         onBlur={formik.handleBlur}
                                         value={formik.values.email}
@@ -107,7 +107,7 @@ function Login() {
                                         <input
                                             type={showPassword ? "text" : "password"}
                                             name="password"
-                                            placeholder={t("Enter your Password")}
+                                            placeholder={t("Enter Your Password")}
                                             onChange={formik.handleChange}
                                             onBlur={formik.handleBlur}
                                             value={formik.values.password}
@@ -119,7 +119,7 @@ function Login() {
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                                            className={`absolute ${lang === "ar"? "left-3" : "right-3"}  top-1/2 transform -translate-y-1/2`}
                                         >
                                             {showPassword ? (
                                                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} viewBox="0 0 20 20" fill="currentColor">
@@ -140,7 +140,7 @@ function Login() {
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center">
+                                    <div className="flex items-center gap-2">
                                         <input
                                             type="checkbox"
                                             name="remember"
@@ -148,7 +148,7 @@ function Login() {
                                             checked={formik.values.remember}
                                             className="rounded border-gray-300 text-primary focus:ring-primary"
                                         />
-                                        <label htmlFor="remember" className={`ml-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        <label htmlFor="remember" className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                                             {t('Remember me')}
                                         </label>
                                     </div>

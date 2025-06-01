@@ -198,7 +198,7 @@ function Register() {
                 </div>
 
                 {/* Terms */}
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     name="terms"
@@ -206,7 +206,7 @@ function Register() {
                     checked={formik.values.terms}
                     className="rounded border-gray-300 text-primary focus:ring-primary"
                   />
-                  <label className={`ml-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <label className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                     {t('I agree with')}{' '}
                     <Link to="/terms" className="text-primary hover:underline">{t('Terms of Use')}</Link> {t('and')}{' '}
                     <Link to="/privacy" className="text-primary hover:underline">{t("Privacy Policy")}</Link>
