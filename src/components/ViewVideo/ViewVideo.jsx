@@ -3,9 +3,13 @@ import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
 import time from '../../assets/images/ViewVideo/time.svg';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { useTranslation } from 'react-i18next';
 
 const ViewVideo = () => {
     const theme = useSelector(selectTheme);
+    const lang = useSelector(selectTranslate);
+    const { t } = useTranslation();
     const isDark = theme === 'dark';
 
     const DATA = [
@@ -60,11 +64,11 @@ const ViewVideo = () => {
     ];
 
     return (
-        <div className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-12 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
+        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-12 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
 
             {/* Header */}
             <div className="flex flex-col mt-10 lg:flex-row justify-between items-start lg:items-center gap-6">
-                <h1 className="font-extrabold text-3xl sm:text-4xl">UI/UX Design Course</h1>
+                <h1 className="font-extrabold text-3xl sm:text-4xl bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent">UI/UX Design Course</h1>
                 <div className="w-full lg:w-1/2 text-base sm:text-lg">
                     <p>
                         Welcome to our UI/UX Design course! This comprehensive program will equip you with the knowledge and skills to create exceptional user interfaces (UI) and enhance user experiences (UX). Dive into the world of design thinking, wireframing, prototyping, and usability testing. Below is an overview of the curriculum.

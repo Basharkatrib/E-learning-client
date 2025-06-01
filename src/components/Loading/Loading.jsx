@@ -3,10 +3,16 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { useTranslation } from 'react-i18next';
+
 const Loading = () => {
     const theme = useSelector(selectTheme);
+    const lang = useSelector(selectTranslate);
+    const { t } = useTranslation();
+
     return (
-        <div className={` ${theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : 'bg-white text-black border-gray-100'} flex items-center justify-center h-screen`}>
+        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={` ${theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : 'bg-white text-black border-gray-100'} flex items-center justify-center h-screen`}>
             <div className="flex flex-col items-center space-y-6">
                 {/* Spinner */}
                 <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin "></div>
@@ -18,7 +24,7 @@ const Loading = () => {
                     transition={{ delay: 0.3, duration: 0.6 }}
                     className={`text-2xl font-bold ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
                 >
-                    Please wait for loading...
+                    {t('Please wait for loading...')}
                 </motion.p>
             </div>
         </div>

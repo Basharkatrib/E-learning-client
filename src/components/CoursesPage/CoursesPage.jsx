@@ -1,11 +1,14 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { useTranslation } from 'react-i18next';
 import CourseCard from './CourseCard';
 
 import img1 from '../../assets/images/courses/Image-1.png';
 import img2 from '../../assets/images/courses/Image-2.png';
 import img3 from '../../assets/images/courses/Image-3.png';
+
 
 const courses = [
   {
@@ -47,18 +50,20 @@ const courses = [
 ];
 
 export default function CoursesPage() {
-  const theme = useSelector(selectTheme); 
+  const theme = useSelector(selectTheme);
+  const lang = useSelector(selectTranslate);
+  const { t } = useTranslation();
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden">
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="relative min-h-screen w-full overflow-x-hidden">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/10 via-blue-200/30 to-white dark:from-gray-900 dark:via-primary/10 dark:to-gray-950 transition-all duration-500" />
       <div className="mt-10 pt-16 pb-6 px-4 sm:px-6 lg:px-8">
         <div className=" mb-14 flex flex-col sm:flex-row">
           <h1 className="text-4xl md:text-4xl font-extrabold bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent drop-shadow-lg mb-4">
-            Online Courses on Design and Development
+            {t('Online Courses on Design and Development')}
           </h1>
-          <p className={`text-lg ${theme === 'dark'? "text-white" : "dark:text-gray-300"} mt-2 max-w-2xl mx-auto font-medium`}>
-            Explore our curated courses to help you grow your design and development skills step-by-step.
+          <p className={`text-lg ${theme === 'dark' ? "text-white" : "dark:text-gray-300"} mt-2 max-w-2xl mx-auto font-medium`}>
+            {t('Explore our curated courses to help you grow your design and development skills step-by-step.')}
           </p>
         </div>
         <div className="space-y-12 ">

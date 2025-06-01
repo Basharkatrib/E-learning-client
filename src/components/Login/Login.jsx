@@ -11,6 +11,8 @@ import { toast } from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../redux/features/authSlice';
 import { useLocation } from 'react-router-dom';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { useTranslation } from 'react-i18next';
 
 
 function Login() {
@@ -19,6 +21,8 @@ function Login() {
     const navigate = useNavigate();
     const [loginUser, { isLoading, isError, error }] = useLoginMutation();
     const dispatch = useDispatch();
+    const lang = useSelector(selectTranslate);
+    const { t } = useTranslation();
 
     const formik = useFormik({
         initialValues: {
@@ -36,23 +40,23 @@ function Login() {
                     email: values.email,
                     password: values.password,
                 }).unwrap();
-        
+
                 dispatch(setCredentials({
                     user: res.user,
                     token: res.token
                 }));
                 toast.success('You are logged in successfully');
-                navigate('/'); 
+                navigate('/');
             } catch (err) {
                 console.error('Login failed:', err);
                 toast.error(err?.data?.message || 'Login failed. Please try again.');
             }
         }
-        
+
     });
 
     return (
-        <div className="min-h-screen pt-16 pb-8 flex items-center justify-center mt-10">
+        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen pt-16 pb-8 flex items-center justify-center mt-10">
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-center">
                     {/* Login Form */}
@@ -67,21 +71,21 @@ function Login() {
                                 }`}
                         >
                             <h2 className={`text-2xl font-bold text-center mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                Login
+                                {t('Login')}
                             </h2>
                             <p className={`text-center mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                                Welcome back! Please login to your account
+                                {t('Welcome back! Please login to your account')}
                             </p>
 
                             <form onSubmit={formik.handleSubmit} className="space-y-4">
                                 <div>
                                     <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        Email
+                                        {t('Email')}
                                     </label>
                                     <input
                                         type="email"
                                         name="email"
-                                        placeholder="Enter your Email"
+                                        placeholder={t("Enter your Email")}
                                         onChange={formik.handleChange}
                                         onBlur={formik.handleBlur}
                                         value={formik.values.email}
@@ -97,13 +101,13 @@ function Login() {
 
                                 <div>
                                     <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        Password
+                                        {t('Password')}
                                     </label>
                                     <div className="relative">
                                         <input
                                             type={showPassword ? "text" : "password"}
                                             name="password"
-                                            placeholder="Enter your Password"
+                                            placeholder={t("Enter your Password")}
                                             onChange={formik.handleChange}
                                             onBlur={formik.handleBlur}
                                             value={formik.values.password}
@@ -145,11 +149,11 @@ function Login() {
                                             className="rounded border-gray-300 text-primary focus:ring-primary"
                                         />
                                         <label htmlFor="remember" className={`ml-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                                            Remember me
+                                            {t('Remember me')}
                                         </label>
                                     </div>
                                     <Link to="/forget" className="text-sm text-primary hover:underline">
-                                        Forgot Password?
+                                        {t("Forgot Password?")}
                                     </Link>
                                 </div>
 
@@ -158,12 +162,12 @@ function Login() {
                                     disabled={isLoading}
                                     className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50"
                                 >
-                                    {isLoading ? 'Logging in...' : 'Login'}
+                                    {isLoading ? t('Logging in...') : t('Login')}
                                 </button>
 
                                 {isError && (
                                     <p className="text-red-500 text-sm text-center mt-2">
-                                        {error?.data?.message || 'Something went wrong. Please try again.'}
+                                        {error?.data?.message || t('Something went wrong. Please try again.')}
                                     </p>
                                 )}
 
@@ -173,7 +177,7 @@ function Login() {
                                     </div>
                                     <div className="relative flex justify-center text-sm">
                                         <span className={`px-2 ${theme === 'dark' ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-500'}`}>
-                                            OR
+                                            {t('OR')}
                                         </span>
                                     </div>
                                 </div>
@@ -199,14 +203,14 @@ function Login() {
                                         </defs>
                                     </svg>
                                     <span className={theme === 'dark' ? 'text-white' : 'text-gray-700'}>
-                                        Login with Google
+                                        {t('Login with Google')}
                                     </span>
                                 </button>
 
                                 <p className={`text-center text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                                    Don't have an account?{' '}
+                                    {t("Don't have an account?")}{' '}
                                     <Link to="/signup" className="text-primary hover:underline">
-                                        Sign Up
+                                        {t('Sign Up')}
                                     </Link>
                                 </p>
                             </form>

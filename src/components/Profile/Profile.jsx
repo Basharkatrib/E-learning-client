@@ -4,11 +4,16 @@ import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
 import { selectCurrentUser } from '../../redux/features/authSlice';
 import profilePic from '../../assets/images/testimonials/me.jpg';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { useTranslation } from 'react-i18next';
 
 function ProfilePage() {
   const theme = useSelector(selectTheme);
   const currentUser = useSelector(selectCurrentUser);
   const [editMode, setEditMode] = useState(false);
+  const lang = useSelector(selectTranslate);
+  const { t } = useTranslation();
+
   const [user, setUser] = useState({
     name: '',
     email: '',
@@ -38,7 +43,7 @@ function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 mt-10">
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen flex items-center justify-center px-4 mt-10">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -75,7 +80,7 @@ function ProfilePage() {
                 : 'bg-primary hover:bg-primary/90 text-white'
             }`}
           >
-            {editMode ? 'Cancel' : 'Edit Profile'}
+            {editMode ? t('Cancel') : t('Edit Profile')}
           </motion.button>
         </div>
 
@@ -83,7 +88,7 @@ function ProfilePage() {
           <h2 className={`text-2xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Profile</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Name</label>
+              <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{t('Name')}</label>
               <input
                 name="name"
                 value={user.name}
@@ -98,7 +103,7 @@ function ProfilePage() {
             </div>
 
             <div>
-              <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Email</label>
+              <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{t('Email')}</label>
               <input
                 name="email"
                 type="email"
@@ -114,7 +119,7 @@ function ProfilePage() {
             </div>
 
             <div>
-              <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Bio</label>
+              <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{t('Bio')}</label>
               <textarea
                 name="bio"
                 value={user.bio}

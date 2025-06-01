@@ -3,12 +3,16 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
+import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { useTranslation } from 'react-i18next';
 
 function VerifyEmail() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const theme = useSelector(selectTheme);
     const [verificationStatus, setVerificationStatus] = useState('verifying');
+    const lang = useSelector(selectTranslate);
+    const { t } = useTranslation();
 
     useEffect(() => {
         const verifyEmail = async () => {
@@ -52,7 +56,7 @@ function VerifyEmail() {
     
 
     return (
-        <div className="min-h-screen pt-16 pb-8 flex items-center justify-center">
+        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen pt-16 pb-8 flex items-center justify-center">
             <div className="container mx-auto px-4">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -66,10 +70,10 @@ function VerifyEmail() {
                         <>
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                             <h2 className={`text-2xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                Verifying your email...
+                                {t('Verifying your email...')}
                             </h2>
                             <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                                Please wait while we verify your email address.
+                                {t('Please wait while we verify your email address.')}
                             </p>
                         </>
                     )}
@@ -82,10 +86,10 @@ function VerifyEmail() {
                                 </svg>
                             </div>
                             <h2 className={`text-2xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                Email Verified Successfully!
+                                {t('Email Verified Successfully!')}
                             </h2>
                             <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                                Your email has been verified. You will be redirected to the login page shortly.
+                                {t('Your email has been verified. You will be redirected to the login page shortly.')}
                             </p>
                         </>
                     )}
@@ -98,16 +102,16 @@ function VerifyEmail() {
                                 </svg>
                             </div>
                             <h2 className={`text-2xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                Verification Failed
+                                {t('Verification Failed')}
                             </h2>
                             <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
-                                We couldn't verify your email. The link may be invalid or expired.
+                                {t("We couldn't verify your email. The link may be invalid or expired.")}
                             </p>
                             <button
                                 onClick={() => navigate('/login')}
                                 className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200"
                             >
-                                Back to Login
+                                {t('Back to Login')}
                             </button>
                         </>
                     )}
