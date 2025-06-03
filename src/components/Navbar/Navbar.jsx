@@ -75,8 +75,8 @@ function Navbar() {
                                 const isActive = currentPath === item.href
                                 return (
                                     <motion.li key={item.id}>
-                                        <a
-                                            href={item.href}
+                                        <Link
+                                            to={item.href}
                                             className={`p-2 rounded-[4px] transition-all duration-200 ${theme === 'dark'
                                                 ? isActive
                                                     ? 'bg-gray-700 text-white'
@@ -87,7 +87,7 @@ function Navbar() {
                                                 }`}
                                         >
                                             {t(item.name)}
-                                        </a>
+                                        </Link>
                                     </motion.li>
                                 )
                             })}
@@ -127,7 +127,7 @@ function Navbar() {
                             <img
                                 src={lang === 'en' ? SYR : USA}
                                 alt="language"
-                                className='w-9 h-7 object-cover rounded'
+                                className='w-8 h-6 object-cover rounded'
                             />
                         </motion.div>
 
