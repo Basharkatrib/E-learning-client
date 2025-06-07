@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Routes, Route } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
@@ -24,9 +25,38 @@ import { useGetCurrentUserQuery } from './redux/features/apiSlice';
 import { setCredentials } from './redux/features/authSlice';
 import { selectTheme } from './redux/features/themeSlice';
 import Chat from './components/Chat/Chat';
+import Pusher from 'pusher-js';
 
 function App() {
   const theme = useSelector(selectTheme);
+
+  useEffect(() => {
+    Pusher.logToConsole = true;
+
+    const pusher = new Pusher(import.meta.env.VITE_PUSHER_API_KEY, {
+      cluster: 'eu',
+    });
+
+    const channel = pusher.subscribe('channel-name');
+    channel.bind('my-event', function(data) {
+      // Show notification using react-hot-toast
+      toast(data.data.message || 'New notification received!', {
+        duration: 4000,
+        position: 'top-right',
+        style: {
+          background: theme === 'dark' ? '#1F2937' : '#fff',
+          color: theme === 'dark' ? '#fff' : '#000',
+          border: '1px solid #6D28D9',
+        },
+        icon: '🔔',
+      });
+    });
+
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+    };
+  }, [theme]);
   
 
   return (
