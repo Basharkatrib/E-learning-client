@@ -19,6 +19,7 @@ function Register() {
   const [showResend, setShowResend] = useState(false);
   const [isTeacher, setIsTeacher] = useState(false);
   const [certificate, setCertificate] = useState(null);
+  const [certificatePreview, setCertificatePreview] = useState(null);
   const theme = useSelector(selectTheme);
   const [registerUser, { isLoading }] = useRegisterMutation();
   const [resendVerification, { isLoading: isResending }] = useResendVerificationMutation();
@@ -30,6 +31,37 @@ function Register() {
   useEffect(() => {
     console.log(email);
   }, [email]);
+
+  const handleCertificateChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(t('File size should not exceed 10MB'));
+        return;
+      }
+      
+      // Validate file type
+      const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+      if (!validTypes.includes(file.type)) {
+        toast.error(t('Invalid file type. Please upload PDF, JPG, JPEG, or PNG'));
+        return;
+      }
+
+      setCertificate(file);
+      
+      // Create preview for images
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setCertificatePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setCertificatePreview(null);
+      }
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -50,21 +82,50 @@ function Register() {
     }),
     onSubmit: async (values) => {
       try {
-        const userData = {
-          name: values.fullName,
-          email: values.email,
-          password: values.password,
-          password_confirmation: values.confirmPassword,
-        };
+        if (isTeacher && certificate) {
+          // Handle registration with certificate
+          const formData = new FormData();
+          formData.append('name', values.fullName);
+          formData.append('email', values.email);
+          formData.append('password', values.password);
+          formData.append('password_confirmation', values.confirmPassword);
+          formData.append('certificate', certificate);
 
-        const res = await registerUser(userData).unwrap();
+          // Debug logs
+          console.log('Certificate file:', certificate);
+          console.log('FormData contents:');
+          for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
+          }
+
+          const res = await registerUser(formData).unwrap();
+          console.log('Registration response:', res);
+        } else {
+          // Handle regular registration without certificate
+          const userData = {
+            name: values.fullName,
+            email: values.email,
+            password: values.password,
+            password_confirmation: values.confirmPassword,
+          };
+
+          const res = await registerUser(userData).unwrap();
+          console.log('Registration response:', res);
+        }
+
         dispatch(setEmail(values.email));
         toast.success(t('Registration successful. Please check your email for account verification. A verification link has been sent.'));
         setShowResend(true);
-        console.log('Response:', res);
       } catch (err) {
-        console.error(t('Registration failed:'), err);
-        toast.error(err?.data?.message || t('Registration failed. Please try again.'));
+        console.error('Registration error:', err);
+        if (err.status === 500) {
+          console.error('Server error details:', err);
+          toast.error(t('Server error. Please try again later.'));
+        } else if (err.data?.message) {
+          toast.error(err.data.message);
+        } else {
+          toast.error(t('Registration failed. Please try again.'));
+        }
       }
     }
   });
@@ -151,19 +212,32 @@ function Register() {
                   )}
                 </div>
                 {isTeacher && (
-                  <div>
+                  <div className="space-y-2">
                     <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                       {t('Upload Certificate')}
                     </label>
                     <input
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => setCertificate(e.target.files[0])}
+                      onChange={handleCertificateChange}
                       className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
                     />
+                    {certificatePreview && (
+                      <div className="mt-2">
+                        <img 
+                          src={certificatePreview} 
+                          alt="Certificate preview" 
+                          className="max-w-xs rounded-lg shadow-md"
+                        />
+                      </div>
+                    )}
+                    {certificate && !certificatePreview && (
+                      <div className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {t('Selected file:')} {certificate.name}
+                      </div>
+                    )}
                   </div>
                 )}
-
 
                 {/* Password */}
                 <div>
