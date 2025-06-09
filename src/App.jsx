@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Routes, Route } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { addNotification } from './redux/features/notificationsSlice';
 
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
@@ -29,6 +30,7 @@ import Pusher from 'pusher-js';
 
 function App() {
   const theme = useSelector(selectTheme);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     Pusher.logToConsole = true;
@@ -39,7 +41,15 @@ function App() {
 
     const channel = pusher.subscribe('channel-name');
     channel.bind('my-event', function(data) {
-      // Show notification using react-hot-toast
+      // Add notification to Redux store
+      dispatch(addNotification({
+        id: Date.now(), // Use timestamp as unique ID
+        message: data.data.message || 'New notification received!',
+        read: false,
+        timestamp: new Date().toISOString()
+      }));
+
+      // Show toast notification
       toast(data.data.message || 'New notification received!', {
         duration: 4000,
         position: 'top-right',
@@ -56,8 +66,9 @@ function App() {
       channel.unbind_all();
       channel.unsubscribe();
     };
-  }, [theme]);
+  }, [theme, dispatch]);
   
+
 
   return (
     <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
@@ -69,7 +80,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forget" element={<ForgetPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/me" element={ <ProtectedRoute><ProfilePage /></ProtectedRoute> } />
+        <Route path="/me" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/contactus" element={<Contact />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/error" element={<ErrorPage />} />
