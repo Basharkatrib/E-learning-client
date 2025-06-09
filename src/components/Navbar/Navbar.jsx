@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme, selectTheme } from '../../redux/features/themeSlice';
@@ -29,13 +29,24 @@ function Navbar() {
     function changeLanguage() {
         dispatch(toggleLanguage());
     }
-    useEffect(()=>{
+    useEffect(() => {
         i18n.changeLanguage(lang);
-    },[lang])
+    }, [lang])
 
-    // useEffect(() => {
-    //     document.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    // }, [lang]);
+    // 
+    const [isNotifOpen, setIsNotifOpen] = useState(false);
+    const notifRef = useRef();
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (notifRef.current && !notifRef.current.contains(event.target)) {
+                setIsNotifOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
 
     const navItems = [
         { id: 1, name: 'Home', href: '/' },
@@ -44,6 +55,10 @@ function Navbar() {
         { id: 4, name: 'Pricing', href: '/pricing' },
         { id: 5, name: 'Contact', href: '/contactus' }
     ];
+    const [notifications, setNotifications] = useState([
+        { id: 1, message: '👨‍🏫 This user is a teacher' },
+        { id: 2, message: '👨‍🎓 This user is a student' }
+    ]);
 
     const handleLogout = async () => {
         try {
@@ -62,7 +77,7 @@ function Navbar() {
     };
 
     return (
-        <nav  dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`fixed top-0 w-full left-0 right-0 z-50 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} shadow-md transition-colors duration-200`}>
+        <nav dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`fixed top-0 w-full left-0 right-0 z-50 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} shadow-md transition-colors duration-200`}>
             <div className="px-4 sm:px-6 lg:px-8 w-full">
                 <div className="flex justify-between items-center py-4 w-full">
                     <div className="flex items-center gap-2">
@@ -132,6 +147,76 @@ function Navbar() {
                                 className='w-7 h-5 object-cover rounded'
                             />
                         </motion.div>
+
+
+                        {/* BUTTON  Notifications */}
+                        <div className="relative" ref={notifRef}>
+                            <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setIsNotifOpen(prev => !prev)}
+                                className={`p-2 rounded-full transition-colors duration-200 ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6 text-primary"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C8.67 6.165 8 7.388 8 8.75v5.408c0 .538-.214 1.055-.595 1.437L6 17h5m4 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                    />
+                                </svg>
+
+                                {notifications.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                        {notifications.length}
+                                    </span>
+                                )}
+                            </motion.button>
+
+                            <AnimatePresence>
+                                {isNotifOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className={`absolute right-0 mt-2 w-72 rounded-md shadow-lg z-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                                    >
+                                        <div className="p-4 border-b border-gray-200 dark:border-gray-700 text-3xl sm:text-4xl font-bold">
+                                            Notifications list
+                                        </div>
+                                        <ul className="max-h-60 overflow-y-auto">
+                                            {notifications.length === 0 ? (
+                                                <li className="px-4 py-2 text-sm text-center opacity-60">No notifications</li>
+                                            ) : (
+                                                notifications.map((notif) => (
+                                                    <li
+                                                        key={notif.id}
+                                                        className="flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150"
+                                                    >
+                                                        <span>{notif.message}</span>
+                                                        <button
+                                                            onClick={() =>
+                                                                setNotifications((prev) => prev.filter((n) => n.id !== notif.id))
+                                                            }
+                                                            className="ml-2 text-xs text-red-500 hover:text-red-700"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </li>
+                                                ))
+                                            )}
+                                        </ul>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                        {/* END BUTTON  Notifications */}
 
                         {/* User Menu */}
                         <div className="hidden md:flex items-center gap-4">

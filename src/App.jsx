@@ -27,7 +27,7 @@ import Chat from './components/Chat/Chat';
 
 function App() {
   const theme = useSelector(selectTheme);
-  
+
 
   return (
     <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
@@ -39,7 +39,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forget" element={<ForgetPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/me" element={ <ProtectedRoute><ProfilePage /></ProtectedRoute> } />
+        <Route path="/me" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/contactus" element={<Contact />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/error" element={<ErrorPage />} />

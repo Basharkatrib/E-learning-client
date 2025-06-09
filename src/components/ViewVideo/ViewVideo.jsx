@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
 import time from '../../assets/images/ViewVideo/time.svg';
+import star from '../../assets/images/ViewVideo/star.svg';
 
 const ViewVideo = () => {
     const theme = useSelector(selectTheme);
@@ -84,6 +85,42 @@ const ViewVideo = () => {
                     ></iframe>
                 </div>
             </div>
+
+            {/* CourseHighlights */}
+            <div className="flex flex-col items-center px-4 py-10 space-y-8">
+                <div className="w-full lg:w-2/3 text-center">
+                    <h1 className="text-3xl sm:text-4xl font-extrabold">
+                        Quick information about the course
+                    </h1>
+                </div>
+
+                <div className="w-full lg:w-2/3 flex flex-col sm:flex-row justify-around items-center p-6 rounded-xl shadow-lg">
+                    <div className="text-center px-4">
+                        <h3 className="font-extrabold sm:text-4xl">4 Units</h3>
+                        <p className="text-sm mt-2">Get insight into the subject and learn the basics.</p>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center px-4 border-t sm:border-t-0 sm:border-l border-gray-300">
+                        <div className="flex items-center space-x-2 mt-4 sm:mt-0">
+                            <div className="w-6 h-6">
+                                <img src={star} alt="star" />
+                            </div>
+                            <h3 className="font-extrabold">(4.7)</h3>
+                        </div>
+                    </div>
+
+                    <div className="text-center px-4 border-t sm:border-t-0 sm:border-l border-gray-300 mt-4 sm:mt-0">
+                        <h3 className="font-extrabold sm:text-4xl">Beginner level</h3>
+                    </div>
+
+                    <div className="text-center px-4 border-t sm:border-t-0 sm:border-l border-gray-300 mt-4 sm:mt-0">
+                        <h3 className="font-extrabold sm:text-4xl">72 Hour</h3>
+                        <p className="text-sm mt-2">Two hours every week</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* End CourseHighlights */}
 
             {/* Cards */}
             <motion.div
