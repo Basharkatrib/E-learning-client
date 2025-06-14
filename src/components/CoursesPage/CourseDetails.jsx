@@ -4,9 +4,9 @@ import { selectTheme } from '../../redux/features/themeSlice';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import FAQ from '../FAQ/FAQ';
-import image1 from '../../assets/images/courses/image-1.png';
-import image2 from '../../assets/images/courses/image-2.png';
-import image3 from '../../assets/images/courses/image-3.png';
+import image1 from '../../assets/images/courses/Image-1.png';
+import image2 from '../../assets/images/courses/Image-2.png';
+import image3 from '../../assets/images/courses/Image-3.png';
 
 const dummyCourse = {
     title: 'JavaScript Specialization for Beginners',
