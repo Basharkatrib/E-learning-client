@@ -262,7 +262,7 @@ function Navbar() {
                                                                         <div className={`w-2 h-2 rounded-full ${!notif.read ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`} />
                                                                     </div>
                                                                     <div className="flex-1 min-w-0">
-                                                                        <p className={`text-sm ${theme === "dark"? 'text-gray-100' : 'text-gray-900'}`}>
+                                                                        <p className={`text-sm ${theme === "dark" ? 'text-gray-100' : 'text-gray-900'}`}>
                                                                             {notif.message}
                                                                         </p>
                                                                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

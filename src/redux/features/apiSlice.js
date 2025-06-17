@@ -3,7 +3,8 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://e-learning-server.test/api/' }),
+
+  baseQuery: fetchBaseQuery({ baseUrl: 'https://e-learning-server-me-production.up.railway.app/api/' }),
   endpoints: (builder) => ({
     register: builder.mutation({
       query: (userData) => ({
@@ -58,15 +59,28 @@ export const apiSlice = createApi({
         body: { email },
       }),
     }),
+    // start courses
+    GetCourses: builder.query({
+      query: () => ({
+        url: 'v1/courses',
+        method: 'GET',
+        headers: {
+          "ngrok-skip-browser-warning": "1",
+        }
+      }),
+    }),
   }),
+
 });
 
-export const { 
-  useRegisterMutation, 
-  useLoginMutation, 
-  useForgotPasswordMutation, 
-  useResetPasswordMutation, 
-  useGetCurrentUserQuery, 
-  useLogoutMutation, 
-  useResendVerificationMutation 
+
+export const {
+  useRegisterMutation,
+  useLoginMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+  useGetCurrentUserQuery,
+  useLogoutMutation,
+  useResendVerificationMutation,
+  useGetCoursesQuery
 } = apiSlice;
