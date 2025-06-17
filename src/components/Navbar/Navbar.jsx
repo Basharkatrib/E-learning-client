@@ -75,6 +75,7 @@ function Navbar() {
             await logout(token).unwrap();
             dispatch(logoutAction());
             setIsUserMenuOpen(false);
+            setIsOpen(false);
             toast.success('Logged out successfully.');
         } catch (err) {
             toast.error('Logout failed.');
@@ -473,7 +474,7 @@ function Navbar() {
                                 <div className={`mt-6 pt-6 ${theme === 'dark' ? 'border-t border-gray-700' : 'border-t border-gray-200'}`}>
                                     {!user ? (
                                         <div className="space-y-3">
-                                            <Link to="/signup" className="block">
+                                            <Link to="/signup" onClick={() => setIsOpen(false)} className="block">
                                                 <motion.button
                                                     whileTap={{ scale: 0.95 }}
                                                     className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 ${theme === 'dark'
@@ -488,7 +489,7 @@ function Navbar() {
                                                     {t('Sign Up')}
                                                 </motion.button>
                                             </Link>
-                                            <Link to="/login" className="block">
+                                            <Link to="/login" onClick={() => setIsOpen(false)} className="block">
                                                 <motion.button
                                                     whileTap={{ scale: 0.95 }}
                                                     className="w-full px-4 py-3 rounded-lg bg-primary text-white font-medium flex items-center justify-center gap-2 hover:bg-primary/90"
@@ -502,7 +503,7 @@ function Navbar() {
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
-                                            <Link to="/me" className="block">
+                                            <Link to="/me" onClick={() => setIsOpen(false)} className="block">
                                                 <motion.button
                                                     whileTap={{ scale: 0.95 }}
                                                     className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 ${theme === 'dark'

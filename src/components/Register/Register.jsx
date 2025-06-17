@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
@@ -27,6 +27,7 @@ function Register() {
   const email = useSelector(selectEmail);
   const lang = useSelector(selectTranslate);
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log(email);
@@ -115,6 +116,12 @@ function Register() {
 
         dispatch(setEmail(values.email));
         toast.success(t('Registration successful. Please check your email for account verification. A verification link has been sent.'));
+        
+        // Redirect to login page after successful registration
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+        
         setShowResend(true);
       } catch (err) {
         console.error('Registration error:', err);
