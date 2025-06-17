@@ -1,24 +1,30 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+
 
 const CourseCard = ({
+  id,
   title,
   description,
   author,
   duration,
   level,
-  curriculum,
-  images,
+  category,
+  thumbnail_url,
   isDark,
 }) => {
-  const cardBg = isDark ? 'bg-gray-900' : 'bg-white';
+  const cardBg = isDark ? 'bg-gray-800' : 'bg-white';
   const cardShadow = isDark
     ? 'shadow-lg shadow-black/30'
     : 'shadow-lg shadow-gray-200/60';
   const textColor = isDark ? 'text-white' : 'text-gray-900';
   const subTextColor = isDark ? 'text-gray-300' : 'text-gray-600';
-  const badgeBg = isDark ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-700';
+  const badgeBg = isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700';
   const borderColor = isDark ? 'border-gray-700' : 'border-gray-200';
+  const { t } = useTranslation();
+
 
   return (
     <motion.div
@@ -31,16 +37,16 @@ const CourseCard = ({
       {/* Course Image */}
       <div className="md:w-1/3 relative">
         <img
-          src={images[0]}
+          src={thumbnail_url}
           alt={title}
-          className="w-full h-64 md:h-full object-cover"
+          className="w-full h-72 object-cover"
         />
         <div className="absolute top-4 right-4 flex gap-2">
           <span className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-md bg-black/30 text-white`}>
             {duration}
           </span>
           <span className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-md bg-black/30 text-white`}>
-            {level}
+            {t(level)}
           </span>
         </div>
       </div>
@@ -53,30 +59,34 @@ const CourseCard = ({
               <h2 className={`text-xl md:text-2xl font-bold ${textColor}`}>{title}</h2>
               <p className={`text-sm ${subTextColor} mt-1`}>By {author}</p>
             </div>
-            <button className="px-5 py-2 rounded-lg bg-primary text-white font-semibold shadow-md hover:bg-primary/90 transition">
-              View Course
-            </button>
+            <Link 
+              to={`/course-details/${id}`}
+              className="px-5 py-2 rounded-lg bg-primary text-white font-semibold shadow-md hover:bg-primary/90 transition"
+            >
+              {t('View Course')}
+            </Link>
           </div>
 
-          <p className={`text-base ${subTextColor} mb-6`}>{description}</p>
+          <p className={`text-base ${subTextColor} mb-6 line-clamp-3`}>{description}</p>
 
-          {/* Curriculum Preview */}
+          {/* Course Info */}
           <div className={`border-t ${borderColor} pt-4`}>
-            <h3 className={`font-semibold mb-3 ${textColor}`}>Course Curriculum</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {curriculum.slice(0, 3).map((item, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-                    {i + 1}
-                  </span>
-                  <span className={`text-sm font-medium ${subTextColor}`}>{item}</span>
-                </div>
-              ))}
-              {curriculum.length > 3 && (
-                <div className={`text-sm font-medium text-primary`}>
-                  +{curriculum.length - 3} more modules
-                </div>
-              )}
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <span className={`px-3 py-1 rounded-full text-sm ${badgeBg}`}>
+                  {category}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`px-3 py-1 rounded-full text-sm ${badgeBg}`}>
+                  {t(level)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`px-3 py-1 rounded-full text-sm ${badgeBg}`}>
+                  {duration}
+                </span>
+              </div>
             </div>
           </div>
         </div>

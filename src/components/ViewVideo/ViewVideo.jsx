@@ -159,7 +159,9 @@ const ViewVideo = () => {
                                     <img src={t.img} alt="time" className="w-5 h-5" />
                                     <span className="text-xs sm:text-sm font-medium">{t[`time${i}`]}</span>
                                 </div>
+                                
                             </div>
+                            
                         ))}
                     </motion.div>
                 ))}

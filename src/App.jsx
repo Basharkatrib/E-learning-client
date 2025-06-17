@@ -21,7 +21,7 @@ import ErrorPage from './pages/ErrorPage/ErrorPage';
 import LoadingPage from './pages/LoadingPage/LoadingPage';
 import VerifyEmail from './pages/VerifyEmail/VerifyEmail';
 import VedioPage from './pages/VideoPage/VideoPage';
-import CourseDetails from './components/CoursesPage/CourseDetails';
+import CourseDetailsPage from './pages/CourseDetailsPage/CourseDetailsPage';
 import { useGetCurrentUserQuery } from './redux/features/apiSlice';
 import { setCredentials } from './redux/features/authSlice';
 import { selectTheme } from './redux/features/themeSlice';
@@ -87,7 +87,7 @@ function App() {
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/course" element={<VedioPage />} />
-        <Route path="/course-details" element={<CourseDetails />} />
+        <Route path="/course-details/:id" element={<CourseDetailsPage />} />
         <Route path="*" element={<ErrorPage />} />
       </Routes>
       <Footer />

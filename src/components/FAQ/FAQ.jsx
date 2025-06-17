@@ -5,7 +5,7 @@ import { selectTheme } from '../../redux/features/themeSlice';
 import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
 
-function FAQ() {
+function FAQ({Faqs}) {
     const theme = useSelector(selectTheme);
     const { t } = useTranslation();
     const [openQuestion, setOpenQuestion] = useState(1);
@@ -90,7 +90,7 @@ function FAQ() {
                         transition={{ delay: 0.3 }}
                         className="lg:w-2/3 flex flex-col gap-4"
                     >
-                        {faqs.map((faq) => (
+                        {(Faqs || faqs).map((faq) => (
                             <div 
                                 key={faq.id}
                                 className={`w-full rounded-xl overflow-hidden ${
@@ -106,7 +106,7 @@ function FAQ() {
                                     <span className={`${lang === "ar"? "text-right" : "text-left"} font-medium ${
                                         theme === 'dark' ? 'text-white' : 'text-gray-900'
                                     }`}>
-                                        {t(faq.question)}
+                                        {Faqs ?  (faq.question?.[lang]) : t(faq.question)}
                                     </span>
                                     <motion.span
                                         animate={{ rotate: openQuestion === faq.id ? 45 : 0 }}
@@ -133,7 +133,8 @@ function FAQ() {
                                             <div className={`p-6 text-sm ${
                                                 theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                                             }`}>
-                                                <p className="mb-4">{t(faq.answer)}</p>
+                                                <p className="mb-4">
+                                                    {Faqs ?  (faq.answer?.[lang]) : t(faq.answer)}                                                </p>
                                                 {faq.link && (
                                                     <motion.a
                                                         href={faq.link.url}

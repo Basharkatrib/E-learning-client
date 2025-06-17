@@ -1,92 +1,125 @@
 import React, { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
-import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
 import CourseCard from './CourseCard';
-
-import img1 from '../../assets/images/courses/Image-1.png';
-import img2 from '../../assets/images/courses/Image-2.png';
-import img3 from '../../assets/images/courses/Image-3.png';
-
-const courses = [
-  {
-    title: 'Web Design Fundamentals',
-    description: 'Learn the fundamentals of HTML, CSS, and responsive design principles.',
-    author: 'John Smith',
-    duration: '4 Weeks',
-    level: 'Beginner',
-    category: 'Web Development',
-    curriculum: ['HTML Basics', 'CSS Styling', 'Responsive Design', 'UI Principles', 'Final Project'],
-    images: [img1, img2, img3],
-  },
-  {
-    title: 'UI/UX Design',
-    description: 'Master UI/UX techniques from research to prototype, using design tools and user testing.',
-    author: 'Emily Johnson',
-    duration: '6 Weeks',
-    level: 'Intermediate',
-    category: 'Design',
-    curriculum: ['Design Thinking', 'User Research', 'Wireframes & Prototypes', 'Visual Design', 'Usability Testing'],
-    images: [img2, img3, img1],
-  },
-  {
-    title: 'JavaScript for Beginners',
-    description: 'Start your JavaScript journey and build interactive web features from scratch.',
-    author: 'David Kim',
-    duration: '5 Weeks',
-    level: 'Beginner',
-    category: 'Programming',
-    curriculum: ['Intro to JS', 'Variables & Data Types', 'DOM Manipulation', 'Events & Forms', 'Mini Projects'],
-    images: [img3, img1, img2],
-  },
-];
+import { useGetCoursesQuery } from '../../redux/features/apiSlice';
+import LoadingPage from '../../pages/LoadingPage/LoadingPage';
 
 export default function CoursesPage() {
   const theme = useSelector(selectTheme);
   const lang = useSelector(selectTranslate);
   const { t } = useTranslation();
+  const { data: coursesData, isLoading, error } = useGetCoursesQuery();
 
-  // State for filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState('All');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedDuration, setSelectedDuration] = useState('All');
+  const [selectedLevel, setSelectedLevel] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedDuration, setSelectedDuration] = useState('all');
 
-  // Filter options
-  const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
-  const categories = ['All', 'Web Development', 'Design', 'Programming'];
-  const durations = ['All', '4 Weeks', '5 Weeks', '6 Weeks'];
+  const levels = useMemo(() => [
+    { value: 'all', label: t('All') },
+    { value: 'beginner', label: t('beginner') },
+    { value: 'intermediate', label: t('intermediate') },
+    { value: 'advanced', label: t('advanced') }
+  ], [t]);
 
-  // Filtered courses
+  const categories = useMemo(() => {
+    if (!coursesData?.data) return [{ value: 'all', label: t('All') }];
+    
+    const uniqueCategories = new Set(
+      coursesData.data.map(course => 
+        course.category?.name?.[lang] || course.category?.name?.en || 'Uncategorized'
+      )
+    );
+    
+    return [
+      { value: 'all', label: t('All') },
+      ...Array.from(uniqueCategories).map(cat => ({ 
+        value: cat.toLowerCase(), 
+        label: cat 
+      }))
+    ];
+  }, [coursesData, lang, t]);
+
+  const durations = useMemo(() => {
+    if (!coursesData?.data) return [{ value: 'all', label: t('All') }];
+    
+    const uniqueDurations = new Set(
+      coursesData.data.map(course => 
+        course.duration?.[lang] || course.duration?.en || 'Unknown Duration'
+      )
+    );
+    
+    return [
+      { value: 'all', label: t('All') },
+      ...Array.from(uniqueDurations).map(dur => ({ 
+        value: dur.toLowerCase(), 
+        label: dur 
+      }))
+    ];
+  }, [coursesData, lang, t]);
+
   const filteredCourses = useMemo(() => {
-    return courses.filter(course => {
-      const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          course.author.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesLevel = selectedLevel === 'All' || course.level === selectedLevel;
-      const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory;
-      const matchesDuration = selectedDuration === 'All' || course.duration === selectedDuration;
+    if (!coursesData?.data) return [];
+
+    return coursesData.data.filter(course => {
+      const courseTitle = (course.title?.[lang] || course.title?.en || '').toLowerCase();
+      const courseDescription = (course.description?.[lang] || course.description?.en || '').toLowerCase();
+      const courseDuration = (course.duration?.[lang] || course.duration?.en || '').toLowerCase();
+      const courseCategory = (course.category?.name?.[lang] || course.category?.name?.en || '').toLowerCase();
+      const courseLevel = (course.difficulty_level || '').toLowerCase();
+      const teacherName = (course.teacher?.name || '').toLowerCase();
+
+      const searchLower = searchQuery.toLowerCase();
+
+      const matchesSearch = searchQuery === '' || 
+        courseTitle.includes(searchLower) ||
+        courseDescription.includes(searchLower) ||
+        teacherName.includes(searchLower);
+
+      const matchesLevel = selectedLevel === 'all' || courseLevel === selectedLevel;
+      const matchesCategory = selectedCategory === 'all' || courseCategory === selectedCategory;
+      const matchesDuration = selectedDuration === 'all' || courseDuration === selectedDuration;
 
       return matchesSearch && matchesLevel && matchesCategory && matchesDuration;
     });
-  }, [searchQuery, selectedLevel, selectedCategory, selectedDuration]);
+  }, [coursesData, searchQuery, selectedLevel, selectedCategory, selectedDuration, lang]);
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh] px-4">
+        <div className={`${theme === 'dark' ? 'bg-[#1f2937]' : 'bg-white'} border border-red-600 text-red-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
+          <svg
+            className="mx-auto h-12 w-12 text-red-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01M12 4a8 8 0 100 16 8 8 0 000-16z"
+            />
+          </svg>
+          <h2 className="text-xl font-semibold text-red-500">{t('Error loading courses')}</h2>
+          <p className="text-sm text-gray-400">{t('Please try again later')}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="relative min-h-screen w-full overflow-x-hidden">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/10 via-blue-200/30 to-white dark:from-gray-900 dark:via-primary/10 dark:to-gray-950 transition-all duration-500" />
       <div className="mt-10 pt-16 pb-6 px-4 sm:px-6 lg:px-8">
-        {/* <div className="mb-5 flex flex-col sm:flex-row">
-          <h1 className="text-4xl md:text-4xl font-extrabold bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent drop-shadow-lg mb-4">
-            {t('Online Courses on Design and Development')}
-          </h1>
-          <p className={`text-lg ${theme === 'dark' ? "text-white" : "dark:text-gray-300"} mt-2 max-w-2xl mx-auto font-medium`}>
-            {t('Explore our curated courses to help you grow your design and development skills step-by-step.')}
-          </p>
-        </div> */}
-
-        {/* Search and Filters Section */}
+        {/* Search & Filters */}
         <div className="mb-4 space-y-4">
           {/* Search Bar */}
           <div className="relative">
@@ -100,7 +133,7 @@ export default function CoursesPage() {
               } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
             />
             <svg
-              className={`absolute  ltr:right-4 rtl:left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
+              className={`absolute ${lang === 'ar' ? 'left-4' : 'right-4'} top-1/2 transform -translate-y-1/2 w-5 h-5 ${
                 theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
               }`}
               fill="none"
@@ -114,74 +147,86 @@ export default function CoursesPage() {
           {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Level Filter */}
-            <div className="relative">
-              <select
-              dir='ltr'
-                value={selectedLevel}
-                onChange={(e) => setSelectedLevel(e.target.value)}
-                className={`w-full px-4 py-3 rounded-lg border appearance-none ${
-                  theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
-                } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
-              >
-                {levels.map((level) => (
-                  <option key={level} value={level}>
-                    {t(level)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              dir="ltr"
+              value={selectedLevel}
+              onChange={(e) => setSelectedLevel(e.target.value)}
+              className={`w-full px-4 py-3 rounded-lg border appearance-none ${
+                theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
+              } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
+            >
+              {levels.map((level) => (
+                <option key={level.value} value={level.value}>
+                  {level.label}
+                </option>
+              ))}
+            </select>
 
             {/* Category Filter */}
-            <div className="relative">
-              <select
-                dir='ltr'
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className={`w-full px-4 py-3 rounded-lg border appearance-none ${
-                  theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
-                } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
-              >
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {t(category)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              dir="ltr"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className={`w-full px-4 py-3 rounded-lg border appearance-none ${
+                theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
+              } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
+            >
+              {categories.map((category) => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
 
             {/* Duration Filter */}
-            <div className="relative">
-              <select
-              dir='ltr'
-                value={selectedDuration}
-                onChange={(e) => setSelectedDuration(e.target.value)}
-                className={`w-full px-4 py-3 rounded-lg border appearance-none ${
-                  theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
-                } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
-              >
-                {durations.map((duration) => (
-                  <option key={duration} value={duration}>
-                    {t(duration)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              dir="ltr"
+              value={selectedDuration}
+              onChange={(e) => setSelectedDuration(e.target.value)}
+              className={`w-full px-4 py-3 rounded-lg border appearance-none ${
+                theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
+              } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
+            >
+              {durations.map((duration) => (
+                <option key={duration.value} value={duration.value}>
+                  {duration.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Results Count */}
           <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            {t('Showing')} {filteredCourses.length} {t('courses')}
+            {t('Showing')} {filteredCourses.length === 0 ?  0 : filteredCourses.length - 1} {t('courses')}
           </div>
         </div>
 
         {/* Courses List */}
         <div className="space-y-12">
-          {filteredCourses.map((course, idx) => (
-            <CourseCard key={idx} {...course} isDark={theme === 'dark'} />
-          ))}
+          {filteredCourses.map((course) => {
+            const courseTitle = course.title?.[lang] || course.title?.en || '';
+            const courseDescription = course.description?.[lang] || course.description?.en || '';
+            const courseDuration = course.duration?.[lang] || course.duration?.en || '';
+            const courseCategory = course.category?.name?.[lang] || course.category?.name?.en || '';
+
+            return (
+              <CourseCard
+                key={course.id}
+                id={course.id}
+                title={courseTitle}
+                description={courseDescription}
+                author={course.teacher?.name || 'Unknown Teacher'}
+                duration={courseDuration}
+                level={course.difficulty_level}
+                category={courseCategory}
+                thumbnail_url={course.thumbnail_url}
+                isDark={theme === 'dark'}
+              />
+            );
+          })}
         </div>
 
-        {/* No Results Message */}
+        {/* No Courses Message */}
         {filteredCourses.length === 0 && (
           <div className="text-center py-12">
             <svg

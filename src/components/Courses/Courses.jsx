@@ -1,111 +1,26 @@
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
-import image1 from '../../assets/images/courses/Image-1.png';
-import image2 from '../../assets/images/courses/Image-2.png';
-import image3 from '../../assets/images/courses/Image-3.png';
 import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
-
+import { useGetCoursesQuery } from '../../redux/features/apiSlice';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 
 function Courses() {
     const theme = useSelector(selectTheme);
     const lang = useSelector(selectTranslate);
+    const { t } = useTranslation();
 
 
-    const courses = [
-        {
-          id: 1,
-          image: image1,
-          duration: "6 Weeks",
-          level: "Beginner",
-          instructor: "John Smith",
-          title: "Web Design Fundamentals",
-          description:
-            "Learn the basics of HTML, CSS, and responsive design. Build modern websites that are functional and user-friendly.",
-        },
-        {
-          id: 2,
-          image: image2,
-          duration: "8 Weeks",
-          level: "Intermediate",
-          instructor: "Sarah Johnson",
-          title: "JavaScript for Web Development",
-          description:
-            "Master the core concepts of JavaScript, including DOM manipulation, ES6 features, and asynchronous programming.",
-        },
-        {
-          id: 3,
-          image: image3,
-          duration: "10 Weeks",
-          level: "Advanced",
-          instructor: "David Lee",
-          title: "Full-Stack Development with MERN",
-          description:
-            "Build powerful full-stack applications using MongoDB, Express, React, and Node.js. Learn how to structure and deploy your apps.",
-        },
-        {
-          id: 4,
-          image: image1,
-          duration: "3 Weeks",
-          level: "Beginner",
-          instructor: "Emily Davis",
-          title: "Introduction to UI/UX Design",
-          description:
-            "Explore user interface and user experience design concepts. Learn about wireframing, prototyping, and usability testing.",
-        },
-        {
-          id: 5,
-          image: image2,
-          duration: "5 Weeks",
-          level: "Intermediate",
-          instructor: "Michael Brown",
-          title: "React Basics and Components",
-          description:
-            "Dive into the React ecosystem. Learn how to create dynamic UIs using components, props, state, and hooks.",
-        },
-        {
-          id: 6,
-          image: image3,
-          duration: "7 Weeks",
-          level: "Advanced",
-          instructor: "Laura Wilson",
-          title: "Backend APIs with Node.js & Express",
-          description:
-            "Build robust backend APIs using Express and Node.js. Understand routing, middleware, databases, and RESTful services.",
-        },
-        {
-            id: 7,
-            image: image1,
-            duration: "3 Weeks",
-            level: "Beginner",
-            instructor: "Emily Davis",
-            title: "Introduction to UI/UX Design",
-            description:
-              "Explore user interface and user experience design concepts. Learn about wireframing, prototyping, and usability testing.",
-          },
-          {
-            id: 8,
-            image: image2,
-            duration: "5 Weeks",
-            level: "Intermediate",
-            instructor: "Michael Brown",
-            title: "React Basics and Components",
-            description:
-              "Dive into the React ecosystem. Learn how to create dynamic UIs using components, props, state, and hooks.",
-          },
-          {
-            id: 9,
-            image: image3,
-            duration: "7 Weeks",
-            level: "Advanced",
-            instructor: "Laura Wilson",
-            title: "Backend APIs with Node.js & Express",
-            description:
-              "Build robust backend APIs using Express and Node.js. Understand routing, middleware, databases, and RESTful services.",
-          },
-      ];
-      
+    const { data: coursesData, isLoading, error } = useGetCoursesQuery();
+    
+    useEffect(() => {
+        if (coursesData) {
+            console.log(coursesData.data);
+        }
+    }, [coursesData]);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -128,6 +43,16 @@ function Courses() {
             }
         }
     };
+
+    if (isLoading) {
+        return <div className="flex justify-center items-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>;
+    }
+
+    if (error) {
+        return <div className="text-red-500 text-center p-4">Error loading courses</div>;
+    }
 
     return (
         <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-12 ${
@@ -165,7 +90,10 @@ function Courses() {
                     whileTap={{ scale: 0.95 }}
                     className="bg-primary text-white px-6 py-3 rounded-md whitespace-nowrap hover:bg-primary/90 transition-all duration-200 font-medium shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40"
                 >
-                    View All Courses
+                    <Link to='/courses'>
+                    {t('View All Courses')}
+
+                    </Link>
                 </motion.button>
             </motion.div>
 
@@ -176,7 +104,7 @@ function Courses() {
                 viewport={{ once: true, margin: "-100px" }}
                 className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-14"
             >
-                {courses.map((course) => (
+                {coursesData?.data?.slice(0, 6).map((course) => (
                     <motion.div
                         key={course.id}
                         variants={itemVariants}
@@ -189,8 +117,8 @@ function Courses() {
                     >
                         <div className="relative w-full h-48">
                             <img 
-                                src={course.image} 
-                                alt={course.title}
+                                src={course.thumbnail_url} 
+                                alt={course.title[lang]}
                                 className="w-full h-full object-cover"
                             />
                         </div>
@@ -200,40 +128,39 @@ function Courses() {
                                 <span className={`${
                                     theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                                 }`}>
-                                    {course.duration}
+                                    {course.duration[lang]}
                                 </span>
                                 <span className={`${
                                     theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                                 }`}>
-                                    {course.level}
+                                    {t(course.difficulty_level)}
                                 </span>
                             </div>
                             
                             <h3 className={`text-xl font-bold ${
                                 theme === 'dark' ? 'text-white' : 'text-gray-900'
                             }`}>
-                                {course.title}
+                                {course.title[lang]}
                             </h3>
                             
                             <p className={`text-sm ${
                                 theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                            }`}>
-                                {course.description}
+                            } line-clamp-2`}>
+                                {course.description[lang]}
                             </p>
                             
                             <div className="mt-2 flex items-center justify-between">
                                 <span className={`text-sm ${
                                     theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                                 }`}>
-                                    By {course.instructor}
+                                    By {course.teacher?.name || 'Unknown Teacher'}
                                 </span>
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                <Link
+                                    to={`/course-details/${course.id}`}
                                     className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors duration-200"
                                 >
-                                    Get it Now
-                                </motion.button>
+                                    {t('Get it Now')}
+                                </Link>
                             </div>
                         </div>
                     </motion.div>
