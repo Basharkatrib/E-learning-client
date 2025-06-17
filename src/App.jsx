@@ -27,8 +27,8 @@ import { setCredentials } from './redux/features/authSlice';
 import { selectTheme } from './redux/features/themeSlice';
 import Chat from './components/Chat/Chat';
 import Pusher from 'pusher-js';
-
 function App() {
+  console.log('Pusher Key:', import.meta.env.VITE_PUSHER_API_KEY);
   const theme = useSelector(selectTheme);
   const dispatch = useDispatch();
 
@@ -38,9 +38,8 @@ function App() {
     const pusher = new Pusher(import.meta.env.VITE_PUSHER_API_KEY, {
       cluster: 'eu',
     });
-
     const channel = pusher.subscribe('channel-name');
-    channel.bind('my-event', function(data) {
+    channel.bind('my-event', function (data) {
       // Add notification to Redux store
       dispatch(addNotification({
         id: Date.now(), // Use timestamp as unique ID
@@ -67,7 +66,7 @@ function App() {
       channel.unsubscribe();
     };
   }, [theme, dispatch]);
-  
+
 
 
   return (
