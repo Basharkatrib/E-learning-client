@@ -140,7 +140,7 @@ export default function AboutUs() {
   const isDark = theme === 'dark';
   const isAr = lang === 'ar';
   return (
-    <div dir={isAr ? 'rtl' : 'ltr'} className={`min-h-screen w-full mt-18 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} pt-8 pb-16`}> 
+    <div dir={isAr ? 'rtl' : 'ltr'} className={`min-h-screen overflow-hidden w-full mt-18 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} pt-8 pb-16`}> 
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
@@ -150,11 +150,11 @@ export default function AboutUs() {
       >
         <div className="flex flex-col md:flex-row justify-between md:items-start items-center gap-8 text-center ">
           <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-2 bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent drop-shadow-lg">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2 bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent drop-shadow-lg">
               {isAr ? 'حول LearNova' : 'About LearNova'}
             </h1>
           </div>
-          <p className={`max-w-xl ${isDark? 'text-white' : 'text-gray-500'} text-sm sm:text-base md:text-lg font-medium mx-auto md:mx-0`}>
+          <p className={`max-w-xl ${isDark? 'text-white' : 'text-gray-500'} text-base sm:text-lg md:text-xl font-medium mx-auto md:mx-0`}>
             {isAr
               ? 'مرحبًا بكم في منصتنا، حيث نؤمن بتمكين الأفراد لإتقان عالم التصميم والتطوير. نقدم مجموعة واسعة من الدورات التدريبية عبر الإنترنت، مصممة لتزويد المتعلمين بالمهارات والمعرفة اللازمة للنجاح في عالم رقمي متغير باستمرار.'
               : 'Welcome to our platform, where we are passionate about empowering individuals to master the world of design and development. We offer a wide range of online courses designed to equip learners with the skills and knowledge needed to succeed in the ever-evolving digital landscape.'}
@@ -170,8 +170,8 @@ export default function AboutUs() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
       >
-        <h2 className="text-2xl font-bold mb-2">{isAr ? 'إنجازاتنا' : 'Achievements'}</h2>
-        <p className={`text-gray-400 text-sm sm:text-base mb-6 ${isDark? 'text-white' : 'text-gray-500'}`}> 
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{isAr ? 'إنجازاتنا' : 'Achievements'}</h2>
+        <p className={`text-gray-400 text-base sm:text-lg md:text-xl mb-6 ${isDark? 'text-white' : 'text-gray-500'}`}> 
           {isAr
             ? 'لقد أدى التزامنا بالتميز إلى تحقيق إنجازات بارزة خلال رحلتنا. إليكم بعض من إنجازاتنا المميزة:'
             : 'Our commitment to excellence has led us to achieve significant milestones along our journey. Here are some of our notable achievements'}
@@ -187,8 +187,8 @@ export default function AboutUs() {
             >
               <div className="flex-shrink-0 mb-2 sm:mb-0">{item.icon}</div>
               <div className="w-full">
-                <h3 className="font-bold text-base sm:text-lg mb-1 group-hover:text-primary transition-colors duration-300">{item.title[isAr ? 'ar' : 'en']}</h3>
-                <p className={`text-xs sm:text-sm transition-colors duration-300 ${isDark? 'text-white' : 'text-gray-500'}`}>{item.desc[isAr ? 'ar' : 'en']}</p>
+                <h3 className="font-bold text-lg sm:text-xl mb-1 group-hover:text-primary transition-colors duration-300">{item.title[isAr ? 'ar' : 'en']}</h3>
+                <p className={`text-base sm:text-lg transition-colors duration-300 ${isDark? 'text-white' : 'text-gray-500'}`}>{item.desc[isAr ? 'ar' : 'en']}</p>
               </div>
             </motion.div>
           ))}
@@ -203,8 +203,8 @@ export default function AboutUs() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
       >
-        <h2 className="text-2xl font-bold mb-2">{isAr ? 'أهدافنا' : 'Our Goals'}</h2>
-        <p className={`text-gray-400 text-sm sm:text-base mb-6 ${isDark? 'text-white' : 'text-gray-500'}`}> 
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{isAr ? 'أهدافنا' : 'Our Goals'}</h2>
+        <p className={`text-gray-400 text-base sm:text-lg md:text-xl mb-6 ${isDark? 'text-white' : 'text-gray-500'}`}> 
           {isAr
             ? 'في ليرنوفا، هدفنا هو تمكين الأفراد من جميع الخلفيات للتميز في عالم التصميم والتطوير. نؤمن بأن التعليم يجب أن يكون متاحًا وتحويليًا، لتمكين المتعلمين من متابعة شغفهم وتحقيق تأثير ملموس. من خلال دوراتنا المصممة بعناية، نسعى إلى:'
             : 'At LearNova, our goal is to empower individuals from all backgrounds to thrive in the world of design and development. We believe that education should be accessible and transformative, enabling learners to pursue their passions and make a meaningful impact. Through our carefully crafted courses, we aim to'}
@@ -220,8 +220,8 @@ export default function AboutUs() {
             >
               <div className="flex-shrink-0 mb-2 sm:mb-0">{item.icon}</div>
               <div className="w-full">
-                <h3 className="font-bold text-base sm:text-lg mb-1 group-hover:text-primary transition-colors duration-300">{item.title[isAr ? 'ar' : 'en']}</h3>
-                <p className={`text-xs sm:text-sm transition-colors duration-300 ${isDark? 'text-white' : 'text-gray-500'}`}>{item.desc[isAr ? 'ar' : 'en']}</p>
+                <h3 className="font-bold text-lg sm:text-xl mb-1 group-hover:text-primary transition-colors duration-300">{item.title[isAr ? 'ar' : 'en']}</h3>
+                <p className={`text-base sm:text-lg transition-colors duration-300 ${isDark? 'text-white' : 'text-gray-500'}`}>{item.desc[isAr ? 'ar' : 'en']}</p>
               </div>
             </motion.div>
           ))}
