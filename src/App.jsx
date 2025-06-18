@@ -27,6 +27,9 @@ import { setCredentials } from './redux/features/authSlice';
 import { selectTheme } from './redux/features/themeSlice';
 import Chat from './components/Chat/Chat';
 import Pusher from 'pusher-js';
+import AboutUsPage from './pages/AboutUsPage/AboutUsPage';
+
+
 function App() {
   console.log('Pusher Key:', import.meta.env.VITE_PUSHER_API_KEY);
   const theme = useSelector(selectTheme);
@@ -87,6 +90,7 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/course" element={<VedioPage />} />
         <Route path="/course-details/:id" element={<CourseDetailsPage />} />
+        <Route path="/aboutus" element={<AboutUsPage />} />
         <Route path="*" element={<ErrorPage />} />
       </Routes>
       <Footer />
