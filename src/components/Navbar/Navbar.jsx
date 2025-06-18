@@ -66,7 +66,7 @@ function Navbar() {
         { id: 1, name: 'Home', href: '/' },
         { id: 2, name: 'Courses', href: '/courses' },
         { id: 3, name: 'About Us', href: '/aboutus' },
-        { id: 4, name: 'Pricing', href: '/pricing' },
+        // { id: 4, name: 'Pricing', href: '/pricing' },
         { id: 5, name: 'Contact', href: '/contactus' }
     ];
 
