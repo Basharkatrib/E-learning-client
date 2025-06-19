@@ -31,6 +31,7 @@ const ViewVideo = () => {
   const navigate = useNavigate();
   const { data: coursesData, isLoading, error } = useGetCourseQuery(id);
   const videoPlayerRef = useRef(null);
+  const videoContainerRef = useRef(null);
   
   const getFirstVideo = (data) => {
     const firstSection = data?.sections?.[0];
@@ -47,6 +48,20 @@ const ViewVideo = () => {
   const handleVideoClick = (video) => {
     setCurrentVideo(video);
     videoPlayerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // دالة تكبير الفيديو
+  const handleFullscreen = () => {
+    const el = videoContainerRef.current;
+    if (el) {
+      if (el.requestFullscreen) {
+        el.requestFullscreen();
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+      } else if (el.msRequestFullscreen) {
+        el.msRequestFullscreen();
+      }
+    }
   };
 
   if (isLoading) return <LoadingPage />;
@@ -71,11 +86,11 @@ const ViewVideo = () => {
   const course = coursesData;
 
   return (
-    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-8 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full mt-6 md:mt-18 flex flex-col px-4 sm:px-6 lg:px-8 py-8 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-blue-500 text-white font-bold shadow hover:from-blue-700 hover:to-primary transition-all"
+          className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-blue-500 text-white font-bold shadow hover:from-blue-700 hover:to-primary transition-all"
         >
           <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           {lang === 'ar' ? 'العودة للدورة' : 'Back to Course'}
@@ -140,8 +155,21 @@ const ViewVideo = () => {
         </motion.div>
 
         <div className="order-1 lg:order-2 flex-1 flex flex-col gap-6">
-          <div className="w-full flex justify-center" ref={videoPlayerRef}>
-            <div className={`w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 ${isDark ? 'border-primary/40 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950' : 'border-primary/20 bg-gradient-to-br from-white via-blue-50 to-gray-100'}`}>
+          <div
+            className={`w-full flex justify-center relative ${isDark ? '' : ''}`}
+            ref={videoPlayerRef}
+          >
+            <div
+              ref={videoContainerRef}
+              className={`w-full aspect-video
+                ${isDark ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950' : 'bg-gradient-to-br from-white via-blue-50 to-gray-100'}
+                border-4 ${isDark ? 'border-primary/40' : 'border-primary/20'}
+                rounded-2xl overflow-hidden shadow-2xl
+                sm:max-w-3xl
+                sm:rounded-2xl sm:shadow-2xl sm:border-4
+                max-sm:w-screen max-sm:mx-[-16px] max-sm:rounded-none max-sm:shadow-none max-sm:border-0
+              `}
+            >
               {currentVideo?.video_url && (
                 <iframe
                   className="w-full h-full"
@@ -151,6 +179,15 @@ const ViewVideo = () => {
                   allowFullScreen
                 ></iframe>
               )}
+              {/* زر تكبير يظهر فقط على الموبايل */}
+              <button
+                onClick={handleFullscreen}
+                className="absolute bottom-2 right-2 z-10 bg-black/60 text-white rounded-full p-2 sm:hidden"
+                title={lang === 'ar' ? 'تكبير' : 'Fullscreen'}
+                type="button"
+              >
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M4 4h6M4 4v6M4 4l6 6M20 20h-6M20 20v-6M20 20l-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
             </div>
           </div>
 
