@@ -93,7 +93,7 @@ function App() {
         <Route path="/error" element={<ErrorPage />} />
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/course" element={<VedioPage />} />
+        <Route path="/course/:id" element={<VedioPage />} />
         <Route path="/course-details/:id" element={<CourseDetailsPage />} />
         <Route path="/aboutus" element={<AboutUsPage />} />
         <Route path="*" element={<ErrorPage />} />

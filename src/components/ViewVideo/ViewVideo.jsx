@@ -1,173 +1,205 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
 import time from '../../assets/images/ViewVideo/time.svg';
-import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { selectTranslate } from '../../redux/features/translateSlice';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useGetCourseQuery } from '../../redux/features/apiSlice';
 import { useTranslation } from 'react-i18next';
-import star from '../../assets/images/ViewVideo/star.svg';
+import LoadingPage from '../../pages/LoadingPage/LoadingPage';
+
+const stagger = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.12,
+    },
+  },
+};
+const fadeIn = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, type: 'spring' } },
+};
 
 const ViewVideo = () => {
-    const theme = useSelector(selectTheme);
-    const lang = useSelector(selectTranslate);
-    const { t } = useTranslation();
-    const isDark = theme === 'dark';
+  const theme = useSelector(selectTheme);
+  const lang = useSelector(selectTranslate);
+  const { t } = useTranslation();
+  const isDark = theme === 'dark';
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { data: coursesData, isLoading, error } = useGetCourseQuery(id);
+  const videoPlayerRef = useRef(null);
+  
+  const getFirstVideo = (data) => {
+    const firstSection = data?.sections?.[0];
+    return firstSection?.videos?.[0] || null;
+  };
+  const [currentVideo, setCurrentVideo] = useState(null);
 
-    const DATA = [
-        {
-            id: 1,
-            num: "01",
-            title: "Introduction to UI/UX Design",
-            description1: "Understanding UI/UX Design Principles",
-            time1: "45 Minutes",
-            description2: "Importance of User-Centered Design",
-            time2: "1Hour",
-            description3: "The Role of UI/UX Design in Product Development",
-            time3: "45 Minutes",
-            img: time,
-        },
-        {
-            id: 2,
-            num: "02",
-            title: "User Research and Analysis",
-            description1: "Conducting User Research and Interviews",
-            time1: "1Hour",
-            description2: "Analyzing User Needs and Behavior",
-            time2: "1Hour",
-            description3: "Creating User Personas and Scenarios",
-            time3: "45 Minutes",
-            img: time,
-        },
-        {
-            id: 3,
-            num: "03",
-            title: "Wireframing and Prototyping",
-            description1: "Introduction to Wireframing Tools and Techniques",
-            time1: "45 Minutes",
-            description2: "Creating Low-Fidelity Wireframes",
-            time2: "1Hour",
-            description3: "Prototyping and Interactive Mockups",
-            time3: "45 Minutes",
-            img: time,
-        },
-        {
-            id: 4,
-            num: "04",
-            title: "Visual Design and Branding",
-            description1: "Color Theory and Typography in UI Design",
-            time1: "45 Minutes",
-            description2: "Visual Hierarchy and Layout Design",
-            time2: "1Hour",
-            description3: "Creating a Strong Brand Identity",
-            time3: "45 Minutes",
-            img: time,
-        },
-    ];
+  useEffect(() => {
+    if (coursesData?.sections) {
+      setCurrentVideo(getFirstVideo(coursesData));
+    }
+  }, [coursesData]);
 
+  const handleVideoClick = (video) => {
+    setCurrentVideo(video);
+    videoPlayerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  if (isLoading) return <LoadingPage />;
+  if (error) {
     return (
-        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-12 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
-
-            {/* Header */}
-            <div className="flex flex-col mt-10 lg:flex-row justify-between items-start lg:items-center gap-6">
-                <h1 className="font-extrabold text-3xl sm:text-4xl bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent">UI/UX Design Course</h1>
-                <div className="w-full lg:w-1/2 text-base sm:text-lg">
-                    <p>
-                        Welcome to our UI/UX Design course! This comprehensive program will equip you with the knowledge and skills to create exceptional user interfaces (UI) and enhance user experiences (UX). Dive into the world of design thinking, wireframing, prototyping, and usability testing. Below is an overview of the curriculum.
-                    </p>
-                </div>
-            </div>
-
-            {/* Video */}
-            <div className="w-full  mt-10">
-                <div className='w-full h-126'>
-                    <iframe
-                        className="w-full h-full rounded-lg shadow-md"
-                        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                        title="YouTube video"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                    ></iframe>
-                </div>
-            </div>
-
-            {/* CourseHighlights */}
-            <div className="flex flex-col items-center px-4 py-10 space-y-8">
-                <div className="w-full lg:w-2/3 text-center">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold">
-                        Quick information about the course
-                    </h1>
-                </div>
-
-                <div className="w-full lg:w-2/3 flex flex-col sm:flex-row justify-around items-center p-6 rounded-xl shadow-lg">
-                    <div className="text-center px-4">
-                        <h3 className="font-extrabold sm:text-4xl">4 Units</h3>
-                        <p className="text-sm mt-2">Get insight into the subject and learn the basics.</p>
-                    </div>
-
-                    <div className="flex flex-col items-center justify-center px-4 border-t sm:border-t-0 sm:border-l border-gray-300">
-                        <div className="flex items-center space-x-2 mt-4 sm:mt-0">
-                            <div className="w-6 h-6">
-                                <img src={star} alt="star" />
-                            </div>
-                            <h3 className="font-extrabold">(4.7)</h3>
-                        </div>
-                    </div>
-
-                    <div className="text-center px-4 border-t sm:border-t-0 sm:border-l border-gray-300 mt-4 sm:mt-0">
-                        <h3 className="font-extrabold sm:text-4xl">Beginner level</h3>
-                    </div>
-
-                    <div className="text-center px-4 border-t sm:border-t-0 sm:border-l border-gray-300 mt-4 sm:mt-0">
-                        <h3 className="font-extrabold sm:text-4xl">72 Hour</h3>
-                        <p className="text-sm mt-2">Two hours every week</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* End CourseHighlights */}
-
-            {/* Cards */}
-            <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-100px" }}
-                className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-14"
-            >
-                {DATA.map((t) => (
-                    <motion.div
-                        key={t.id}
-                        whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                        className={`flex flex-col gap-4 p-6 rounded-2xl shadow-md transition-all duration-300 border ${isDark
-                            ? 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-white'
-                            : 'bg-white hover:bg-gray-100 border-gray-200 text-gray-900'
-                            }`}
-                    >
-                        <div>
-                            <h1 className="text-lg font-semibold text-indigo-500">{t.num}</h1>
-                            <h3 className="text-xl sm:text-2xl font-bold">{t.title}</h3>
-                        </div>
-
-                        {[1, 2, 3].map((i) => (
-                            <div
-                                key={i}
-                                className="flex items-start justify-between gap-4 py-3 border-t border-dashed border-gray-400"
-                            >
-                                <div className="flex-1">
-                                    <h4 className="text-sm sm:text-base font-medium">{t[`description${i}`]}</h4>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <img src={t.img} alt="time" className="w-5 h-5" />
-                                    <span className="text-xs sm:text-sm font-medium">{t[`time${i}`]}</span>
-                                </div>
-                                
-                            </div>
-                            
-                        ))}
-                    </motion.div>
-                ))}
-            </motion.div>
+      <div className="flex justify-center items-center min-h-[60vh] px-4">
+        <div className={`${isDark ? 'bg-[#1f2937]' : 'bg-white'} border border-red-600 text-red-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
+          <svg className="mx-auto h-12 w-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 4a8 8 0 100 16 8 8 0 000-16z" />
+          </svg>
+          <h2 className="text-xl font-semibold text-red-500">
+            {t('Error loading courses')}
+          </h2>
+          <p className="text-sm text-gray-400">
+            {t('Please try again later')}
+          </p>
         </div>
+      </div>
     );
+  }
+
+  const course = coursesData;
+
+  return (
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full flex flex-col px-4 sm:px-6 lg:px-8 py-8 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
+      <div className="mb-4 flex items-center gap-2">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-blue-500 text-white font-bold shadow hover:from-blue-700 hover:to-primary transition-all"
+        >
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          {lang === 'ar' ? 'العودة للدورة' : 'Back to Course'}
+        </button>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-8 w-full">
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate="visible"
+          className="order-2 lg:order-1 w-full lg:w-1/3 xl:w-1/4 mt-8 lg:mt-0"
+        >
+          <div className={`rounded-2xl shadow-xl border-2 ${isDark ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950 border-primary/20' : 'bg-gradient-to-br from-white via-blue-50 to-gray-100 border-primary/10'} p-4 lg:sticky lg:top-24`}>
+            <h3 className="text-lg sm:text-xl font-bold mb-4 text-primary flex items-center gap-2">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M4 17V7a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2"/></svg>
+              {lang === 'ar' ? 'دروس الدورة' : 'Course Lessons'}
+            </h3>
+            <div className="flex flex-col gap-4">
+              {course?.sections?.map((section, sidx) => (
+                <motion.div key={section.id} variants={fadeIn}>
+                  <div className="mb-2 font-semibold text-indigo-500 text-base">{lang === 'ar' ? `الوحدة ${sidx + 1}` : `Section ${sidx + 1}`}: {section.title?.[lang]}</div>
+                  <div className="flex flex-col gap-2">
+                    {section?.videos?.map((video) => (
+                      <button
+                        key={video.id}
+                        onClick={() => handleVideoClick(video)}
+                        className={`flex items-center cursor-pointer gap-2 px-3 py-2 rounded-lg transition-all border-2 text-left ${currentVideo?.id === video.id
+                          ? 'bg-gradient-to-r from-primary to-blue-500 text-white border-primary shadow-lg font-bold'
+                          : isDark
+                            ? 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-white'
+                            : 'bg-white hover:bg-blue-50 border-gray-200 text-gray-900'} group`}
+                      >
+                        <span className="flex items-center">
+                          {currentVideo?.id === video.id ? (
+                            <motion.span
+                              initial={{ scale: 0.7, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ type: 'spring', stiffness: 300 }}
+                              className="inline-block mr-1"
+                            >
+                              <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M10 8l6 4-6 4V8z" fill="#6366F1"/></svg>
+                            </motion.span>
+                          ) : (
+                            <span className="inline-block mr-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                              <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M10 8l6 4-6 4V8z" fill="#6366F1"/></svg>
+                            </span>
+                          )}
+                        </span>
+                        <span className="truncate flex-1">{video.title[lang]}</span>
+                        <span className="flex items-center gap-1 text-xs">
+                          <img src={time} alt="time" className="w-4 h-4" />
+                          {video.duration}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="order-1 lg:order-2 flex-1 flex flex-col gap-6">
+          <div className="w-full flex justify-center" ref={videoPlayerRef}>
+            <div className={`w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 ${isDark ? 'border-primary/40 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950' : 'border-primary/20 bg-gradient-to-br from-white via-blue-50 to-gray-100'}`}>
+              {currentVideo?.video_url && (
+                <iframe
+                  className="w-full h-full"
+                  src={currentVideo.video_url}
+                  title={currentVideo.title?.[lang]}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              )}
+            </div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, type: 'spring' }}
+            className={`rounded-2xl shadow-lg p-6 mt-6 mb-2 ${isDark ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950' : 'bg-gradient-to-br from-white via-blue-50 to-gray-100'} backdrop-blur-md`}
+          >
+            <h1 className="font-extrabold text-2xl sm:text-3xl md:text-4xl bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent mb-2">
+              {course?.title?.[lang]}
+            </h1>
+            <p className="text-base sm:text-lg text-gray-500 dark:text-gray-300">
+              {course?.description?.[lang]}
+            </p>
+          </motion.div>
+
+          {currentVideo && (
+            <div className="flex items-center gap-2 mb-2">
+              <motion.span
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                className="inline-block"
+              >
+                <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#6366F1"/><path d="M10 8l6 4-6 4V8z" fill="#fff"/></svg>
+              </motion.span>
+              <h2 className="text-lg sm:text-xl font-bold text-primary">
+                {currentVideo.title?.[lang]}
+              </h2>
+            </div>
+          )}
+
+          {currentVideo && (
+            <div className="flex flex-wrap items-center justify-between gap-4 mt-2 px-2">
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 8v4l3 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/></svg>
+                {lang === 'ar' ? 'المدة:' : 'Duration:'} {currentVideo.duration}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                {lang === 'ar' ? 'الدرس:' : 'Lesson:'} {currentVideo.id}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ViewVideo;

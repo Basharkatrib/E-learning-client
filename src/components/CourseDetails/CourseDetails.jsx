@@ -11,6 +11,7 @@ import image3 from '../../assets/images/courses/Image-3.png';
 import { useGetCourseQuery } from '../../redux/features/apiSlice';
 import { useParams } from 'react-router-dom';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
+import { Link } from 'react-router-dom';
 
 
 
@@ -51,31 +52,31 @@ export default function CourseDetails() {
     if (isLoading) return <LoadingPage />;
     if (error) {
         return (
-          <div className="flex justify-center items-center min-h-[60vh] px-4">
-            <div className={`${theme === 'dark'? 'bg-[#1f2937]' : 'bg-white'} border border-red-600 text-red-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
-              <svg
-                className="mx-auto h-12 w-12 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01M12 4a8 8 0 100 16 8 8 0 000-16z"
-                />
-              </svg>
-              <h2 className="text-xl font-semibold text-red-500">
-                {t('Error loading courses')}
-              </h2>
-              <p className="text-sm text-gray-400">
-                {t('Please try again later')}
-              </p>
+            <div className="flex justify-center items-center min-h-[60vh] px-4">
+                <div className={`${theme === 'dark' ? 'bg-[#1f2937]' : 'bg-white'} border border-red-600 text-red-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
+                    <svg
+                        className="mx-auto h-12 w-12 text-red-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 9v2m0 4h.01M12 4a8 8 0 100 16 8 8 0 000-16z"
+                        />
+                    </svg>
+                    <h2 className="text-xl font-semibold text-red-500">
+                        {t('Error loading courses')}
+                    </h2>
+                    <p className="text-sm text-gray-400">
+                        {t('Please try again later')}
+                    </p>
+                </div>
             </div>
-          </div>
         );
-      }
+    }
 
     const fadeInUp = {
         initial: { opacity: 0, y: 20 },
@@ -104,10 +105,13 @@ export default function CourseDetails() {
                         <span className={`text-sm font-medium text-gray-800 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.teacher.name}</span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-4">
-                        <button className="px-6 py-3 rounded-xl bg-primary text-white font-bold shadow-lg hover:bg-primary/90 transition text-lg">
+                        <Link
+                            to={`/course/${data.id}`}
+                            className="px-6 py-3 rounded-xl bg-primary text-white font-bold shadow-lg hover:bg-primary/90 transition text-lg"
+                        >
                             Register for free
                             <span className="block text-xs font-normal mt-1">Starts {dummyCourse.stats.startDate}</span>
-                        </button>
+                        </Link>
                         <span className={`text-xs text-gray-500 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mt-2 sm:mt-0`}>
                             {dummyCourse.stats.registered.toLocaleString()} already registered
                         </span>
@@ -196,7 +200,7 @@ export default function CourseDetails() {
                             {t('Master the fundamentals through')} {data.sections.length} {t('comprehensive modules designed by industry experts')}
                         </p>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {data.sections.map((section, id) => (
                             <motion.div
@@ -205,63 +209,58 @@ export default function CourseDetails() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.5, delay: id * 0.1 }}
-                                className={`group relative overflow-hidden rounded-2xl shadow-xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 ${
-                                    theme === 'dark' 
-                                    ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950 border border-gray-700' 
+                                className={`group relative overflow-hidden rounded-2xl shadow-xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 ${theme === 'dark'
+                                    ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950 border border-gray-700'
                                     : 'bg-gradient-to-br from-white via-blue-50 to-gray-100 border border-gray-200'
-                                }`}
+                                    }`}
                             >
                                 {/* Background Pattern */}
                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                
+
                                 {/* Section Number Badge */}
                                 <div className={`absolute top-6 ${lang === 'ar' ? 'left-6' : 'right-6'} z-10`}>
-                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                                        theme === 'dark' 
-                                        ? 'bg-primary/20 text-primary border border-primary/30' 
+                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full ${theme === 'dark'
+                                        ? 'bg-primary/20 text-primary border border-primary/30'
                                         : 'bg-primary/10 text-primary border border-primary/20'
-                                    } text-sm font-bold shadow-lg backdrop-blur-sm`}>
+                                        } text-sm font-bold shadow-lg backdrop-blur-sm`}>
                                         {id + 1}
                                     </div>
                                 </div>
-                                
+
                                 {/* Content */}
                                 <div className="relative p-8 h-64 flex flex-col items-center justify-center text-center">
                                     {/* Icon */}
-                                    <div className={`flex items-center justify-center w-20 h-20 rounded-full mb-6 ${
-                                        theme === 'dark' 
-                                        ? 'bg-gradient-to-br from-primary/20 to-blue-500/20 text-primary' 
+                                    <div className={`flex items-center justify-center w-20 h-20 rounded-full mb-6 ${theme === 'dark'
+                                        ? 'bg-gradient-to-br from-primary/20 to-blue-500/20 text-primary'
                                         : 'bg-gradient-to-br from-primary/10 to-blue-500/10 text-primary'
-                                    } text-4xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                                        } text-4xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                                         {id === 0 ? '🚀' : id === 1 ? '💡' : id === 2 ? '⚡' : id === 3 ? '🎯' : id === 4 ? '🏆' : '📚'}
                                     </div>
-                                    
+
                                     {/* Title */}
-                                    <h3 className={`text-xl font-bold mb-3 ${
-                                        theme === 'dark' ? 'text-white' : 'text-gray-900'
-                                    } group-hover:text-primary transition-colors duration-300`}>
+                                    <h3 className={`text-xl font-bold mb-3 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                        } group-hover:text-primary transition-colors duration-300`}>
                                         {section.title?.[lang] || section.title?.en}
                                     </h3>
-                                    
+
                                     {/* Progress Indicator */}
                                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
                                         <div className="bg-gradient-to-r from-primary to-blue-500 h-2 rounded-full transition-all duration-500 group-hover:w-full" style={{ width: '0%' }} />
                                     </div>
-                                    
+
                                     {/* Status */}
-                                    <div className={`text-sm font-medium ${
-                                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                                    }`}>
+                                    <div className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                                        }`}>
                                         {section.videos?.length || 0} {t('lessons')}
                                     </div>
                                 </div>
-                                
+
                                 {/* Hover Effect Overlay */}
                                 <div className={`absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl`} />
                             </motion.div>
                         ))}
                     </div>
-                    
+
                     {/* Call to Action */}
                     <div className="text-center mt-12">
                         <motion.button
