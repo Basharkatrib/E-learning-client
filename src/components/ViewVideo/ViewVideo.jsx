@@ -82,7 +82,7 @@ const ViewVideo = () => {
                 <div className='w-full h-126'>
                     <iframe
                         className="w-full h-full rounded-lg shadow-md"
-                        src="https://www.youtube.com/embed/MJDPFYe_0g0"
+                        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
                         title="YouTube video"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen

@@ -23,7 +23,7 @@ import VerifyEmail from './pages/VerifyEmail/VerifyEmail';
 import VedioPage from './pages/VideoPage/VideoPage';
 import CourseDetailsPage from './pages/CourseDetailsPage/CourseDetailsPage';
 import { useGetCurrentUserQuery } from './redux/features/apiSlice';
-import { setCredentials } from './redux/features/authSlice';
+import { setCredentials, logout } from './redux/features/authSlice';
 import { selectTheme } from './redux/features/themeSlice';
 import Chat from './components/Chat/Chat';
 import Pusher from 'pusher-js';
@@ -34,6 +34,7 @@ function App() {
   console.log('Pusher Key:', import.meta.env.VITE_PUSHER_API_KEY);
   const theme = useSelector(selectTheme);
   const dispatch = useDispatch();
+  const { error } = useGetCurrentUserQuery();
 
   useEffect(() => {
     Pusher.logToConsole = true;
@@ -70,7 +71,11 @@ function App() {
     };
   }, [theme, dispatch]);
 
-
+  useEffect(() => {
+    if (error) {
+      dispatch(logout());
+    }
+  }, [error, dispatch]);
 
   return (
     <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
