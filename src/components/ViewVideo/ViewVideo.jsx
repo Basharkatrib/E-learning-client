@@ -50,7 +50,6 @@ const ViewVideo = () => {
     videoPlayerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  // دالة تكبير الفيديو
   const handleFullscreen = () => {
     const el = videoContainerRef.current;
     if (el) {
@@ -179,7 +178,6 @@ const ViewVideo = () => {
                   allowFullScreen
                 ></iframe>
               )}
-              {/* زر تكبير يظهر فقط على الموبايل */}
               <button
                 onClick={handleFullscreen}
                 className="absolute bottom-2 right-2 z-10 bg-black/60 text-white rounded-full p-2 sm:hidden"
