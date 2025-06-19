@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
 import { selectTranslate } from '../../redux/features/translateSlice';
 import { useGetCoursesQuery } from '../../redux/features/apiSlice';
-import { useEffect } from 'react';
+
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -15,11 +15,11 @@ function Courses() {
 
     const { data: coursesData, isLoading, error } = useGetCoursesQuery();
 
-    useEffect(() => {
-        if (coursesData) {
-            console.log(coursesData.data);
-        }
-    }, [coursesData]);
+    // useEffect(() => {
+    //     if (coursesData) {
+    //         console.log(coursesData.data);
+    //     }
+    // }, [coursesData]);
 
     const containerVariants = {
         hidden: { opacity: 0 },
