@@ -23,18 +23,20 @@ import VerifyEmail from './pages/VerifyEmail/VerifyEmail';
 import VedioPage from './pages/VideoPage/VideoPage';
 import CourseDetailsPage from './pages/CourseDetailsPage/CourseDetailsPage';
 import { useGetCurrentUserQuery } from './redux/features/apiSlice';
-import { setCredentials, logout } from './redux/features/authSlice';
+import { setCredentials, logout, selectToken } from './redux/features/authSlice';
 import { selectTheme } from './redux/features/themeSlice';
 import Chat from './components/Chat/Chat';
 import Pusher from 'pusher-js';
 import AboutUsPage from './pages/AboutUsPage/AboutUsPage';
+import ProtectedCourseRoute from './components/ProtectedCourse/ProtectedCourseRoute';
 
 
 function App() {
   console.log('Pusher Key:', import.meta.env.VITE_PUSHER_API_KEY);
   const theme = useSelector(selectTheme);
   const dispatch = useDispatch();
-  const { error } = useGetCurrentUserQuery();
+  const token = useSelector(selectToken);
+  const { error } = useGetCurrentUserQuery(token);
 
   useEffect(() => {
     Pusher.logToConsole = true;
@@ -93,7 +95,14 @@ function App() {
         <Route path="/error" element={<ErrorPage />} />
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/course/:id" element={<VedioPage />} />
+        <Route
+          path="/course/:id"
+          element={
+            <ProtectedCourseRoute>
+              <VedioPage />
+            </ProtectedCourseRoute>
+          }
+        />
         <Route path="/course-details/:id" element={<CourseDetailsPage />} />
         <Route path="/aboutus" element={<AboutUsPage />} />
         <Route path="*" element={<ErrorPage />} />

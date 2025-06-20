@@ -5,15 +5,12 @@ import { selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import FAQ from '../FAQ/FAQ';
-import image1 from '../../assets/images/courses/Image-1.png';
-import image2 from '../../assets/images/courses/Image-2.png';
-import image3 from '../../assets/images/courses/Image-3.png';
-import { useGetCourseQuery } from '../../redux/features/apiSlice';
-import { useParams } from 'react-router-dom';
+import { useGetCourseQuery, useEnrollUserMutation, useUnenrollUserMutation } from '../../redux/features/apiSlice';
+import { selectToken, selectCurrentUser } from '../../redux/features/authSlice';
+import { useParams, useNavigate } from 'react-router-dom';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
-import { Link } from 'react-router-dom';
-
-
+import toast from 'react-hot-toast';
+import { useIsEnrolledMutation } from '../../redux/features/apiSlice';
 
 const dummyCourse = {
     stats: {
@@ -37,8 +34,20 @@ export default function CourseDetails() {
     const { t } = useTranslation();
     const isDark = theme === 'dark';
     const { id } = useParams();
-    const { data, error, isLoading } = useGetCourseQuery(id);
     const lang = useSelector(selectTranslate);
+    const navigate = useNavigate();
+    const token = useSelector(selectToken);
+    const user = useSelector(selectCurrentUser);
+
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [showCongrats, setShowCongrats] = useState(false);
+    const [showUnenrollConfirm, setShowUnenrollConfirm] = useState(false);
+    const [showUnenrollSuccess, setShowUnenrollSuccess] = useState(false);
+    const [enrollUser, { isLoading: isEnrolling }] = useEnrollUserMutation();
+    const { data, error, isLoading, refetch } = useGetCourseQuery(id, { refetchOnMountOrArgChange: true });
+    const [isEnrolled, { isLoading: isCheckingEnrollment }] = useIsEnrolledMutation();
+    const [enrollmentStatus, setEnrollmentStatus] = useState(false);
+    const [unenrollUser, { isLoading: isUnenrolling }] = useUnenrollUserMutation();
 
     useEffect(() => {
         if (data) {
@@ -47,7 +56,79 @@ export default function CourseDetails() {
         if (error) {
             console.error('Error loading course:', error);
         }
+        console.log(user.id)
     }, [data, error]);
+
+    useEffect(() => {
+        const checkEnrollmentStatus = async () => {
+            if (user && token) {
+                try {
+                    const response = await isEnrolled({
+                        userId: user.id,
+                        courseId: id,
+                        token
+                    }).unwrap();
+
+                    console.log("Enrollment check response:", response);
+
+                    // اعتمد على isEnrolled الذي يرجعه السيرفر
+                    setEnrollmentStatus(response.isEnrolled === true);
+                } catch (error) {
+                    console.error('Error checking enrollment:', error);
+                    setEnrollmentStatus(false);
+                }
+            }
+        };
+
+        checkEnrollmentStatus();
+    }, [user, token, id]);
+
+    useEffect(() => {
+        console.log(enrollmentStatus);
+    }, [enrollmentStatus]);
+
+
+    const handleUnenroll = () => {
+        setShowUnenrollConfirm(true);
+    };
+
+    const handleRegister = () => {
+        setShowConfirm(true);
+    };
+
+    const handleConfirm = async () => {
+        try {
+            await enrollUser({ id, token }).unwrap();
+            setShowConfirm(false);
+            setShowCongrats(true);
+            toast.success(lang === 'ar' ? 'تم التسجيل بنجاح!' : 'Enrolled successfully!');
+            setTimeout(() => {
+                setShowCongrats(false);
+                navigate(`/course/${id}`);
+            }, 1800);
+        } catch (e) {
+            setShowConfirm(false);
+            toast.error(lang === 'ar' ? 'حدث خطأ أثناء التسجيل' : 'Error during enrollment');
+        }
+    };
+
+
+    const handleUnenrollConfirm = async () => {
+        try {
+            await unenrollUser({ id, token }).unwrap();
+            setShowUnenrollConfirm(false);
+            setShowUnenrollSuccess(true); // ممكن تستخدم toast هنا بدلاً
+            toast.success(lang === 'ar' ? 'تم إلغاء التسجيل بنجاح' : 'Unenrolled successfully');
+            setEnrollmentStatus(false); // حدث الحالة محليًا
+        } catch (error) {
+            toast.error(lang === 'ar' ? 'حدث خطأ أثناء الإلغاء' : 'Error during unenrollment');
+            console.error("Unenroll error:", error);
+            setShowUnenrollConfirm(false);
+        }
+    };
+
+
+
 
     if (isLoading) return <LoadingPage />;
     if (error) {
@@ -86,6 +167,91 @@ export default function CourseDetails() {
 
     return (
         <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen mt-18 w-full ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+            {/* Popup تأكيد التسجيل */}
+            {showConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className={`rounded-2xl shadow-xl p-8 max-w-sm w-full ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+                        <h2 className="text-xl font-bold mb-4 text-center">{lang === 'ar' ? 'تأكيد التسجيل' : 'Confirm Enrollment'}</h2>
+                        <p className="mb-6 text-center">{lang === 'ar' ? 'هل أنت متأكد أنك تريد التسجيل في هذه الدورة؟' : 'Are you sure you want to enroll in this course?'}</p>
+                        <div className="flex gap-4 justify-center">
+                            <button
+                                onClick={handleConfirm}
+                                className="px-6 py-2 rounded-lg bg-primary text-white font-bold shadow hover:bg-primary/90 transition"
+                                disabled={isEnrolling}
+                            >
+                                {isEnrolling ? (lang === 'ar' ? 'جاري التسجيل...' : 'Enrolling...') : (lang === 'ar' ? 'تأكيد' : 'Confirm')}
+                            </button>
+                            <button
+                                onClick={() => setShowConfirm(false)}
+                                className="px-6 py-2 rounded-lg bg-gray-300 text-gray-800 font-bold shadow hover:bg-gray-400 transition"
+                            >
+                                {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Popup تهنئة */}
+            {showCongrats && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className={`rounded-2xl shadow-xl p-8 max-w-sm w-full flex flex-col items-center ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+                        <svg className="mb-4" width="48" height="48" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#22c55e" /><path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        <h2 className="text-2xl font-bold mb-2 text-center">{lang === 'ar' ? 'مبروك!' : 'Congratulations!'}</h2>
+                        <p className="text-center mb-2">{lang === 'ar' ? 'تم تسجيلك في الدورة بنجاح.' : 'You have been enrolled in the course successfully.'}</p>
+                    </div>
+                </div>
+            )}
+            {/* Popup تأكيد إلغاء التسجيل */}
+            {showUnenrollConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className={`rounded-2xl shadow-xl p-8 max-w-sm w-full ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+                        <h2 className="text-xl font-bold mb-4 text-center">{lang === 'ar' ? 'تأكيد إلغاء التسجيل' : 'Confirm Unenrollment'}</h2>
+                        <p className="mb-6 text-center">{lang === 'ar' ? 'هل أنت متأكد أنك تريد إلغاء تسجيلك في هذه الدورة؟' : 'Are you sure you want to unenroll from this course?'}</p>
+                        <div className="flex gap-4 justify-center">
+                            <button
+                                onClick={handleUnenrollConfirm}  // هنا نربط الدالة
+                                className="px-6 py-2 rounded-lg bg-red-600 text-white font-bold shadow hover:bg-red-700 transition"
+                                disabled={isUnenrolling}
+                            >
+                                {isUnenrolling
+                                    ? (lang === 'ar' ? 'جاري الإلغاء...' : 'Unenrolling...')
+                                    : (lang === 'ar' ? 'تأكيد' : 'Confirm')}
+                            </button>
+
+                            <button
+                                onClick={() => setShowUnenrollConfirm(false)}
+                                className="px-6 py-2 rounded-lg bg-gray-300 text-gray-800 font-bold shadow hover:bg-gray-400 transition"
+                            >
+                                {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Popup تهنئة إلغاء التسجيل */}
+            {showUnenrollSuccess && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className={`rounded-2xl shadow-xl p-8 max-w-sm w-full flex flex-col items-center ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+                        <svg className="mb-4" width="48" height="48" fill="none" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" fill="#ef4444" />
+                            <path d="M15 10l-4 4-2-2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <h2 className="text-2xl font-bold mb-2 text-center">
+                            {lang === 'ar' ? 'تم الإلغاء' : 'Unenrolled'}
+                        </h2>
+                        <p className="text-center mb-4">
+                            {lang === 'ar' ? 'تم إلغاء تسجيلك في الدورة بنجاح.' : 'You have been unenrolled from the course successfully.'}
+                        </p>
+                        <button
+                            onClick={() => setShowUnenrollSuccess(false)}
+                            className="mt-2 px-6 py-2 rounded-lg bg-primary text-white font-semibold shadow hover:bg-primary/90 transition"
+                        >
+                            {lang === 'ar' ? 'تم' : 'Done'}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Hero Section */}
             <motion.div
                 initial={{ opacity: 0 }}
@@ -105,19 +271,46 @@ export default function CourseDetails() {
                         <span className={`text-sm font-medium text-gray-800 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.teacher.name}</span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-4">
-                        <Link
-                            to={`/course/${data.id}`}
-                            className="px-6 py-3 rounded-xl bg-primary text-white font-bold shadow-lg hover:bg-primary/90 transition text-lg"
-                        >
-                            Register for free
-                            <span className="block text-xs font-normal mt-1">Starts {dummyCourse.stats.startDate}</span>
-                        </Link>
+                        {/* زر التسجيل أو إلغاء التسجيل حسب حالة المستخدم */}
+                        {!enrollmentStatus ? (
+                            <button
+                                onClick={handleRegister}
+                                disabled={isCheckingEnrollment}
+                                className={`px-6 py-3 rounded-xl font-bold shadow-lg transition text-lg ${isCheckingEnrollment
+                                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                                        : 'bg-primary text-white hover:bg-primary/90'
+                                    }`}
+                            >
+                                {isCheckingEnrollment
+                                    ? (lang === 'ar' ? 'يرجى الانتظار...' : 'Please wait...')
+                                    : (lang === 'ar' ? 'سجل مجاناً' : 'Register for free')}
+                                {!isCheckingEnrollment && (
+                                    <span className="block text-xs font-normal mt-1">
+                                        {lang === 'ar' ? 'تبدأ في' : 'Starts'} {dummyCourse.stats.startDate}
+                                    </span>
+                                )}
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleUnenroll}
+                                disabled={isCheckingEnrollment}
+                                className={`px-6 py-3 rounded-xl font-bold shadow-lg transition text-lg ${isCheckingEnrollment
+                                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                                        : 'bg-red-600 text-white hover:bg-red-700'
+                                    }`}
+                            >
+                                {isCheckingEnrollment
+                                    ? (lang === 'ar' ? 'يرجى الانتظار...' : 'Please wait...')
+                                    : (lang === 'ar' ? 'إلغاء التسجيل من الدورة' : 'Unenroll from course')}
+                            </button>
+                        )}
+
                         <span className={`text-xs text-gray-500 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mt-2 sm:mt-0`}>
-                            {dummyCourse.stats.registered.toLocaleString()} already registered
+                            {dummyCourse.stats.registered.toLocaleString()} {lang === 'ar' ? 'مسجل بالفعل' : 'already registered'}
                         </span>
                     </div>
                     <div className={`text-sm text-gray-500 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>
-                        Try for free: Sign up to start your free trial with full access for 7 days.
+                        {lang === 'ar' ? 'جرّب مجاناً: سجّل لبدء تجربتك المجانية مع وصول كامل لمدة 7 أيام.' : 'Try for free: Sign up to start your free trial with full access for 7 days.'}
                     </div>
                 </div>
                 <div className="flex-shrink-0 w-full md:w-80 h-48 md:h-64 rounded-2xl overflow-hidden shadow-xl bg-gray-200 dark:bg-gray-800">

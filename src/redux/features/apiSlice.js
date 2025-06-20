@@ -73,6 +73,46 @@ export const apiSlice = createApi({
         method: 'GET',
       }),
     }),
+    enrollUser: builder.mutation({
+      query: ({ id, token }) => ({
+        url: `v1/courses/${id}/enroll`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    unenrollUser: builder.mutation({
+      query: ({ id, token }) => ({
+        url: `v1/courses/${id}/unenroll`,
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    isEnrolled: builder.mutation({
+      query: ({ userId, courseId, token }) => ({
+        url: `v1/enrollment/check`,
+        method: 'POST',
+        body: { 
+          'user_id': userId,
+          'course_id': courseId
+         },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    userEnrollments: builder.query({
+      query: ({ id, token }) => ({
+        url: `v1/users/${id}/enrollments`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
   }),
 
 });
@@ -87,4 +127,8 @@ export const {
   useResendVerificationMutation,
   useGetCoursesQuery,
   useGetCourseQuery,
+  useEnrollUserMutation,
+  useUnenrollUserMutation,
+  useUserEnrollmentsQuery,
+  useIsEnrolledMutation
 } = apiSlice;
