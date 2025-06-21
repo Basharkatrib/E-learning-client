@@ -5,7 +5,7 @@ import { selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import FAQ from '../FAQ/FAQ';
-import { useGetCourseQuery, useEnrollUserMutation, useUnenrollUserMutation } from '../../redux/features/apiSlice';
+import { useGetCourseQuery, useEnrollUserMutation, useUnenrollUserMutation, useCourseEnrollmentsQuery } from '../../redux/features/apiSlice';
 import { selectToken, selectCurrentUser } from '../../redux/features/authSlice';
 import { useParams, useNavigate } from 'react-router-dom';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
@@ -48,16 +48,10 @@ export default function CourseDetails() {
     const [isEnrolled, { isLoading: isCheckingEnrollment }] = useIsEnrolledMutation();
     const [enrollmentStatus, setEnrollmentStatus] = useState(false);
     const [unenrollUser, { isLoading: isUnenrolling }] = useUnenrollUserMutation();
+    const { data: enrollmentsData, refetch: refetchEnrollments, error: enrollmentsError } = useCourseEnrollmentsQuery({ id, token }, {
+        skip: !token
+    });
 
-    useEffect(() => {
-        if (data) {
-            console.log('Course data:', data);
-        }
-        if (error) {
-            console.error('Error loading course:', error);
-        }
-        console.log(user.id)
-    }, [data, error]);
 
     useEffect(() => {
         const checkEnrollmentStatus = async () => {
@@ -69,12 +63,8 @@ export default function CourseDetails() {
                         token
                     }).unwrap();
 
-                    console.log("Enrollment check response:", response);
-
-                    // اعتمد على isEnrolled الذي يرجعه السيرفر
                     setEnrollmentStatus(response.isEnrolled === true);
                 } catch (error) {
-                    console.error('Error checking enrollment:', error);
                     setEnrollmentStatus(false);
                 }
             }
@@ -83,9 +73,6 @@ export default function CourseDetails() {
         checkEnrollmentStatus();
     }, [user, token, id]);
 
-    useEffect(() => {
-        console.log(enrollmentStatus);
-    }, [enrollmentStatus]);
 
 
     const handleUnenroll = () => {
@@ -102,6 +89,8 @@ export default function CourseDetails() {
             setShowConfirm(false);
             setShowCongrats(true);
             toast.success(lang === 'ar' ? 'تم التسجيل بنجاح!' : 'Enrolled successfully!');
+            refetchEnrollments();
+            setEnrollmentStatus(true);
             setTimeout(() => {
                 setShowCongrats(false);
                 navigate(`/course/${id}`);
@@ -117,12 +106,12 @@ export default function CourseDetails() {
         try {
             await unenrollUser({ id, token }).unwrap();
             setShowUnenrollConfirm(false);
-            setShowUnenrollSuccess(true); // ممكن تستخدم toast هنا بدلاً
+            setShowUnenrollSuccess(true); 
             toast.success(lang === 'ar' ? 'تم إلغاء التسجيل بنجاح' : 'Unenrolled successfully');
-            setEnrollmentStatus(false); // حدث الحالة محليًا
+            setEnrollmentStatus(false);
+            refetchEnrollments();
         } catch (error) {
             toast.error(lang === 'ar' ? 'حدث خطأ أثناء الإلغاء' : 'Error during unenrollment');
-            console.error("Unenroll error:", error);
             setShowUnenrollConfirm(false);
         }
     };
@@ -167,7 +156,6 @@ export default function CourseDetails() {
 
     return (
         <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen mt-18 w-full ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-            {/* Popup تأكيد التسجيل */}
             {showConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                     <div className={`rounded-2xl shadow-xl p-8 max-w-sm w-full ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
@@ -191,7 +179,6 @@ export default function CourseDetails() {
                     </div>
                 </div>
             )}
-            {/* Popup تهنئة */}
             {showCongrats && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                     <div className={`rounded-2xl shadow-xl p-8 max-w-sm w-full flex flex-col items-center ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
@@ -201,7 +188,6 @@ export default function CourseDetails() {
                     </div>
                 </div>
             )}
-            {/* Popup تأكيد إلغاء التسجيل */}
             {showUnenrollConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                     <div className={`rounded-2xl shadow-xl p-8 max-w-sm w-full ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
@@ -209,7 +195,7 @@ export default function CourseDetails() {
                         <p className="mb-6 text-center">{lang === 'ar' ? 'هل أنت متأكد أنك تريد إلغاء تسجيلك في هذه الدورة؟' : 'Are you sure you want to unenroll from this course?'}</p>
                         <div className="flex gap-4 justify-center">
                             <button
-                                onClick={handleUnenrollConfirm}  // هنا نربط الدالة
+                                onClick={handleUnenrollConfirm} 
                                 className="px-6 py-2 rounded-lg bg-red-600 text-white font-bold shadow hover:bg-red-700 transition"
                                 disabled={isUnenrolling}
                             >
@@ -228,7 +214,6 @@ export default function CourseDetails() {
                     </div>
                 </div>
             )}
-            {/* Popup تهنئة إلغاء التسجيل */}
             {showUnenrollSuccess && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                     <div className={`rounded-2xl shadow-xl p-8 max-w-sm w-full flex flex-col items-center ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
@@ -252,7 +237,6 @@ export default function CourseDetails() {
                 </div>
             )}
 
-            {/* Hero Section */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -271,7 +255,6 @@ export default function CourseDetails() {
                         <span className={`text-sm font-medium text-gray-800 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.teacher.name}</span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-4">
-                        {/* زر التسجيل أو إلغاء التسجيل حسب حالة المستخدم */}
                         {!enrollmentStatus ? (
                             <button
                                 onClick={handleRegister}
@@ -306,7 +289,7 @@ export default function CourseDetails() {
                         )}
 
                         <span className={`text-xs text-gray-500 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mt-2 sm:mt-0`}>
-                            {dummyCourse.stats.registered.toLocaleString()} {lang === 'ar' ? 'مسجل بالفعل' : 'already registered'}
+                            {(enrollmentsData?.data?.length || 0).toLocaleString()} {lang === 'ar' ? 'مسجل بالفعل' : 'already registered'}
                         </span>
                     </div>
                     <div className={`text-sm text-gray-500 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>
@@ -464,7 +447,7 @@ export default function CourseDetails() {
                             {t('Start Learning Now')}
                         </motion.button>
                         <p className={`text-sm mt-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {t('Join')} {dummyCourse.stats.registered.toLocaleString()} {t('students already enrolled')}
+                            {t('Join')} {(enrollmentsData?.length || 0).toLocaleString()} {t('students already enrolled')}
                         </p>
                     </div>
                 </div>
