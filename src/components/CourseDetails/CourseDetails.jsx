@@ -282,12 +282,12 @@ export default function CourseDetails() {
                                     whileTap={{ scale: 0.97 }}
                                     onClick={handleUnenroll}
                                     disabled={isCheckingEnrollment}
-                                    className={`px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-lg flex items-center gap-2
+                                    className={`px-3 md:px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-sm md:text-lg flex items-center gap-2
                                         bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white
                                         disabled:opacity-50 disabled:cursor-not-allowed
                                         ${isCheckingEnrollment ? 'bg-gray-400' : ''}`}
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                     {isCheckingEnrollment
@@ -299,11 +299,11 @@ export default function CourseDetails() {
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => navigate(`/course/${id}`)}
-                                    className={`px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-lg flex items-center gap-2 
+                                    className={`px-3 md:px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-sm md:text-lg flex items-center gap-2 
                                         bg-gradient-to-r from-primary to-blue-600 hover:from-blue-700 hover:to-primary text-white
                                         ${isDark ? '' : ''}`}
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-5.197-3.027A1 1 0 008 9.027v5.946a1 1 0 001.555.832l5.197-3.027a1 1 0 000-1.664z" />
                                         <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="2" fill="none" />
                                     </svg>

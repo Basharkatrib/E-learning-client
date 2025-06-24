@@ -449,7 +449,6 @@ function Navbar() {
                 </div>
 
                 {/* Mobile Menu */}
-                {/* Mobile Menu */}
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
@@ -464,24 +463,41 @@ function Navbar() {
                                     {navItems.map((item) => {
                                         const isActive = currentPath === item.href
 
-                                        return <motion.div>
-                                            <Link
-                                                to={item.href}
-                                                onClick={() => setIsOpen(false)}
-                                                // ... existing code ...
-                                                className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
-                                                    ? `text-gray-200 hover:bg-gray-700/50 ${isActive ? 'bg-gray-700 text-primary' : ''}`
-                                                    : `text-gray-700 hover:bg-gray-100 ${isActive ? 'bg-gray-200 text-primary' : ''}`
+                                        return (
+                                            <motion.div key={item.href}>
+                                                <Link
+                                                    to={item.href}
+                                                    onClick={() => setIsOpen(false)}
+                                                    className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
+                                                        ? `text-gray-200 hover:bg-gray-700/50 ${isActive ? 'bg-gray-700 text-primary' : ''}`
+                                                        : `text-gray-700 hover:bg-gray-100 ${isActive ? 'bg-gray-200 text-primary' : ''}`
                                                     }`}
-
+                                                >
+                                                    <span className="font-medium">{t(item.name)}</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ltr:rotate-0 rtl:rotate-180 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                </Link>
+                                            </motion.div>
+                                        );
+                                    })}
+                                    {user && (
+                                        <motion.div key="my-courses">
+                                            <Link
+                                                to="/my-courses"
+                                                onClick={() => setIsOpen(false)}
+                                                className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
+                                                    ? `text-gray-200 hover:bg-gray-700/50 ${currentPath === '/my-courses' ? 'bg-gray-700 text-primary' : ''}`
+                                                    : `text-gray-700 hover:bg-gray-100 ${currentPath === '/my-courses' ? 'bg-gray-200 text-primary' : ''}`
+                                                }`}
                                             >
-                                                <span className="font-medium">{t(item.name)}</span>
+                                                <span className="font-medium">{(lang === "en") ? "MyCourses" : "الدورات المسجل بها"}</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ltr:rotate-0 rtl:rotate-180 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                                 </svg>
                                             </Link>
                                         </motion.div>
-                                    })}
+                                    )}
                                 </div>
 
                                 <div className={`mt-6 pt-6 ${theme === 'dark' ? 'border-t border-gray-700' : 'border-t border-gray-200'}`}>
