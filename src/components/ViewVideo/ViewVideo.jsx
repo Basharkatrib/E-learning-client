@@ -47,7 +47,8 @@ const ViewVideo = () => {
 
   const handleVideoClick = (video) => {
     setCurrentVideo(video);
-    videoPlayerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // scroll to top of the page smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFullscreen = () => {

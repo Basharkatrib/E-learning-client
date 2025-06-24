@@ -90,7 +90,7 @@ export const apiSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
-      invalidatesTags: ['UserEnrollments'], // ← هذه الإضافة
+      invalidatesTags: ['UserEnrollments'],
     }),
     isEnrolled: builder.mutation({
       query: ({ userId, courseId, token }) => ({
@@ -113,7 +113,7 @@ export const apiSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
-      providesTags: ['UserEnrollments'], // ← هذه الإضافة
+      providesTags: ['UserEnrollments'],
     }),
     courseEnrollments: builder.query({
       query: ({ id, token }) => ({

@@ -30,6 +30,7 @@ import Pusher from 'pusher-js';
 import AboutUsPage from './pages/AboutUsPage/AboutUsPage';
 import ProtectedCourseRoute from './components/ProtectedCourse/ProtectedCourseRoute';
 import ViewMyCourses from './pages/ViewMyCourses/ViewMyCourses';
+import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 
 
 function App() {
@@ -84,31 +85,32 @@ function App() {
     <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
       <Toaster position="top-center" />
       <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/signup" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/forget" element={<ForgetPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/me" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/contactus" element={<Contact />} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/error" element={<ErrorPage />} />
-        <Route path="/loading" element={<LoadingPage />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/my-courses" element={<ViewMyCourses />} />
-        <Route
-          path="/course/:id"
-          element={
-            <ProtectedCourseRoute>
-              <VedioPage />
-            </ProtectedCourseRoute>
-          }
-        />
-        <Route path="/course-details/:id" element={<CourseDetailsPage />} />
-        <Route path="/aboutus" element={<AboutUsPage />} />
-        <Route path="*" element={<ErrorPage />} />
-      </Routes>
+      <ScrollToTop />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/signup" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forget" element={<ForgetPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/me" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/contactus" element={<Contact />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/error" element={<ErrorPage />} />
+          <Route path="/loading" element={<LoadingPage />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/my-courses" element={<ViewMyCourses />} />
+          <Route
+            path="/course/:id"
+            element={
+              <ProtectedCourseRoute>
+                <VedioPage />
+              </ProtectedCourseRoute>
+            }
+          />
+          <Route path="/course-details/:id" element={<CourseDetailsPage />} />
+          <Route path="/aboutus" element={<AboutUsPage />} />
+          <Route path="*" element={<ErrorPage />} />
+        </Routes>
       <Footer />
       <Chat />
     </div>
