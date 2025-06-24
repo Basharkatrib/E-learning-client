@@ -75,11 +75,11 @@ function App() {
   //   };
   // }, [theme, dispatch]);
 
-  // useEffect(() => {
-  //   if (error) {
-  //     dispatch(logout());
-  //   }
-  // }, [error, dispatch]);
+  useEffect(() => {
+    if (error) {
+      dispatch(logout());
+    }
+  }, [error, dispatch]);
 
   return (
     <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
