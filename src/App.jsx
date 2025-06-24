@@ -29,6 +29,7 @@ import Chat from './components/Chat/Chat';
 import Pusher from 'pusher-js';
 import AboutUsPage from './pages/AboutUsPage/AboutUsPage';
 import ProtectedCourseRoute from './components/ProtectedCourse/ProtectedCourseRoute';
+import ViewMyCourses from './pages/ViewMyCourses/ViewMyCourses';
 
 
 function App() {
@@ -38,46 +39,46 @@ function App() {
   const token = useSelector(selectToken);
   const { error } = useGetCurrentUserQuery(token);
 
-  useEffect(() => {
-    Pusher.logToConsole = true;
+  // useEffect(() => {
+  //   Pusher.logToConsole = true;
 
-    const pusher = new Pusher(import.meta.env.VITE_PUSHER_API_KEY, {
-      cluster: 'eu',
-    });
-    const channel = pusher.subscribe('channel-name');
-    channel.bind('my-event', function (data) {
-      // Add notification to Redux store
-      dispatch(addNotification({
-        id: Date.now(), // Use timestamp as unique ID
-        message: data.data.message || 'New notification received!',
-        read: false,
-        timestamp: new Date().toISOString()
-      }));
+  //   const pusher = new Pusher(import.meta.env.VITE_PUSHER_API_KEY, {
+  //     cluster: 'eu',
+  //   });
+  //   const channel = pusher.subscribe('channel-name');
+  //   channel.bind('my-event', function (data) {
+  //     // Add notification to Redux store
+  //     dispatch(addNotification({
+  //       id: Date.now(), // Use timestamp as unique ID
+  //       message: data.data.message || 'New notification received!',
+  //       read: false,
+  //       timestamp: new Date().toISOString()
+  //     }));
 
-      // Show toast notification
-      toast(data.data.message || 'New notification received!', {
-        duration: 4000,
-        position: 'top-right',
-        style: {
-          background: theme === 'dark' ? '#1F2937' : '#fff',
-          color: theme === 'dark' ? '#fff' : '#000',
-          border: '1px solid #6D28D9',
-        },
-        icon: '🔔',
-      });
-    });
+  //     // Show toast notification
+  //     toast(data.data.message || 'New notification received!', {
+  //       duration: 4000,
+  //       position: 'top-right',
+  //       style: {
+  //         background: theme === 'dark' ? '#1F2937' : '#fff',
+  //         color: theme === 'dark' ? '#fff' : '#000',
+  //         border: '1px solid #6D28D9',
+  //       },
+  //       icon: '🔔',
+  //     });
+  //   });
 
-    return () => {
-      channel.unbind_all();
-      channel.unsubscribe();
-    };
-  }, [theme, dispatch]);
+  //   return () => {
+  //     channel.unbind_all();
+  //     channel.unsubscribe();
+  //   };
+  // }, [theme, dispatch]);
 
-  useEffect(() => {
-    if (error) {
-      dispatch(logout());
-    }
-  }, [error, dispatch]);
+  // useEffect(() => {
+  //   if (error) {
+  //     dispatch(logout());
+  //   }
+  // }, [error, dispatch]);
 
   return (
     <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
@@ -95,6 +96,7 @@ function App() {
         <Route path="/error" element={<ErrorPage />} />
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/my-courses" element={<ViewMyCourses />} />
         <Route
           path="/course/:id"
           element={

@@ -12,7 +12,6 @@ import { useLogoutMutation } from '../../redux/features/apiSlice';
 import { toast } from 'react-hot-toast';
 import { logout as logoutAction, selectToken, selectCurrentUser } from '../../redux/features/authSlice';
 import { selectNotifications, selectUnreadCount, removeNotification, markAsRead, markAllAsRead, clearAllNotifications } from '../../redux/features/notificationsSlice';
-
 function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -100,7 +99,7 @@ function Navbar() {
                         />
                         <ul className='hidden md:flex items-center gap-6'>
                             {navItems.map((item) => {
-                                const isActive = currentPath === item.href
+                                const isActive = currentPath === item.href;
                                 return (
                                     <motion.li key={item.id}>
                                         <Link
@@ -117,8 +116,22 @@ function Navbar() {
                                             {t(item.name)}
                                         </Link>
                                     </motion.li>
-                                )
+                                );
                             })}
+
+                            {user && (
+                                <motion.li>
+                                    <Link
+                                        to="/my-courses"
+                                        className={`p-2 rounded-[4px] transition-all duration-200 ${theme === 'dark'
+                                            ? 'text-white hover:bg-gray-700'
+                                            : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
+                                            }`}
+                                    >
+                                        {(lang === "en") ? "MyCourses" : "الدورات المسجل بها"}
+                                    </Link>
+                                </motion.li>
+                            )}
                         </ul>
                     </div>
 
