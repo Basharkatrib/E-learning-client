@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
 import { selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import FAQ from '../FAQ/FAQ';
 import { useGetCourseQuery, useEnrollUserMutation, useUnenrollUserMutation, useCourseEnrollmentsQuery } from '../../redux/features/apiSlice';
 import { selectToken, selectCurrentUser } from '../../redux/features/authSlice';
@@ -11,6 +11,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
 import toast from 'react-hot-toast';
 import { useIsEnrolledMutation } from '../../redux/features/apiSlice';
+import { useCourseRatingsMutation, useCourseRatingsUpdateMutation, useCourseRatingsDeleteMutation, useCourseMyRatingQuery } from '../../redux/features/apiSlice';
 
 const dummyCourse = {
     stats: {
@@ -51,7 +52,15 @@ export default function CourseDetails() {
     const { data: enrollmentsData, refetch: refetchEnrollments, error: enrollmentsError } = useCourseEnrollmentsQuery({ id, token }, {
         skip: !token
     });
-
+    const [showRating, setShowRating] = useState(false);
+    const [rating, setRating] = useState(0);
+    const [review, setReview] = useState('');
+    const [editMode, setEditMode] = useState(false);
+    const [submitRating, { isLoading: isRatingLoading }] = useCourseRatingsMutation();
+    const [updateRating, { isLoading: isUpdateLoading }] = useCourseRatingsUpdateMutation();
+    const [deleteRating, { isLoading: isDeleteLoading }] = useCourseRatingsDeleteMutation();
+    const { data: myRatingData, refetch: refetchMyRating, isLoading: isMyRatingLoading } = useCourseMyRatingQuery({ token, courseId: id }, { skip: !token || !id });
+    const [hideRating, setHideRating] = useState(false);
 
     useEffect(() => {
         const checkEnrollmentStatus = async () => {
@@ -62,7 +71,7 @@ export default function CourseDetails() {
                         courseId: id,
                         token
                     }).unwrap();
-
+                    console.log(response);
                     setEnrollmentStatus(response.isEnrolled === true);
                 } catch (error) {
                     setEnrollmentStatus(false);
@@ -73,7 +82,16 @@ export default function CourseDetails() {
         checkEnrollmentStatus();
     }, [user, token, id]);
 
-
+    useEffect(() => {
+        if (myRatingData && myRatingData.rating) {
+            setRating(myRatingData.rating.rating);
+            setReview(myRatingData.rating.review || '');
+            setHideRating(false);
+        } else {
+            setRating(0);
+            setReview('');
+        }
+    }, [myRatingData]);
 
     const handleUnenroll = () => {
         setShowUnenrollConfirm(true);
@@ -101,7 +119,6 @@ export default function CourseDetails() {
         }
     };
 
-
     const handleUnenrollConfirm = async () => {
         try {
             await unenrollUser({ id, token }).unwrap();
@@ -116,8 +133,42 @@ export default function CourseDetails() {
         }
     };
 
+    const handleStarClick = (star) => {
+        setRating(star);
+    };
 
+    const handleSubmitRating = async (e) => {
+        e.preventDefault();
+        try {
+            if (myRatingData && myRatingData.rating && editMode) {
+                await updateRating({ id, token, ratingId: myRatingData.rating.id, rating, review }).unwrap();
+                toast.success(lang === 'ar' ? 'تم تحديث التقييم بنجاح' : 'Rating updated successfully');
+                setEditMode(false);
+            } else {
+                await submitRating({ id, token, rating, review }).unwrap();
+                toast.success(lang === 'ar' ? 'تم إرسال التقييم بنجاح' : 'Rating submitted successfully');
+            }
+            setShowRating(false);
+            refetchMyRating();
+        } catch (err) {
+            toast.error(lang === 'ar' ? 'حدث خطأ أثناء إرسال التقييم' : 'Error submitting rating');
+        }
+    };
 
+    const handleDeleteRating = async () => {
+        try {
+            await deleteRating({ token, courseId: id, ratingId: myRatingData.rating.id }).unwrap();
+            toast.success(lang === 'ar' ? 'تم حذف التقييم' : 'Rating deleted');
+            setShowRating(false);
+            setEditMode(false);
+            setRating(0);
+            setReview('');
+            setHideRating(true);
+            refetchMyRating();
+        } catch (err) {
+            toast.error(lang === 'ar' ? 'حدث خطأ أثناء حذف التقييم' : 'Error deleting rating');
+        }
+    };
 
     if (isLoading) return <LoadingPage />;
     if (error) {
@@ -477,6 +528,99 @@ export default function CourseDetails() {
                 </div>
             </div>
             <FAQ Faqs={data.faqs} />
+
+            <div className="pb-12 px-4 sm:px-6 lg:px-8">
+            {enrollmentStatus && (
+                <div className={`max-w-md mx-auto rounded-xl border border-gray-200 dark:border-gray-700 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-primary/5 to-transparent'} p-5 mt-8 mb-8 flex flex-col items-center`}>
+                    <div className="flex flex-col items-center mb-2">
+                        <svg className="h-12 w-12 text-yellow-400 mb-1 drop-shadow" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+                        </svg>
+                        <h3 className={`text-lg font-bold text-center ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{lang === 'ar' ? 'تقييمك للدورة' : 'Your Course Rating'}</h3>
+                    </div>
+                    {isMyRatingLoading ? (
+                        <div className="text-center py-4 text-gray-400 text-sm">{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>
+                    ) : (!hideRating && myRatingData && myRatingData.rating) ? (
+                        <div className="mb-3 flex flex-col items-center gap-1 w-full">
+                            <div className="flex items-center gap-1 mb-1">
+                                {[1,2,3,4,5].map((star) => (
+                                    <svg
+                                        key={star}
+                                        className={`h-6 w-6 ${myRatingData.rating.rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                    >
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+                                    </svg>
+                                ))}
+                            </div>
+                            <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} text-center mb-1 w-full break-words`}>{myRatingData.rating.review}</div>
+                            <div className="flex gap-2 mt-1">
+                                <button onClick={() => { setShowRating(true); setEditMode(true); }} className="px-3 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-medium border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition">{lang === 'ar' ? 'تعديل' : 'Edit'}</button>
+                                <button onClick={handleDeleteRating} disabled={isDeleteLoading} className="px-3 py-1 rounded bg-gray-100 dark:bg-gray-800 text-red-500 text-xs font-medium border border-gray-200 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-gray-700 transition disabled:opacity-50">{lang === 'ar' ? 'حذف' : 'Delete'}</button>
+                            </div>
+                        </div>
+                    ) : null}
+                    <div className="flex flex-col items-center gap-2 mb-2 w-full">
+                        <button
+                            onClick={() => { setShowRating((v) => !v); setEditMode(false); }}
+                            className="w-full py-2 rounded bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition"
+                        >
+                            {lang === 'ar' ? (showRating ? 'إخفاء التقييم' : 'قيّم هذه الدورة') : (showRating ? 'Hide Rating' : 'Rate this course')}
+                        </button>
+                    </div>
+                    <AnimatePresence>
+                    {showRating && (
+                        <motion.form 
+                            initial={{ opacity: 0, y: 20 }} 
+                            animate={{ opacity: 1, y: 0 }} 
+                            exit={{ opacity: 0, y: 20 }} 
+                            transition={{ duration: 0.3, type: 'spring' }}
+                            onSubmit={handleSubmitRating} 
+                            className="space-y-3 w-full"
+                        >
+                            <div className="flex items-center justify-center gap-1 mb-1">
+                                {[1,2,3,4,5].map((star) => (
+                                    <button
+                                        key={star}
+                                        type="button"
+                                        onClick={() => handleStarClick(star)}
+                                        className="focus:outline-none"
+                                    >
+                                        <svg
+                                            className={`h-7 w-7 ${rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+                                        </svg>
+                                    </button>
+                                ))}
+                            </div>
+                            <textarea
+                                className="w-full rounded border border-gray-200 dark:border-gray-700 p-2 focus:outline-none focus:ring-1 focus:ring-primary bg-white dark:bg-gray-900 text-sm shadow-inner min-h-[50px] resize-none transition-all duration-200 text-black dark:text-white"
+                                rows={2}
+                                placeholder={lang === 'ar' ? 'اكتب مراجعتك هنا (اختياري)' : 'Write your review here (optional)'}
+                                value={review}
+                                onChange={e => setReview(e.target.value)}
+                            />
+                            <button
+                                type="submit"
+                                disabled={isRatingLoading || isUpdateLoading || rating === 0}
+                                className="w-full py-2 rounded bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition disabled:opacity-50"
+                            >
+                                {(isRatingLoading || isUpdateLoading)
+                                    ? (lang === 'ar' ? 'جاري الإرسال...' : 'Submitting...')
+                                    : (editMode
+                                        ? (lang === 'ar' ? 'تحديث التقييم' : 'Update Rating')
+                                        : (lang === 'ar' ? 'إرسال التقييم' : 'Submit Rating'))}
+                            </button>
+                        </motion.form>
+                    )}
+                    </AnimatePresence>
+                </div>
+            )}
+            </div>
 
         </div>
     );

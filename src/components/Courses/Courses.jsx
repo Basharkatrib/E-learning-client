@@ -15,11 +15,6 @@ function Courses() {
 
     const { data: coursesData, isLoading, error } = useGetCoursesQuery();
 
-    // useEffect(() => {
-    //     if (coursesData) {
-    //         console.log(coursesData.data);
-    //     }
-    // }, [coursesData]);
 
     const containerVariants = {
         hidden: { opacity: 0 },

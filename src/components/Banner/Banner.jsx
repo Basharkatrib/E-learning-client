@@ -31,7 +31,8 @@ const Banner = () => {
             url: banner3,
             title: "Flexible Learning",
             subtitle: "Study at your own pace, anywhere, anytime"
-        }
+        },
+    
     ];
 
     useEffect(() => {
@@ -43,7 +44,7 @@ const Banner = () => {
     }, []);
 
     return (
-        <div className="relative h-[calc(100vh-72px)] overflow-hidden mt-18">
+        <div className="relative h-[calc(100vh-65px)] overflow-hidden mt-18">
             <AnimatePresence mode='wait'>
                 <motion.div
                     key={currentImageIndex}

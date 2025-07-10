@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import CourseCard from './CourseCard';
 import { useGetCoursesQuery } from '../../redux/features/apiSlice';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
+import { useLocation } from 'react-router-dom';
 
 export default function CoursesPage() {
   const theme = useSelector(selectTheme);
@@ -13,10 +14,20 @@ export default function CoursesPage() {
   const { t } = useTranslation();
   const { data: coursesData, isLoading, error } = useGetCoursesQuery();
 
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDuration, setSelectedDuration] = useState('all');
+
+  // تحديث selectedCategory من الكويري بارامز
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const catParam = params.get('category');
+    if (catParam) {
+      setSelectedCategory(catParam.toLowerCase());
+    }
+  }, [location.search]);
 
   const levels = useMemo(() => [
     { value: 'all', label: t('All') },

@@ -10,7 +10,7 @@ import twitter from '../../assets/images/footer/Twitter.svg';
 import linkedin from '../../assets/images/footer/linkedin.svg';
 import phone from '../../assets/images/footer/phone.svg';
 import location from '../../assets/images/footer/location.svg';
-import logo from '../../assets/images/footer/Logo.svg';
+import logo from '../../assets/images/footer/logo.png';
 
 // Dark mode icons
 import email_w from '../../assets/images/footer-white/email_w.svg';
@@ -76,7 +76,7 @@ function Footer() {
       <div className="px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-3 flex flex-col gap-6 items-start">
-            <img src={logo} alt="LearNova" className="h-10 w-auto" />
+            <img src={logo} alt="LearNova" className="h-15 w-auto" />
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <img src={theme === 'dark' ? email_w : email} alt="email" className="w-5 h-5" />

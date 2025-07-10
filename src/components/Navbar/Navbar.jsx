@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme, selectTheme } from '../../redux/features/themeSlice';
 import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
-import logo from '../../assets/images/navbar/Logo.svg';
+import logo from '../../assets/images/navbar/logo.png';
 import UAE from '../../assets/images/navbar/UAE.png';
 import USA from '../../assets/images/navbar/USA.jpeg';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -91,12 +91,15 @@ function Navbar() {
             <div className="px-4 sm:px-6 lg:px-8 w-full">
                 <div className="flex justify-between items-center py-4 w-full">
                     <div className="flex items-center gap-2">
-                        <motion.img
-                            whileHover={{ scale: 1.1 }}
-                            className="w-10 h-10"
-                            src={logo}
-                            alt="logo"
-                        />
+                        <Link to="/">
+                            <motion.img
+                                whileHover={{ scale: 1.1 }}
+                                className="w-auto h-15"
+                                src={logo}
+                                alt="logo"
+                            />
+                        </Link>
+
                         <ul className='hidden md:flex items-center gap-6'>
                             {navItems.map((item) => {
                                 const isActive = currentPath === item.href;
@@ -471,7 +474,7 @@ function Navbar() {
                                                     className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
                                                         ? `text-gray-200 hover:bg-gray-700/50 ${isActive ? 'bg-gray-700 text-primary' : ''}`
                                                         : `text-gray-700 hover:bg-gray-100 ${isActive ? 'bg-gray-200 text-primary' : ''}`
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <span className="font-medium">{t(item.name)}</span>
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ltr:rotate-0 rtl:rotate-180 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
@@ -489,7 +492,7 @@ function Navbar() {
                                                 className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
                                                     ? `text-gray-200 hover:bg-gray-700/50 ${currentPath === '/my-courses' ? 'bg-gray-700 text-primary' : ''}`
                                                     : `text-gray-700 hover:bg-gray-100 ${currentPath === '/my-courses' ? 'bg-gray-200 text-primary' : ''}`
-                                                }`}
+                                                    }`}
                                             >
                                                 <span className="font-medium">{(lang === "en") ? "MyCourses" : "الدورات المسجل بها"}</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ltr:rotate-0 rtl:rotate-180 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
