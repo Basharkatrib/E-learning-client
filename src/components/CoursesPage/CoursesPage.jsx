@@ -129,7 +129,7 @@ export default function CoursesPage() {
   return (
     <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="relative min-h-screen w-full overflow-x-hidden">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/10 via-blue-200/30 to-white dark:from-gray-900 dark:via-primary/10 dark:to-gray-950 transition-all duration-500" />
-      <div className="mt-10 pt-16 pb-6 px-4 sm:px-6 lg:px-8">
+      <div className="mt-14 pt-16 pb-6 px-4 sm:px-6 lg:px-8">
         {/* Search & Filters */}
         <div className="mb-4 space-y-4">
           {/* Search Bar */}

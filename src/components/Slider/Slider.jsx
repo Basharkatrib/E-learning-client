@@ -11,7 +11,7 @@ import { Link, useNavigate } from 'react-router-dom'
 
 const Slider = () => {
   const theme = useSelector(selectTheme)
-  const { data, isLoading } = useGetCategoriesQuery();
+  const { data, isLoading, isError, error } = useGetCategoriesQuery();
   const categories = data?.data || [];
   const navigate = useNavigate();
 
@@ -39,8 +39,8 @@ const Slider = () => {
         <div className="overflow-x-hidden">
           <Swiper
             modules={[Autoplay]}
-            spaceBetween={12}
-            slidesPerView={2}
+            spaceBetween={9}
+            slidesPerView={3}
             loop={false}
             speed={2000}
             centeredSlides={false}
@@ -50,7 +50,7 @@ const Slider = () => {
               reverseDirection: true,
             }}
             breakpoints={{
-              640: { slidesPerView: 2 },
+              640: { slidesPerView: 3 },
               768: { slidesPerView: 4 }, 
               1024: { slidesPerView: 6 }, 
               1536: { slidesPerView: 8 },
@@ -60,6 +60,8 @@ const Slider = () => {
           >
             {isLoading ? (
               <SwiperSlide><div className="text-center text-gray-400">Loading...</div></SwiperSlide>
+            ) : isError ? (
+              <SwiperSlide><div className="text-center text-red-500 font-semibold">حدث خطأ أثناء تحميل التصنيفات</div></SwiperSlide>
             ) : allChildren.map((child) => (
               <SwiperSlide key={child.id} className="flex items-center justify-center">
                 <div className="flex items-center justify-center group relative transition-all duration-300 hover:scale-110">

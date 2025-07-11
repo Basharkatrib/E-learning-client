@@ -48,6 +48,12 @@ function App() {
   
   useEffect(() => {
     if (error) {
+      console.log("CurrentUser error:", error);
+    }
+  }, [error]);
+  
+  useEffect(() => {
+    if (error && (error.originalStatus === 401 || error.originalStatus === 405)) {
       dispatch(logout());
     }
   }, [error, dispatch]);

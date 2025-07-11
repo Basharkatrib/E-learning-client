@@ -37,7 +37,7 @@ const MyCourses = () => {
     if (error) return <div className="text-red-500">Error loading courses</div>;
 
     return (
-        <div className={`min-h-screen py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-500 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className={`min-h-screen py-20 px-4 sm:px-6 lg:px-8 transition-colors duration-500 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
             <div className=" mx-auto">
                 <h2 className={`text-4xl sm:text-5xl font-extrabold text-center mb-10 mt-10 tracking-tight ${isDark ? 'text-white' : 'text-gray-800'}`}>
                     {(lang === "en" ? "My Enrolled Courses" : "الدورات التي التحقت بها")}

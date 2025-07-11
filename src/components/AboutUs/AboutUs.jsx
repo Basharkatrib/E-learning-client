@@ -140,7 +140,7 @@ export default function AboutUs() {
   const isDark = theme === 'dark';
   const isAr = lang === 'ar';
   return (
-    <div dir={isAr ? 'rtl' : 'ltr'} className={`min-h-screen overflow-hidden w-full mt-18 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} pt-8 pb-16`}> 
+    <div dir={isAr ? 'rtl' : 'ltr'} className={`min-h-screen overflow-hidden w-full mt-22 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} pt-8 pb-16`}> 
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}

@@ -6,6 +6,7 @@ import banner3 from '../../assets/images/banner/image-3.avif';
 import banner1 from '../../assets/images/banner/image-1.avif';
 import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 
 
 
@@ -15,7 +16,7 @@ const Banner = () => {
     const { t, i18n } = useTranslation();
     const lang = useSelector(selectTranslate);
 
-    
+
     const images = [
         {
             url: banner1,
@@ -32,7 +33,7 @@ const Banner = () => {
             title: "Flexible Learning",
             subtitle: "Study at your own pace, anywhere, anytime"
         },
-    
+
     ];
 
     useEffect(() => {
@@ -44,7 +45,7 @@ const Banner = () => {
     }, []);
 
     return (
-        <div className="relative h-[calc(100vh-65px)] overflow-hidden mt-18">
+        <div className="relative h-[calc(100vh-65px)] overflow-hidden mt-22">
             <AnimatePresence mode='wait'>
                 <motion.div
                     key={currentImageIndex}
@@ -54,7 +55,7 @@ const Banner = () => {
                     transition={{ duration: 1 }}
                     className="absolute inset-0"
                 >
-                    <img 
+                    <img
                         src={images[currentImageIndex].url}
                         alt="education"
                         className="w-full h-screen md:h-full object-cover object-top md:object-center"
@@ -84,7 +85,7 @@ const Banner = () => {
                             </motion.div>
                         </AnimatePresence>
 
-                        <div className={`flex flex-wrap gap-6 ${lang === "ar"? "items-end justify-end" : ""}`}>
+                        <div className={`flex flex-wrap gap-6 ${lang === "ar" ? "items-end justify-end" : ""}`}>
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -100,7 +101,9 @@ const Banner = () => {
                                 whileTap={{ scale: 0.95 }}
                                 className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300"
                             >
-                                {t('View Courses')}
+                                <Link to='/courses'>
+                                    {t('View Courses')}
+                                </Link>
                             </motion.button>
                         </div>
 
@@ -110,9 +113,8 @@ const Banner = () => {
                                 <motion.button
                                     key={index}
                                     onClick={() => setCurrentImageIndex(index)}
-                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                                        currentImageIndex === index ? 'bg-primary w-8' : 'bg-white/50 hover:bg-white'
-                                    }`}
+                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${currentImageIndex === index ? 'bg-primary w-8' : 'bg-white/50 hover:bg-white'
+                                        }`}
                                     whileHover={{ scale: 1.2 }}
                                     whileTap={{ scale: 0.9 }}
                                 />
@@ -123,7 +125,7 @@ const Banner = () => {
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-black to-transparent z-[1]" />
-            
+
             <div className="absolute top-20 right-20 w-64 h-64 bg-primary/20 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-20 left-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
         </div>

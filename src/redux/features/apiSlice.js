@@ -174,6 +174,30 @@ export const apiSlice = createApi({
         },
       }),
     }),
+    courseMyProgress: builder.query({
+      query: ({ token, courseId }) => ({
+        url: `v1/courses/${courseId}/progress`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    courseMyProgressUpdate: builder.mutation({
+      query: ({ token, courseId, progress, videosCompleted }) => ({
+        url: `v1/courses/${courseId}/progress`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: {
+          progress,
+          videos_completed: videosCompleted,
+        },
+      }),
+    }),
+    
   }),
 
 });
@@ -197,5 +221,7 @@ export const {
   useCourseRatingsMutation,
   useCourseRatingsUpdateMutation,
   useCourseRatingsDeleteMutation,
-  useCourseMyRatingQuery
+  useCourseMyRatingQuery,
+  useCourseMyProgressQuery,
+  useCourseMyProgressUpdateMutation
 } = apiSlice;

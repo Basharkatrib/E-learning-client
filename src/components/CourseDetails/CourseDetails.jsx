@@ -206,7 +206,7 @@ export default function CourseDetails() {
     };
 
     return (
-        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen mt-18 w-full ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen mt-22 w-full ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
             {showConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                     <div className={`rounded-2xl shadow-xl p-8 max-w-sm w-full ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
