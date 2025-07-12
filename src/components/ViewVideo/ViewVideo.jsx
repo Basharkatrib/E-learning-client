@@ -15,7 +15,6 @@ import {
 import { useTranslation } from 'react-i18next';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
 import { selectToken } from '../../redux/features/authSlice';
-import defaultCover from '../../assets/images/banner/image-1.avif';
 
 const stagger = {
   hidden: {},
@@ -60,6 +59,7 @@ const ViewVideo = () => {
   } = useGetWatchedVideosQuery(token, { skip: !token });
   const [watchedVideos, setWatchedVideos] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showCover, setShowCover] = useState(true);
 
   useEffect(() => {
     let ids = [];
@@ -77,12 +77,16 @@ const ViewVideo = () => {
     console.log('Extracted watchedVideos IDs:', ids);
   }, [watchedVideosData]);
 
-  const totalVideos = coursesData?.sections?.reduce((acc, section) => acc + (section.videos?.length || 0), 0);
-  const currentProgress = progressData?.progress || 0;
-  const progressPerVideo = totalVideos ? Math.floor(100 / totalVideos) : 0;
+  const allVideos = coursesData?.sections?.flatMap(section => section.videos || []) || [];
+  const allVideoIds = allVideos.map(v => String(v.id));
+  const watchedInThisCourse = watchedVideos.filter(id => allVideoIds.includes(String(id)));
+  const totalVideos = allVideos.length;
+  const watchedCount = watchedInThisCourse.length;
+  const progress = totalVideos > 0 ? Math.round((watchedCount / totalVideos) * 100) : 0;
 
   const handleVideoClick = async (video) => {
     setCurrentVideo(video);
+    setShowCover(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (!watchedVideos.map(String).includes(String(video.id))) {
       try {
@@ -190,8 +194,7 @@ const ViewVideo = () => {
           <div className="flex justify-between items-center mb-1">
             <span className="text-sm font-bold text-primary">{t('Progress')}</span>
             <span className="text-xs font-bold text-gray-700 dark:text-gray-200">
-              {progressData.progress}%
-              {progressData.progress === 100 && (
+              {progress === 100 && (
                 <span className="ml-2 text-green-500" title="Completed">
                   <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#bbf7d0" /><path d="M9 12l2 2 4-4" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </span>
@@ -201,11 +204,11 @@ const ViewVideo = () => {
           <div className="relative w-full h-5 rounded-full bg-gray-200 dark:bg-gray-700 shadow-inner overflow-hidden">
             <div
               className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-primary via-blue-400 to-primary transition-all duration-700 flex items-center justify-end pr-2"
-              style={{ width: `${progressData.progress}%` }}
+              style={{ width: `${progress}%` }}
             >
-              <span className={`text-xs font-bold ${progressData.progress > 15 ? 'text-white' : 'text-primary'}`}>{progressData.progress}%</span>
+              <span className={`text-xs font-bold ${progress > 15 ? 'text-white' : 'text-white'}`}>{progress}%</span>
             </div>
-            {progressData.progress === 100 && (
+            {progress === 100 && (
               <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400/60 via-lime-300/60 to-green-400/60 animate-pulse"></div>
             )}
           </div>
@@ -288,7 +291,17 @@ const ViewVideo = () => {
               `}
               style={{ position: 'relative' }}
             >
-              {currentVideo?.video_url && (
+              {showCover && course?.thumbnail_url && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60">
+                  <img
+                    src={course.thumbnail_url}
+                    alt="Course Cover"
+                    className="object-cover w-full h-full max-h-[400px] rounded-2xl shadow-lg"
+                    style={{ objectFit: 'cover' }}
+                  />
+                </div>
+              )}
+              {!showCover && currentVideo?.video_url && (
                 <iframe
                   className="w-full h-full"
                   src={currentVideo.video_url}
