@@ -9,6 +9,8 @@ import {
   useGetCourseQuery,
   useCourseMyProgressQuery,
   useCourseMyProgressUpdateMutation,
+  useGetWatchedVideosQuery,
+  useMarkVideoAsWatchedMutation,
 } from '../../redux/features/apiSlice';
 import { useTranslation } from 'react-i18next';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
@@ -50,43 +52,30 @@ const ViewVideo = () => {
   const [updateProgress] = useCourseMyProgressUpdateMutation();
 
   const [currentVideo, setCurrentVideo] = useState(null);
-  const [watchedVideos, setWatchedVideos] = useState(() => {
-    // حفظ الفيديوهات المشاهدة في localStorage (اختياري)
-    const saved = localStorage.getItem('watchedVideos');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [markVideoAsWatched] = useMarkVideoAsWatchedMutation();
+  const {
+    data: watchedVideosData,
+    isLoading: watchedLoading,
+    refetch: refetchWatched,
+  } = useGetWatchedVideosQuery(token, { skip: !token });
+  const [watchedVideos, setWatchedVideos] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (coursesData?.sections) {
-      const allVideos = coursesData.sections.flatMap(section => section.videos || []);
-      if (allVideos.length > 0 && watchedVideos.length === 0) {
-        setCurrentVideo(allVideos[0]);
-        setWatchedVideos([allVideos[0].id]);
-        localStorage.setItem('watchedVideos', JSON.stringify([allVideos[0].id]));
-        // زيادة progress لأول فيديو فقط
-        (async () => {
-          try {
-            const totalVideos = allVideos.length;
-            const progressPerVideo = totalVideos ? Math.floor(100 / totalVideos) : 0;
-            let newProgress = (totalVideos === 1) ? 100 : progressPerVideo;
-            await updateProgress({
-              token,
-              courseId: id,
-              progress: newProgress,
-              videoId: allVideos[0].id,
-            }).unwrap();
-            refetchProgress();
-          } catch (err) {
-            console.error('Error updating progress for first video:', err);
-          }
-        })();
-      } else if (!currentVideo && allVideos.length > 0) {
-        setCurrentVideo(allVideos[0]);
+    let ids = [];
+    if (watchedVideosData) {
+      if (Array.isArray(watchedVideosData.watched)) {
+        ids = watchedVideosData.watched;
+      } else if (Array.isArray(watchedVideosData.data)) {
+        ids = watchedVideosData.data;
+      } else if (Array.isArray(watchedVideosData)) {
+        ids = watchedVideosData;
       }
     }
-    // eslint-disable-next-line
-  }, [coursesData]);
+    setWatchedVideos(ids);
+    console.log('watchedVideosData from API:', watchedVideosData);
+    console.log('Extracted watchedVideos IDs:', ids);
+  }, [watchedVideosData]);
 
   const totalVideos = coursesData?.sections?.reduce((acc, section) => acc + (section.videos?.length || 0), 0);
   const currentProgress = progressData?.progress || 0;
@@ -95,26 +84,12 @@ const ViewVideo = () => {
   const handleVideoClick = async (video) => {
     setCurrentVideo(video);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (!watchedVideos.includes(video.id)) {
-      const newWatched = [...watchedVideos, video.id];
-      setWatchedVideos(newWatched);
-      localStorage.setItem('watchedVideos', JSON.stringify(newWatched));
-      // زيادة progress بنسبة فيديو واحد فقط
-      const allVideos = coursesData.sections.flatMap(section => section.videos || []);
-      const totalVideos = allVideos.length;
-      const progressPerVideo = totalVideos ? Math.floor(100 / totalVideos) : 0;
-      let newProgress = progressData?.progress ? progressData.progress + progressPerVideo : progressPerVideo;
-      if (newProgress > 100) newProgress = 100;
+    if (!watchedVideos.map(String).includes(String(video.id))) {
       try {
-        await updateProgress({
-          token,
-          courseId: id,
-          progress: newProgress,
-          videoId: video.id,
-        }).unwrap();
-        refetchProgress();
+        await markVideoAsWatched({ token, videoId: video.id });
+        await refetchWatched();
       } catch (err) {
-        console.error('Error updating progress:', err);
+        console.error('Error marking video as watched:', err);
       }
     }
   };
@@ -178,7 +153,7 @@ const ViewVideo = () => {
                 <div className="flex flex-col gap-2">
                   {section?.videos?.map((video, vidx) => {
                     const globalIdx = coursesData.sections.slice(0, sidx).reduce((acc, sec) => acc + (sec.videos?.length || 0), 0) + vidx;
-                    const isWatched = watchedVideos.includes(video.id);
+                    const isWatched = watchedVideos.map(String).includes(String(video.id));
                     return (
                       <button
                         key={video.id}
@@ -256,7 +231,7 @@ const ViewVideo = () => {
                   <div className="flex flex-col gap-2">
                     {section?.videos?.map((video, vidx) => {
                       const globalIdx = coursesData.sections.slice(0, sidx).reduce((acc, sec) => acc + (sec.videos?.length || 0), 0) + vidx;
-                      const isWatched = watchedVideos.includes(video.id);
+                      const isWatched = watchedVideos.map(String).includes(String(video.id));
                       return (
                         <button
                           key={video.id}
