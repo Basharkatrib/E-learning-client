@@ -197,6 +197,26 @@ export const apiSlice = createApi({
         },
       }),
     }),
+    getWatchedVideos: builder.query({
+      query: (token) => ({
+        url: 'v1/user/watched-videos',
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    
+    markVideoAsWatched: builder.mutation({
+      query: ({ token, videoId }) => ({
+        url: `v1/videos/${videoId}/watch`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    
     
   }),
 
@@ -223,5 +243,7 @@ export const {
   useCourseRatingsDeleteMutation,
   useCourseMyRatingQuery,
   useCourseMyProgressQuery,
-  useCourseMyProgressUpdateMutation
+  useCourseMyProgressUpdateMutation,
+  useGetWatchedVideosQuery,
+  useMarkVideoAsWatchedMutation
 } = apiSlice;

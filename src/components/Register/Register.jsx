@@ -130,33 +130,14 @@ function Register() {
         transition={{ duration: 0.6 }}
         className="w-full max-w-xl p-8 mt-20 md:p-10 bg-white/30 backdrop-blur-lg rounded-2xl shadow-2xl"
       >
-        <h2 className="text-3xl font-extrabold text-center text-gray-800 dark:text-white">{t('Sign Up')}</h2>
-
-        {/* صورة المستخدم */}
-        <div className="flex flex-col items-center space-y-3 mt-6 mb-6">
-          <label className="text-sm text-gray-800 dark:text-white/90">{lang==='en'?'Upload Profile Picture':'تحميل صورة الملف الشخصي'}</label>
-          <div className="relative">
-            <img
-              src={avatarPreview || "https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg"}
-              alt="Avatar Preview"
-              className="w-24 h-24 rounded-full object-cover border-2 border-white shadow-md"
-            />
-            <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow cursor-pointer">
-              <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M4 3a2 2 0 00-2 2v11.586A2 2 0 004.586 18H16a2 2 0 002-2V5a2 2 0 00-2-2H4zm5 5a3 3 0 116 0 3 3 0 01-6 0zM4 16a6 6 0 1112 0H4z" />
-              </svg>
-            </label>
-            <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-          </div>
-        </div>
-
+        <h2 className="text-3xl mb-5 font-extrabold text-center text-gray-800 dark:text-white">{t('Sign Up')}</h2>
         {/* نوع المستخدم */}
         <div className="flex gap-4 mb-6 bg-white/20 dark:bg-white/10 p-2 rounded-xl">
           <button
             onClick={() => setIsTeacher(false)}
             className={`w-full py-2 rounded-lg text-sm font-semibold transition duration-300 ${
               !isTeacher
-                ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-indigo-300'
+                ? 'bg-primary text-white shadow-lg ring-2 ring-indigo-300'
                 : 'bg-white text-black'
             }`}
           >
@@ -166,7 +147,7 @@ function Register() {
             onClick={() => setIsTeacher(true)}
             className={`w-full py-2 rounded-lg text-sm font-semibold transition duration-300 ${
               isTeacher
-                ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-indigo-300'
+                ? 'bg-primary text-white shadow-lg ring-2 ring-indigo-300'
                 : 'bg-white text-black'
             }`}
           >
@@ -192,7 +173,7 @@ function Register() {
             {t('I agree with')} <Link to="/terms" className="underline mx-1">{t('Terms of Use')}</Link> {t('and')} <Link to="/privacy" className="underline mx-1">{t('Privacy Policy')}</Link>
           </div>
 
-          <button type="submit" disabled={isLoading} className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
+          <button type="submit" disabled={isLoading} className="w-full bg-primary text-white py-2 rounded-lg hover:bg-indigo-700 transition">
             {isLoading ? t('Signing Up...') : t('Sign Up')}
           </button>
 
