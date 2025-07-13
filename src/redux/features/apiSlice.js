@@ -58,6 +58,12 @@ export const apiSlice = createApi({
         body: { email },
       }),
     }),
+    getCategories: builder.query({
+      query: () => ({
+        url: 'v1/categories',
+        method: 'GET',
+      }),
+    }),
     getCourses: builder.query({
       query: () => ({
         url: 'v1/courses',
@@ -90,7 +96,7 @@ export const apiSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
-      invalidatesTags: ['UserEnrollments'], // ← هذه الإضافة
+      invalidatesTags: ['UserEnrollments'],
     }),
     isEnrolled: builder.mutation({
       query: ({ userId, courseId, token }) => ({
@@ -113,7 +119,7 @@ export const apiSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
-      providesTags: ['UserEnrollments'], // ← هذه الإضافة
+      providesTags: ['UserEnrollments'],
     }),
     courseEnrollments: builder.query({
       query: ({ id, token }) => ({
@@ -124,11 +130,80 @@ export const apiSlice = createApi({
         },
       }),
     }),
+    courseRatings: builder.mutation({
+      query: ({ id, token, rating, review }) => ({
+        url: `v1/courses/${id}/ratings`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          'rating': rating,
+          'review': review
+        },
+      }),
+    }),
+    courseRatingsUpdate: builder.mutation({
+      query: ({ id, token, ratingId, rating, review }) => ({
+        url: `v1/courses/${id}/ratings/${ratingId}`,
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          'rating': rating,
+          'review': review
+        },
+      }),
+    }),
+    courseRatingsDelete: builder.mutation({
+      query: ({ token, courseId, ratingId }) => ({
+        url: `v1/courses/${courseId}/ratings/${ratingId}`,
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    courseMyRating: builder.query({
+      query: ({ token, courseId }) => ({
+        url: `v1/courses/${courseId}/my-rating`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    courseMyProgress: builder.query({
+      query: ({ token, courseId }) => ({
+        url: `v1/courses/${courseId}/progress`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    courseMyProgressUpdate: builder.mutation({
+      query: ({ token, courseId, progress, videosCompleted }) => ({
+        url: `v1/courses/${courseId}/progress`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: {
+          progress,
+          videos_completed: videosCompleted,
+        },
+      }),
+    }),
+    
   }),
 
 });
 
 export const {
+  useGetCategoriesQuery,
   useRegisterMutation,
   useLoginMutation,
   useForgotPasswordMutation,
@@ -142,5 +217,11 @@ export const {
   useUnenrollUserMutation,
   useUserEnrollmentsQuery,
   useIsEnrolledMutation,
-  useCourseEnrollmentsQuery
+  useCourseEnrollmentsQuery,
+  useCourseRatingsMutation,
+  useCourseRatingsUpdateMutation,
+  useCourseRatingsDeleteMutation,
+  useCourseMyRatingQuery,
+  useCourseMyProgressQuery,
+  useCourseMyProgressUpdateMutation
 } = apiSlice;

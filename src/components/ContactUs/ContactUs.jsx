@@ -38,7 +38,7 @@ const ContactUs = () => {
   ];
 
   return (
-    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full mt-10 pt-16 pb-14 px-4 sm:px-6 lg:px-8 flex flex-col justify-around items-center ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full mt-14 pt-16 pb-14 px-4 sm:px-6 lg:px-8 flex flex-col justify-around items-center ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
       <div className='p-3 flex flex-col lg:flex-row justify-around items-center gap-8 text-center lg:text-left'>
         <h1 className='text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent'>{t('Contact Us')}</h1>
         <div className='w-full lg:w-1/2'>

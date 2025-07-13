@@ -6,7 +6,11 @@ import Footer from "../../components/Footer/Footer";
 import Slider from "../../components/Slider/Slider";
 import Testimonials from "../../components/Testimonials/Testimonials";
 
+
 function Home() {
+
+    
+
     return (
         <div>
             <Banner />

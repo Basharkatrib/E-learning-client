@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Routes, Route } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { addNotification } from './redux/features/notificationsSlice';
-
+import logo from './assets/images/navbar/logo.png'
+import { motion } from 'framer-motion';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
 import { Toaster } from 'react-hot-toast';
@@ -30,6 +31,9 @@ import Pusher from 'pusher-js';
 import AboutUsPage from './pages/AboutUsPage/AboutUsPage';
 import ProtectedCourseRoute from './components/ProtectedCourse/ProtectedCourseRoute';
 import ViewMyCourses from './pages/ViewMyCourses/ViewMyCourses';
+import ScrollToTop from './components/ScrollToTop/ScrollToTop';
+import { useGetCoursesQuery } from "./redux/features/apiSlice";
+
 
 
 function App() {
@@ -38,6 +42,45 @@ function App() {
   const dispatch = useDispatch();
   const token = useSelector(selectToken);
   const { error } = useGetCurrentUserQuery(token);
+
+  const [showSplash, setShowSplash] = useState(true);
+
+  
+  useEffect(() => {
+    if (error) {
+      console.log("CurrentUser error:", error);
+    }
+  }, [error]);
+  
+  useEffect(() => {
+    if (error && (error.originalStatus === 401 || error.originalStatus === 405)) {
+      dispatch(logout());
+    }
+  }, [error, dispatch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 5000); 
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showSplash) {
+    return (
+      <div className="relative w-full h-screen overflow-hidden bg-gray-900">
+        <motion.img
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: [0, 1, 0.8, 1], scale: [0.8, 1.6, 1.4, 1.6] }}
+          transition={{ duration: 5 }}
+          src={logo}
+          alt="Logo"
+          className="absolute inset-0 m-auto w-56  md:w-72 h-72 object-contain"
+        />
+      </div>
+    );
+  }
+  
 
   // useEffect(() => {
   //   Pusher.logToConsole = true;
@@ -74,23 +117,23 @@ function App() {
   //   };
   // }, [theme, dispatch]);
 
-  // useEffect(() => {
-  //   if (error) {
-  //     dispatch(logout());
-  //   }
-  // }, [error, dispatch]);
 
   return (
     <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
       <Toaster position="top-center" />
       <Navbar />
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/signup" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forget" element={<ForgetPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/me" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/me" element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>}
+          />
         <Route path="/contactus" element={<Contact />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/error" element={<ErrorPage />} />

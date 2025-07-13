@@ -19,6 +19,7 @@ const MyCourses = () => {
         { id: user?.id, token },
         {
             skip: !user || !token,
+            refetchOnMountOrArgChange: true,
         }
     );
 
@@ -36,8 +37,8 @@ const MyCourses = () => {
     if (error) return <div className="text-red-500">Error loading courses</div>;
 
     return (
-        <div className={`min-h-screen py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-500 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-            <div className="max-w-6xl mx-auto">
+        <div className={`min-h-screen py-20 px-4 sm:px-6 lg:px-8 transition-colors duration-500 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+            <div className=" mx-auto">
                 <h2 className={`text-4xl sm:text-5xl font-extrabold text-center mb-10 mt-10 tracking-tight ${isDark ? 'text-white' : 'text-gray-800'}`}>
                     {(lang === "en" ? "My Enrolled Courses" : "الدورات التي التحقت بها")}
                 </h2>
@@ -64,12 +65,26 @@ const MyCourses = () => {
                                     <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                                         {(lang === "en" ? course.courseDescription.en : course.courseDescription.ar)}
                                     </p>
+                                    <div className='flex items-center justify-between w-full'>
                                     <Link
                                         to={`/course/${course.courseId}`}
-                                        className="inline-block mt-2 text-sm font-semibold text-blue-500 hover:text-blue-700 transition"
+                                        className="mt-2 text-sm font-semibold text-blue-500 hover:text-blue-700 transition flex items-center gap-1"
                                     >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-5.197-3.027A1 1 0 008 9.027v5.946a1 1 0 001.555.832l5.197-3.027a1 1 0 000-1.664z" />
+                                            <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="2" fill="none" />
+                                        </svg>
                                         {(lang === "en") ? " Go to Course" : "الذهاب الى الدورة "}
                                     </Link>
+                                    <Link
+                                        to={`/course-details/${course.courseId}`}
+                                        className="inline-block mt-2 text-sm font-semibold text-blue-500 hover:text-blue-700 transition"
+                                    >
+                                        {(lang === "en") ? "View details" : "عرض التفاصيل"}
+                                    </Link>
+
+                                    </div>
+                                    
                                 </div>
                             </div>
                         ))}

@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme, selectTheme } from '../../redux/features/themeSlice';
 import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
-import logo from '../../assets/images/navbar/Logo.svg';
+import logo from '../../assets/images/navbar/logo.png';
 import UAE from '../../assets/images/navbar/UAE.png';
 import USA from '../../assets/images/navbar/USA.jpeg';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -91,12 +91,15 @@ function Navbar() {
             <div className="px-4 sm:px-6 lg:px-8 w-full">
                 <div className="flex justify-between items-center py-4 w-full">
                     <div className="flex items-center gap-2">
-                        <motion.img
-                            whileHover={{ scale: 1.1 }}
-                            className="w-10 h-10"
-                            src={logo}
-                            alt="logo"
-                        />
+                        <Link to="/">
+                            <motion.img
+                                whileHover={{ scale: 1.1 }}
+                                className="w-auto h-15"
+                                src={logo}
+                                alt="logo"
+                            />
+                        </Link>
+
                         <ul className='hidden md:flex items-center gap-6'>
                             {navItems.map((item) => {
                                 const isActive = currentPath === item.href;
@@ -174,129 +177,241 @@ function Navbar() {
 
 
                         {/* BUTTON Notifications */}
-                       <div className="relative" ref={notifRef}>
-  <motion.button
-    whileHover={{ scale: 1.1 }}
-    whileTap={{ scale: 0.95 }}
-    onClick={() => setIsNotifOpen(prev => !prev)}
-    className={`p-2 rounded-full transition-colors duration-200 relative ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-6 w-6 text-primary"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C8.67 6.165 8 7.388 8 8.75v5.408c0 .538-.214 1.055-.595 1.437L6 17h5m4 0v1a3 3 0 11-6 0v-1m6 0H9"
-      />
-    </svg>
-    {unreadCount > 0 && (
-      <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1">
-        {unreadCount > 99 ? '99+' : unreadCount}
-      </span>
-    )}
-  </motion.button>
+                        <div className="relative" ref={notifRef}>
+                            <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setIsNotifOpen(prev => !prev)}
+                                className={`p-2 rounded-full transition-colors duration-200 relative ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6 text-primary"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C8.67 6.165 8 7.388 8 8.75v5.408c0 .538-.214 1.055-.595 1.437L6 17h5m4 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                    />
+                                </svg>
 
-  <AnimatePresence>
-    {isNotifOpen && (
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        className={`fixed md:absolute right-2 md:right-0 mt-2 w-[calc(100vw-2rem)] md:w-[22rem] lg:w-[26rem] max-h-[calc(100vh-8rem)] overflow-hidden
-          rounded-2xl shadow-2xl z-50 flex flex-col border
-          ${theme === 'dark' ? 'bg-gray-900 border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-900'}
-        `}
-      >
-        <div className="p-4 sticky top-0 z-10 flex justify-between items-center border-b bg-inherit backdrop-blur-md">
-          <div className="flex items-center gap-2 text-base font-semibold">
-            <span>{t("Notifications")}</span>
-            {unreadCount > 0 && (
-              <span className="bg-primary text-white text-xs rounded-full px-2 py-0.5 font-semibold">
-                {unreadCount}
-              </span>
-            )}
-          </div>
-          {notifications.length > 0 && (
-            <div className="flex items-center gap-2 text-xs">
-              <button onClick={handleMarkAllAsRead} className="text-primary hover:underline">
-                {t("Mark all read")}
-              </button>
-              <button onClick={() => dispatch(clearAllNotifications())} className="text-red-500 hover:underline">
-                {t("Clear all")}
-              </button>
-            </div>
-          )}
-        </div>
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1">
+                                        {unreadCount > 99 ? '99+' : unreadCount}
+                                    </span>
+                                )}
+                            </motion.button>
 
-        <ul className="overflow-y-auto flex-1 divide-y custom-scrollbar
-          ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'}
-        ">
-          {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center">
-              <svg
-  xmlns="http://www.w3.org/2000/svg"
-  className="h-12 w-12 text-gray-400 mb-4"
-  fill="none"
-  viewBox="0 0 24 24"
-  stroke="currentColor"
->
-  <path
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth={2}
-    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C8.67 6.165 8 7.388 8 8.75v5.408c0 .538-.214 1.055-.595 1.437L6 17h5m4 0v1a3 3 0 11-6 0v-1m6 0H9"
-/>
-</svg>
+                            {/* Mobile Sidebar Notifications */}
+                            <AnimatePresence>
+                                {isNotifOpen && (
+                                    <>
+                                        {/* Overlay for mobile */}
+                                        <motion.div
+                                            className="fixed inset-0 z-40 bg-black/40 md:hidden"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            onClick={() => setIsNotifOpen(false)}
+                                        />
+                                        {/* Sidebar for mobile */}
+                                        <motion.div
+                                            initial={{ x: '100%' }}
+                                            animate={{ x: 0 }}
+                                            exit={{ x: '100%' }}
+                                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                            className={`fixed top-0 right-0 h-full w-80 max-w-full z-50 ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'} shadow-2xl md:hidden flex flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-700 dark:scrollbar-track-gray-900`}
+                                        >
+                                            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-inherit z-10">
+                                                <span className={`text-lg font-bold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Notifications</span>
+                                                <button onClick={() => setIsNotifOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div className="flex-1 overflow-y-auto">
+                                                {notifications.length === 0 ? (
+                                                    <div className="flex flex-col items-center justify-center p-8 text-center">
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            className="h-12 w-12 text-gray-400 mb-4"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C8.67 6.165 8 7.388 8 8.75v5.408c0 .538-.214 1.055-.595 1.437L6 17h5m4 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                                            />
+                                                        </svg>
+                                                        <p className="text-gray-500 dark:text-gray-400">No notifications yet</p>
+                                                        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                                                            We'll notify you when something arrives
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                                                        {notifications.map((notif) => (
+                                                            <li
+                                                                key={notif.id}
+                                                                className={`group relative ${!notif.read ? 'bg-primary/5' : ''}`}
+                                                            >
+                                                                <div className="p-4 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                                                                    <div className="flex items-start gap-3">
+                                                                        <div className="flex-shrink-0 mt-1">
+                                                                            <div className={`w-2 h-2 rounded-full ${!notif.read ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className={`text-sm ${theme === "dark" ? 'text-gray-100' : 'text-gray-900'}`}>
+                                                                                {notif.message}
+                                                                            </p>
+                                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                                                {new Date(notif.timestamp).toLocaleString()}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div className="flex-shrink-0 flex items-center gap-2">
+                                                                            {!notif.read && (
+                                                                                <button
+                                                                                    onClick={() => handleMarkAsRead(notif.id)}
+                                                                                    className="text-xs text-primary hover:text-primary/80 transition-colors duration-200"
+                                                                                >
+                                                                                    Mark read
+                                                                                </button>
+                                                                            )}
+                                                                            <button
+                                                                                onClick={() => handleRemoveNotification(notif.id)}
+                                                                                className="text-gray-400 hover:text-red-500 transition-colors duration-200 opacity-0 group-hover:opacity-100"
+                                                                            >
+                                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                                                                </svg>
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
+                                        </motion.div>
 
-              <p className="text-gray-500 dark:text-gray-400">{t("No notifications yet")}</p>
-            </div>
-          ) : (
-            notifications.map((notif) => (
-              <li
-                key={notif.id}
-                className={`group px-4 py-3 transition-colors duration-150
-                  ${!notif.read ? 'bg-primary/5 dark:bg-primary/10' : ''}
-                  hover:bg-gray-50 dark:hover:bg-gray-800
-                `}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    <div className={`w-2 h-2 rounded-full ${!notif.read ? 'bg-primary' : 'bg-gray-400 dark:bg-gray-600'}`} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{notif.message}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {new Date(notif.timestamp).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    {!notif.read && (
-                      <button onClick={() => handleMarkAsRead(notif.id)} className="text-xs text-primary hover:underline">
-                        {t("Mark read")}
-                      </button>
-                    )}
-                    <button onClick={() => handleRemoveNotification(notif.id)} className="text-gray-400 hover:text-red-500">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6 6l8 8M6 14L14 6" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </li>
-            ))
-          )}
-        </ul>
-      </motion.div>
-    )}
-  </AnimatePresence>
-</div>
+                                        {/* Desktop Dropdown Notifications */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className={`hidden md:fixed md:absolute right-0 mt-2 w-[calc(100vw-2rem)] md:w-80 lg:w-96 rounded-xl shadow-lg z-50 
+                                                ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}
+                                                border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}
+                                                max-h-[calc(100vh-8rem)] flex flex-col md:block`}
+                                        >
+                                            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-inherit z-10">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-lg font-bold">Notifications</span>
+                                                    {unreadCount > 0 && (
+                                                        <span className="bg-primary text-white text-xs font-bold rounded-full px-2 py-0.5">
+                                                            {unreadCount} new
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {notifications.length > 0 && (
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={handleMarkAllAsRead}
+                                                            className="text-sm text-primary hover:text-primary/80 transition-colors duration-200"
+                                                        >
+                                                            Mark all read
+                                                        </button>
+                                                        <button
+                                                            onClick={() => dispatch(clearAllNotifications())}
+                                                            className="text-sm text-red-500 hover:text-red-600 transition-colors duration-200"
+                                                        >
+                                                            Clear all
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
 
+                                            <div className="overflow-y-auto flex-1">
+                                                {notifications.length === 0 ? (
+                                                    <div className="flex flex-col items-center justify-center p-8 text-center">
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            className="h-12 w-12 text-gray-400 mb-4"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C8.67 6.165 8 7.388 8 8.75v5.408c0 .538-.214 1.055-.595 1.437L6 17h5m4 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                                            />
+                                                        </svg>
+                                                        <p className="text-gray-500 dark:text-gray-400">No notifications yet</p>
+                                                        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                                                            We'll notify you when something arrives
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                                                        {notifications.map((notif) => (
+                                                            <li
+                                                                key={notif.id}
+                                                                className={`group relative ${!notif.read ? 'bg-primary/5' : ''}`}
+                                                            >
+                                                                <div className="p-4 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                                                                    <div className="flex items-start gap-3">
+                                                                        <div className="flex-shrink-0 mt-1">
+                                                                            <div className={`w-2 h-2 rounded-full ${!notif.read ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className={`text-sm ${theme === "dark" ? 'text-gray-100' : 'text-gray-900'}`}>
+                                                                                {notif.message}
+                                                                            </p>
+                                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                                                {new Date(notif.timestamp).toLocaleString()}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div className="flex-shrink-0 flex items-center gap-2">
+                                                                            {!notif.read && (
+                                                                                <button
+                                                                                    onClick={() => handleMarkAsRead(notif.id)}
+                                                                                    className="text-xs text-primary hover:text-primary/80 transition-colors duration-200"
+                                                                                >
+                                                                                    Mark read
+                                                                                </button>
+                                                                            )}
+                                                                            <button
+                                                                                onClick={() => handleRemoveNotification(notif.id)}
+                                                                                className="text-gray-400 hover:text-red-500 transition-colors duration-200 opacity-0 group-hover:opacity-100"
+                                                                            >
+                                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                                                                </svg>
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
                         {/* END BUTTON Notifications */}
 
                         {/* User Menu */}
@@ -434,7 +549,6 @@ function Navbar() {
                 </div>
 
                 {/* Mobile Menu */}
-                {/* Mobile Menu */}
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
@@ -449,24 +563,41 @@ function Navbar() {
                                     {navItems.map((item) => {
                                         const isActive = currentPath === item.href
 
-                                        return <motion.div>
+                                        return (
+                                            <motion.div key={item.href}>
+                                                <Link
+                                                    to={item.href}
+                                                    onClick={() => setIsOpen(false)}
+                                                    className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
+                                                        ? `text-gray-200 hover:bg-gray-700/50 ${isActive ? 'bg-gray-700 text-primary' : ''}`
+                                                        : `text-gray-700 hover:bg-gray-100 ${isActive ? 'bg-gray-200 text-primary' : ''}`
+                                                        }`}
+                                                >
+                                                    <span className="font-medium">{t(item.name)}</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ltr:rotate-0 rtl:rotate-180 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                </Link>
+                                            </motion.div>
+                                        );
+                                    })}
+                                    {user && (
+                                        <motion.div key="my-courses">
                                             <Link
-                                                to={item.href}
+                                                to="/my-courses"
                                                 onClick={() => setIsOpen(false)}
-                                                // ... existing code ...
                                                 className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
-                                                    ? `text-gray-200 hover:bg-gray-700/50 ${isActive ? 'bg-gray-700 text-primary' : ''}`
-                                                    : `text-gray-700 hover:bg-gray-100 ${isActive ? 'bg-gray-200 text-primary' : ''}`
+                                                    ? `text-gray-200 hover:bg-gray-700/50 ${currentPath === '/my-courses' ? 'bg-gray-700 text-primary' : ''}`
+                                                    : `text-gray-700 hover:bg-gray-100 ${currentPath === '/my-courses' ? 'bg-gray-200 text-primary' : ''}`
                                                     }`}
-
                                             >
-                                                <span className="font-medium">{t(item.name)}</span>
+                                                <span className="font-medium">{(lang === "en") ? "MyCourses" : "الدورات المسجل بها"}</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ltr:rotate-0 rtl:rotate-180 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                                 </svg>
                                             </Link>
                                         </motion.div>
-                                    })}
+                                    )}
                                 </div>
 
                                 <div className={`mt-6 pt-6 ${theme === 'dark' ? 'border-t border-gray-700' : 'border-t border-gray-200'}`}>
