@@ -180,6 +180,15 @@
   "Studying in English": "ادرس بالانكليزية",
   "25 languages available" : "25 لغة متاحة",
   "The course consists of": "يحتوي الكورس على",
-  "lectures": "محاضرات"
-  
+  "lectures": "محاضرات",
+  "Take Quiz": "بدء الامتحان",
+  "No quizzes available": "لا يوجد امتحانات متاحة",
+  "Submit Quiz": "تسليم الامتحان",
+  "Submitting...": "جاري التسليم...",
+  "Please answer all questions": "الرجاء الإجابة على جميع الأسئلة",
+  "Congratulations! You passed the quiz": "تهانينا! لقد اجتزت الامتحان بنجاح",
+  "Quiz submitted, but you did not pass. Try again!": "تم تسليم الامتحان، ولكن لم تجتز. حاول مرة أخرى!",
+  "Error loading quiz": "خطأ في تحميل الامتحان",
+  "Error submitting quiz": "خطأ في تسليم الامتحان",
+  "Please try again later": "الرجاء المحاولة مرة أخرى لاحقاً"
 }

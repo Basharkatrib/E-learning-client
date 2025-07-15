@@ -424,9 +424,17 @@ function Navbar() {
                                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                                         className="flex items-center gap-2 cursor-pointer"
                                     >
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                        {user.profile_image ? (
+                                          <img
+                                            src={user.profile_image}
+                                            alt="profile"
+                                            className="w-10 h-10 rounded-full object-cover shadow-lg border border-primary"
+                                          />
+                                        ) : (
+                                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                                             {user.email?.charAt(0).toUpperCase()}
-                                        </div>
+                                          </div>
+                                        )}
                                         <div className="flex flex-col">
                                             <span className={`font-medium text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
                                                 {user?.name}

@@ -11,6 +11,7 @@ import {
   useCourseMyProgressUpdateMutation,
   useGetWatchedVideosQuery,
   useMarkVideoAsWatchedMutation,
+  useGetQuizQuery,
 } from '../../redux/features/apiSlice';
 import { useTranslation } from 'react-i18next';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
@@ -24,6 +25,7 @@ const stagger = {
     },
   },
 };
+
 const fadeIn = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, type: 'spring' } },
@@ -49,7 +51,6 @@ const ViewVideo = () => {
   } = useCourseMyProgressQuery({ token, courseId: id });
 
   const [updateProgress] = useCourseMyProgressUpdateMutation();
-
   const [currentVideo, setCurrentVideo] = useState(null);
   const [markVideoAsWatched] = useMarkVideoAsWatchedMutation();
   const {
@@ -57,9 +58,11 @@ const ViewVideo = () => {
     isLoading: watchedLoading,
     refetch: refetchWatched,
   } = useGetWatchedVideosQuery(token, { skip: !token });
+  
   const [watchedVideos, setWatchedVideos] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCover, setShowCover] = useState(true);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     let ids = [];
@@ -73,16 +76,24 @@ const ViewVideo = () => {
       }
     }
     setWatchedVideos(ids);
-    console.log('watchedVideosData from API:', watchedVideosData);
-    console.log('Extracted watchedVideos IDs:', ids);
   }, [watchedVideosData]);
 
-  const allVideos = coursesData?.sections?.flatMap(section => section.videos || []) || [];
-  const allVideoIds = allVideos.map(v => String(v.id));
-  const watchedInThisCourse = watchedVideos.filter(id => allVideoIds.includes(String(id)));
-  const totalVideos = allVideos.length;
-  const watchedCount = watchedInThisCourse.length;
-  const progress = totalVideos > 0 ? Math.round((watchedCount / totalVideos) * 100) : 0;
+  useEffect(() => {
+    if (coursesData?.sections && watchedVideos.length >= 0) {
+      const allVideos = coursesData.sections.flatMap(section => section.videos || []) || [];
+      const allVideoIds = allVideos.map(v => String(v.id));
+      const watchedInThisCourse = watchedVideos.filter(id => allVideoIds.includes(String(id)));
+      const totalVideos = allVideos.length;
+      const watchedCount = watchedInThisCourse.length;
+      const calculatedProgress = totalVideos > 0 ? Math.round((watchedCount / totalVideos) * 100) : 0;
+      setProgress(calculatedProgress);
+    }
+  }, [coursesData, watchedVideos]);
+
+  const { data: quizData, isLoading: quizLoading } = useGetQuizQuery(
+    { courseId: id, token },
+    { skip: !token || !id || progress < 70 }
+  );
 
   const handleVideoClick = async (video) => {
     setCurrentVideo(video);
@@ -95,19 +106,6 @@ const ViewVideo = () => {
       } catch (err) {
         console.error('Error marking video as watched:', err);
       }
-    }
-  };
-
-  const handlePlay = () => {
-    // No need to handle play logic as showCover is removed
-  };
-
-  const handleFullscreen = () => {
-    const el = videoContainerRef.current;
-    if (el) {
-      if (el.requestFullscreen) el.requestFullscreen();
-      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-      else if (el.msRequestFullscreen) el.msRequestFullscreen();
     }
   };
 
@@ -363,6 +361,82 @@ const ViewVideo = () => {
                 {lang === 'ar' ? 'الدرس:' : 'Lesson:'} {currentVideo.id}
               </div>
             </div>
+          )}
+
+          {/* Quiz Section */}
+          {progress >= 70 && quizData && quizData.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mt-8 p-6 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}
+            >
+              <h3 className="text-2xl font-bold mb-4 text-primary">
+                {t('Course Quiz')}
+              </h3>
+              <div className="grid grid-cols-1 gap-4">
+                {quizData.map((quiz) => (
+                  <motion.div
+                    key={quiz.id}
+                    whileHover={{ scale: 1.02 }}
+                    className={`p-4 rounded-lg ${
+                      isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'
+                    } cursor-pointer transition-all`}
+                  >
+                    <h4 className="font-semibold text-lg mb-2">{quiz.title}</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                      {quiz.description}
+                    </p>
+                    <div className="flex justify-between items-center">
+                      <div className="flex flex-col">
+                        <span className="text-sm">
+                          {t('Passing Score')}: {quiz.passing_score}%
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {t('Time Limit')}: {quiz.time_limit} {t('minutes')}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => navigate(`/quiz/${id}/${quiz.id}`)}
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                      >
+                        {t('Take Quiz')}
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Progress Message */}
+          {progress < 70 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mt-8 p-6 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center">
+                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24" className="text-yellow-500">
+                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M12 3c7.2 0 9 1.8 9 9s-1.8 9-9 9-9-1.8-9-9 1.8-9 9-9z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-primary mb-2">
+                    {t('Complete More Lessons')}
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    {t('You need to complete')} {Math.ceil(70 - progress)}% {t('more of the course to unlock the quiz')}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+                <div
+                  className="bg-primary h-4 rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </motion.div>
           )}
 
         </div>

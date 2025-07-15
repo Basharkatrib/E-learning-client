@@ -42,6 +42,22 @@ export const apiSlice = createApi({
         },
       }),
     }),
+    updateProfile: builder.mutation({
+      query: ({ token, name, profileImage }) => {
+        const formData = new FormData();
+        if (name) formData.append("name", name);
+        if (profileImage) formData.append("profile_image", profileImage);
+    
+        return {
+          url: 'v1/profile',
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        };
+      },
+    }),    
     logout: builder.mutation({
       query: (token) => ({
         url: 'logout',
@@ -173,6 +189,8 @@ export const apiSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
+      // Skip the request if no token is available
+      skip: (arg) => !arg?.token,
     }),
     courseMyProgress: builder.query({
       query: ({ token, courseId }) => ({
@@ -216,13 +234,54 @@ export const apiSlice = createApi({
         },
       }),
     }),
-    
+
+    // Quiz endpoints
+    getQuizzes: builder.query({
+      query: ({ courseId, token }) => ({
+        url: `v1/courses/${courseId}/quiz`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      transformResponse: (response) => {
+        // Check if response is an array directly or nested in data property
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
+        // If neither, return empty array to prevent errors
+        console.warn('Unexpected quiz response format:', response);
+        return [];
+      },
+    }),
+
+    getQuiz: builder.query({
+      query: ({ courseId, token }) => ({
+        url: `v1/courses/${courseId}/quiz`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+
+    submitQuiz: builder.mutation({
+      query: ({ courseId, quizId, answers, token }) => ({
+        url: `v1/courses/${courseId}/quiz/${quizId}/submit`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: { answers },
+      }),
+    }),
     
   }),
 
-});
-
-export const {
+});export const {
   useGetCategoriesQuery,
   useRegisterMutation,
   useLoginMutation,
@@ -245,5 +304,11 @@ export const {
   useCourseMyProgressQuery,
   useCourseMyProgressUpdateMutation,
   useGetWatchedVideosQuery,
-  useMarkVideoAsWatchedMutation
+  useMarkVideoAsWatchedMutation,
+  useUpdateProfileMutation,
+  useGetQuizzesQuery,
+  useGetQuizQuery,
+  useSubmitQuizMutation,
 } = apiSlice;
+
+
