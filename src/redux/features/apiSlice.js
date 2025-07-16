@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://e-learning-server-me-production.up.railway.app/api/' }),
+  baseQuery: fetchBaseQuery({ baseUrl: 'https://e-learning-server.test/api/' }),
   endpoints: (builder) => ({
     register: builder.mutation({
       query: (userData) => ({
@@ -200,6 +200,20 @@ export const apiSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
+      // Transform response to standardized format
+      transformResponse: (response) => ({
+        courseId: response.courseId,
+        progress: response.progress,
+        videosCompleted: response.videosCompleted,
+        completedAt: response.completedAt,
+        canTakeQuiz: response.canTakeQuiz
+      }),
+      // Provide tags for cache invalidation
+      providesTags: (result, error, { courseId }) => [
+        { type: 'CourseProgress', id: courseId }
+      ],
+      // Skip if no token or courseId
+      skip: (arg) => !arg?.token || !arg?.courseId,
     }),
     courseMyProgressUpdate: builder.mutation({
       query: ({ token, courseId, progress, videosCompleted }) => ({
@@ -214,6 +228,28 @@ export const apiSlice = createApi({
           videos_completed: videosCompleted,
         },
       }),
+      // Invalidate relevant queries after mutation
+      invalidatesTags: (result, error, { courseId }) => [
+        { type: 'CourseProgress', id: courseId },
+        'UserEnrollments'
+      ],
+      // Transform the response
+      transformResponse: (response) => {
+        return {
+          courseId: response.courseId,
+          progress: response.progress,
+          videosCompleted: response.videosCompleted,
+          completedAt: response.completedAt,
+          canTakeQuiz: response.canTakeQuiz
+        };
+      },
+      // Handle errors
+      transformErrorResponse: (response) => {
+        return {
+          status: response.status,
+          message: response?.data?.message || 'Failed to update progress'
+        };
+      }
     }),
     getWatchedVideos: builder.query({
       query: (token) => ({
@@ -244,17 +280,9 @@ export const apiSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
-      transformResponse: (response) => {
-        // Check if response is an array directly or nested in data property
-        if (Array.isArray(response)) {
-          return response;
-        } else if (response.data && Array.isArray(response.data)) {
-          return response.data;
-        }
-        // If neither, return empty array to prevent errors
-        console.warn('Unexpected quiz response format:', response);
-        return [];
-      },
+      providesTags: (result, error, { courseId }) => [
+        { type: 'Quiz', id: courseId }
+      ]
     }),
 
     getQuiz: builder.query({
@@ -265,8 +293,63 @@ export const apiSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
+      transformResponse: (response) => {
+        console.log('Quiz API Response:', response);
+        return Array.isArray(response) ? response : response.data || [];
+      },
+      transformErrorResponse: (response) => {
+        console.error('Quiz API Error:', response);
+        return {
+          status: response.status,
+          message: response?.data?.message || 'Failed to fetch quiz'
+        };
+      },
+      providesTags: (result, error, { courseId }) => [
+        { type: 'Quiz', id: courseId }
+      ]
+    }),
+    checkQuizAttempt: builder.query({
+      query: ({ courseId, quizId, token }) => ({
+        url: `v1/courses/${courseId}/quizzes/${quizId}/attempt-status`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      transformResponse: (response) => ({
+        hasAttempted: response.has_attempted,
+        latestAttempt: response.latest_attempt,
+      }),
+    }),
+    // Get quiz attempt history
+    getQuizAttempts: builder.query({
+      query: ({ courseId, quizId, token }) => ({
+        url: `v1/courses/${courseId}/quiz/${quizId}/attempts`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: (result, error, { courseId, quizId }) => [
+        { type: 'QuizAttempts', id: `${courseId}-${quizId}` }
+      ]
     }),
 
+    // Get latest quiz attempt result
+    getLatestQuizAttempt: builder.query({
+      query: ({ courseId, quizId, token }) => ({
+        url: `v1/courses/${courseId}/quiz/${quizId}/latest-attempt`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: (result, error, { courseId, quizId }) => [
+        { type: 'QuizAttempt', id: `${courseId}-${quizId}` }
+      ]
+    }),
+
+    // Submit quiz attempt
     submitQuiz: builder.mutation({
       query: ({ courseId, quizId, answers, token }) => ({
         url: `v1/courses/${courseId}/quiz/${quizId}/submit`,
@@ -277,6 +360,10 @@ export const apiSlice = createApi({
         },
         body: { answers },
       }),
+      invalidatesTags: (result, error, { courseId, quizId }) => [
+        { type: 'QuizAttempts', id: `${courseId}-${quizId}` },
+        { type: 'QuizAttempt', id: `${courseId}-${quizId}` }
+      ]
     }),
     
   }),
@@ -309,6 +396,8 @@ export const apiSlice = createApi({
   useGetQuizzesQuery,
   useGetQuizQuery,
   useSubmitQuizMutation,
+  useGetLatestQuizAttemptQuery,
+  useCheckQuizAttemptQuery,
 } = apiSlice;
 
 

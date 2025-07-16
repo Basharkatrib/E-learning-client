@@ -78,23 +78,6 @@ const ViewVideo = () => {
     setWatchedVideos(ids);
   }, [watchedVideosData]);
 
-  useEffect(() => {
-    if (coursesData?.sections && watchedVideos.length >= 0) {
-      const allVideos = coursesData.sections.flatMap(section => section.videos || []) || [];
-      const allVideoIds = allVideos.map(v => String(v.id));
-      const watchedInThisCourse = watchedVideos.filter(id => allVideoIds.includes(String(id)));
-      const totalVideos = allVideos.length;
-      const watchedCount = watchedInThisCourse.length;
-      const calculatedProgress = totalVideos > 0 ? Math.round((watchedCount / totalVideos) * 100) : 0;
-      setProgress(calculatedProgress);
-    }
-  }, [coursesData, watchedVideos]);
-
-  const { data: quizData, isLoading: quizLoading } = useGetQuizQuery(
-    { courseId: id, token },
-    { skip: !token || !id || progress < 70 }
-  );
-
   const handleVideoClick = async (video) => {
     setCurrentVideo(video);
     setShowCover(false);
@@ -103,13 +86,104 @@ const ViewVideo = () => {
       try {
         await markVideoAsWatched({ token, videoId: video.id });
         await refetchWatched();
+        
+        // Calculate new progress after marking video as watched
+        const allVideos = coursesData.sections.flatMap(section => section.videos || []);
+        const totalVideos = allVideos.length;
+        const newWatchedVideos = [...watchedVideos, video.id];
+        const watchedCount = newWatchedVideos.length;
+        const newProgress = Math.round((watchedCount / totalVideos) * 100);
+        
+        // Update progress in backend
+        try {
+          await updateProgress({
+            token,
+            courseId: id,
+            progress: newProgress,
+            videosCompleted: newProgress === 100
+          });
+          await refetchProgress();
+        } catch (err) {
+          console.error('Error updating progress:', err);
+        }
       } catch (err) {
         console.error('Error marking video as watched:', err);
       }
     }
   };
 
-  if (isLoading || progressLoading) return <LoadingPage />;
+  // Add video completion tracking
+  useEffect(() => {
+    if (currentVideo && !watchedVideos.map(String).includes(String(currentVideo.id))) {
+      const videoElement = document.querySelector('iframe');
+      if (videoElement) {
+        // Add message listener for video progress
+        const handleMessage = async (event) => {
+          // Check if message is from Vimeo
+          if (event.origin === "https://player.vimeo.com") {
+            try {
+              const data = JSON.parse(event.data);
+              // Check if video ended
+              if (data.event === 'ended') {
+                await handleVideoClick(currentVideo);
+              }
+            } catch (e) {
+              // Ignore parsing errors
+            }
+          }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+      }
+    }
+  }, [currentVideo, watchedVideos]);
+
+  // Update progress whenever watched videos change
+  useEffect(() => {
+    const updateCourseProgress = async () => {
+      if (coursesData?.sections && watchedVideos.length >= 0) {
+        const allVideos = coursesData.sections.flatMap(section => section.videos || []);
+        const allVideoIds = allVideos.map(v => String(v.id));
+        const watchedInThisCourse = watchedVideos.filter(id => allVideoIds.includes(String(id)));
+        const totalVideos = allVideos.length;
+        const watchedCount = watchedInThisCourse.length;
+        const calculatedProgress = totalVideos > 0 ? Math.round((watchedCount / totalVideos) * 100) : 0;
+        
+        if (calculatedProgress !== progress) {
+          setProgress(calculatedProgress);
+          try {
+            await updateProgress({
+              token,
+              courseId: id,
+              progress: calculatedProgress,
+              videosCompleted: calculatedProgress === 100
+            });
+            await refetchProgress();
+          } catch (err) {
+            console.error('Error updating progress:', err);
+          }
+        }
+      }
+    };
+
+    updateCourseProgress();
+  }, [coursesData, watchedVideos]);
+
+  const { data: quizData, isLoading: quizLoading } = useGetQuizQuery(
+    { courseId: id, token },
+    { skip: !token || !id }  // Remove the progress < 70 condition from here
+  );
+
+  // Add debug logging
+  useEffect(() => {
+    console.log('Quiz Data:', quizData);
+    console.log('Progress:', progress);
+    console.log('Course ID:', id);
+    console.log('Token:', token);
+  }, [quizData, progress, id, token]);
+
+  if (isLoading || progressLoading || quizLoading) return <LoadingPage />;
   if (error || progressError) {
     return (
       <div className="flex justify-center items-center min-h-[60vh] px-4">
@@ -364,15 +438,15 @@ const ViewVideo = () => {
           )}
 
           {/* Quiz Section */}
-          {progress >= 70 && quizData && quizData.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`mt-8 p-6 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}
-            >
-              <h3 className="text-2xl font-bold mb-4 text-primary">
-                {t('Course Quiz')}
-              </h3>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`mt-8 p-6 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}
+          >
+            <h3 className="text-2xl font-bold mb-4 text-primary">
+              {t('Course Quiz')}
+            </h3>
+            {quizData && quizData.length > 0 ? (
               <div className="grid grid-cols-1 gap-4">
                 {quizData.map((quiz) => (
                   <motion.div
@@ -395,46 +469,51 @@ const ViewVideo = () => {
                           {t('Time Limit')}: {quiz.time_limit} {t('minutes')}
                         </span>
                       </div>
-                      <button
-                        onClick={() => navigate(`/quiz/${id}/${quiz.id}`)}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                      >
-                        {t('Take Quiz')}
-                      </button>
+                      {progress >= 70 ? (
+                        <button
+                          onClick={() => navigate(`/quiz/${id}/${quiz.id}`)}
+                          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          {t('Take Quiz')}
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          className="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed"
+                          title={t('Complete 70% of the course to unlock')}
+                        >
+                          {t('Locked')} ({progress}%)
+                        </button>
+                      )}
                     </div>
                   </motion.div>
                 ))}
               </div>
-            </motion.div>
-          )}
+            ) : (
+              <div className="text-center text-gray-500">
+                {t('No quizzes available for this course')}
+              </div>
+            )}
+          </motion.div>
 
           {/* Progress Message */}
           {progress < 70 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`mt-8 p-6 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}
+              className={`mt-4 p-4 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg border-l-4 border-yellow-500`}
             >
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center">
-                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24" className="text-yellow-500">
-                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M12 3c7.2 0 9 1.8 9 9s-1.8 9-9 9-9-1.8-9-9 1.8-9 9-9z"/>
+                <div className="flex-shrink-0">
+                  <svg className="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-primary mb-2">
-                    {t('Complete More Lessons')}
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    {t('You need to complete')} {Math.ceil(70 - progress)}% {t('more of the course to unlock the quiz')}
+                  <p className="text-sm">
+                    {t('You need to complete')} <span className="font-bold text-yellow-500">{70 - progress}%</span> {t('more of the course to unlock the quiz')}
                   </p>
                 </div>
-              </div>
-              <div className="mt-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
-                <div
-                  className="bg-primary h-4 rounded-full transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
               </div>
             </motion.div>
           )}
