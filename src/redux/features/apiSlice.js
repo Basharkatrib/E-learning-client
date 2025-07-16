@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://e-learning-server-me-production.up.railway.app/api/' }),
+  baseQuery: fetchBaseQuery({ baseUrl: 'https://e-learning-server.test/api/' }),
   endpoints: (builder) => ({
     register: builder.mutation({
       query: (userData) => ({
@@ -83,6 +83,15 @@ export const apiSlice = createApi({
     getCourses: builder.query({
       query: () => ({
         url: 'v1/courses',
+        method: 'GET',
+        headers: {
+          "ngrok-skip-browser-warning": "1",
+        }
+      }),
+    }),
+    getTrendingCourses: builder.query({
+      query: () => ({
+        url: 'v1/courses/trending',
         method: 'GET',
         headers: {
           "ngrok-skip-browser-warning": "1",
@@ -366,6 +375,98 @@ export const apiSlice = createApi({
       ]
     }),
     
+    // Saved Courses endpoints
+    getSavedCourses: builder.query({
+      query: (token) => ({
+        url: 'v1/saved-courses',
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: ['SavedCourses']
+    }),
+    
+    saveCourse: builder.mutation({
+      query: ({courseId, token}) => ({
+        url: `v1/saved-courses/${courseId}`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: ['SavedCourses']
+    }),
+    
+    unsaveCourse: builder.mutation({
+      query: ({courseId, token}) => ({
+        url: `v1/saved-courses/${courseId}`,
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: ['SavedCourses']
+    }),
+    
+    checkSavedCourse: builder.mutation({
+      query: ({courseId, token}) => ({
+        url: `v1/saved-courses/${courseId}/check`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: ['SavedCourses']
+    }),
+
+    // Notes endpoints
+    getNotes: builder.query({
+      query: ({ token, courseId }) => ({
+        url: `v1/notes?course_id=${courseId}`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: ['Notes'],
+    }),
+
+    createNote: builder.mutation({
+      query: ({ token, data }) => ({
+        url: 'v1/notes',
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: data,
+      }),
+      invalidatesTags: ['Notes'],
+    }),
+
+    updateNote: builder.mutation({
+      query: ({ token, noteId, data }) => ({
+        url: `v1/notes/${noteId}`,
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: data,
+      }),
+      invalidatesTags: ['Notes'],
+    }),
+
+    deleteNote: builder.mutation({
+      query: ({ token, noteId }) => ({
+        url: `v1/notes/${noteId}`,
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: ['Notes'],
+    }),
+
   }),
 
 });export const {
@@ -398,6 +499,15 @@ export const apiSlice = createApi({
   useSubmitQuizMutation,
   useGetLatestQuizAttemptQuery,
   useCheckQuizAttemptQuery,
+  useGetTrendingCoursesQuery,
+  useGetSavedCoursesQuery,
+  useSaveCourseMutation,
+  useUnsaveCourseMutation,
+  useCheckSavedCourseMutation,
+  useGetNotesQuery,
+  useCreateNoteMutation,
+  useUpdateNoteMutation,
+  useDeleteNoteMutation,
 } = apiSlice;
 
 

@@ -190,5 +190,8 @@
   "Quiz submitted, but you did not pass. Try again!": "تم تسليم الامتحان، ولكن لم تجتز. حاول مرة أخرى!",
   "Error loading quiz": "خطأ في تحميل الامتحان",
   "Error submitting quiz": "خطأ في تسليم الامتحان",
-  "Please try again later": "الرجاء المحاولة مرة أخرى لاحقاً"
+  "Please try again later": "الرجاء المحاولة مرة أخرى لاحقاً",
+  "My Courses": "دوراتي",
+  "Saved Courses": "دورات محفوظة"
+ 
 }

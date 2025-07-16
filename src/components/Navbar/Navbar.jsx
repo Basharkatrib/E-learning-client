@@ -12,6 +12,9 @@ import { useLogoutMutation } from '../../redux/features/apiSlice';
 import { toast } from 'react-hot-toast';
 import { logout as logoutAction, selectToken, selectCurrentUser } from '../../redux/features/authSlice';
 import { selectNotifications, selectUnreadCount, removeNotification, markAsRead, markAllAsRead, clearAllNotifications } from '../../redux/features/notificationsSlice';
+import { Menu } from '@headlessui/react';
+import { FaGraduationCap, FaBookmark } from 'react-icons/fa';
+
 function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -123,17 +126,42 @@ function Navbar() {
                             })}
 
                             {user && (
-                                <motion.li>
-                                    <Link
-                                        to="/my-courses"
-                                        className={`p-2 rounded-[4px] transition-all duration-200 ${theme === 'dark'
-                                            ? 'text-white hover:bg-gray-700'
-                                            : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
+                                <>
+                                    <motion.li>
+                                        <Link
+                                            to="/my-courses"
+                                            className={`p-2 rounded-[4px] transition-all duration-200 flex items-center gap-2 ${
+                                                theme === 'dark'
+                                                    ? currentPath === '/my-courses'
+                                                        ? 'bg-gray-700 text-white'
+                                                        : 'text-white hover:bg-gray-700'
+                                                    : currentPath === '/my-courses'
+                                                        ? 'bg-gray-100 text-primary'
+                                                        : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
                                             }`}
-                                    >
-                                        {(lang === "en") ? "MyCourses" : "الدورات المسجل بها"}
-                                    </Link>
-                                </motion.li>
+                                        >
+                                            <FaGraduationCap className="text-lg" />
+                                            {t('My Courses')}
+                                        </Link>
+                                    </motion.li>
+                                    <motion.li>
+                                        <Link
+                                            to="/saved-courses"
+                                            className={`p-2 rounded-[4px] transition-all duration-200 flex items-center gap-2 ${
+                                                theme === 'dark'
+                                                    ? currentPath === '/saved-courses'
+                                                        ? 'bg-gray-700 text-white'
+                                                        : 'text-white hover:bg-gray-700'
+                                                    : currentPath === '/saved-courses'
+                                                        ? 'bg-gray-100 text-primary'
+                                                        : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
+                                            }`}
+                                        >
+                                            <FaBookmark className="text-lg" />
+                                            {t('Saved Courses')}
+                                        </Link>
+                                    </motion.li>
+                                </>
                             )}
                         </ul>
                     </div>
@@ -590,21 +618,38 @@ function Navbar() {
                                         );
                                     })}
                                     {user && (
-                                        <motion.div key="my-courses">
-                                            <Link
-                                                to="/my-courses"
-                                                onClick={() => setIsOpen(false)}
-                                                className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
-                                                    ? `text-gray-200 hover:bg-gray-700/50 ${currentPath === '/my-courses' ? 'bg-gray-700 text-primary' : ''}`
-                                                    : `text-gray-700 hover:bg-gray-100 ${currentPath === '/my-courses' ? 'bg-gray-200 text-primary' : ''}`
-                                                    }`}
-                                            >
-                                                <span className="font-medium">{(lang === "en") ? "MyCourses" : "الدورات المسجل بها"}</span>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ltr:rotate-0 rtl:rotate-180 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                                                </svg>
-                                            </Link>
-                                        </motion.div>
+                                        <>
+                                            <motion.div key="my-courses">
+                                                <Link
+                                                    to="/my-courses"
+                                                    onClick={() => setIsOpen(false)}
+                                                    className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
+                                                        ? `text-gray-200 hover:bg-gray-700/50 ${currentPath === '/my-courses' ? 'bg-gray-700 text-primary' : ''}`
+                                                        : `text-gray-700 hover:bg-gray-100 ${currentPath === '/my-courses' ? 'bg-gray-200 text-primary' : ''}`
+                                                        }`}
+                                                >
+                                                    <span className="font-medium">{(lang === "en") ? "MyCourses" : "الدورات المسجل بها"}</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ltr:rotate-0 rtl:rotate-180 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                </Link>
+                                            </motion.div>
+                                            <motion.div key="saved-courses">
+                                                <Link
+                                                    to="/saved-courses"
+                                                    onClick={() => setIsOpen(false)}
+                                                    className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${theme === 'dark'
+                                                        ? `text-gray-200 hover:bg-gray-700/50 ${currentPath === '/saved-courses' ? 'bg-gray-700 text-primary' : ''}`
+                                                        : `text-gray-700 hover:bg-gray-100 ${currentPath === '/saved-courses' ? 'bg-gray-200 text-primary' : ''}`
+                                                        }`}
+                                                >
+                                                    <span className="font-medium">{(lang === "en") ? "Saved Courses" : "الدورات المحفوظة"}</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ltr:rotate-0 rtl:rotate-180 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                </Link>
+                                            </motion.div>
+                                        </>
                                     )}
                                 </div>
 
