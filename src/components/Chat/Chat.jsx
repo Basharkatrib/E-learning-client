@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { InferenceClient } from "@huggingface/inference";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
@@ -19,19 +18,36 @@ const Chat = () => {
     const userMessage = input;
     setInput(""); 
     try {
-      const client = new InferenceClient(import.meta.env.VITE_HUGGINGFACE_API_KEY);
-      const chatCompletion = await client.chatCompletion({
-        model: "HuggingFaceH4/zephyr-7b-beta",
-        messages: [{ role: "user", content: userMessage }],
+      const response = await fetch('https://waraqh.buildship.run/quickApi-ccc1f5022b0d', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          string: userMessage
+        })
       });
-      const botResponse = chatCompletion.choices[0].message.content;
 
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Use response.text() instead of response.json() since we're getting plain text
+      const botResponse = await response.text();
       
-      setMessages(prev => [...prev, { question: userMessage, answer: botResponse }]);
+      setMessages(prev => [...prev, { 
+        question: userMessage, 
+        answer: botResponse 
+      }]);
     } catch (error) {
-      setMessages(prev => [...prev, { question: userMessage, answer: "Error: " + error.message }]);
+      console.error('Chat error:', error);
+      setMessages(prev => [...prev, { 
+        question: userMessage, 
+        answer: "عذراً، حدث خطأ في الاتصال. الرجاء المحاولة مرة أخرى." 
+      }]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
