@@ -26,8 +26,8 @@ function ProfilePage() {
     name: '',
     email: '',
     bio: 'Front-End Developer',
-    country: '',  // إضافة حقل البلد
-    specialty: '',  // إضافة حقل التخصص
+    country: '', 
+    specialization: '',
   });
 
   useEffect(() => {
@@ -36,16 +36,16 @@ function ProfilePage() {
         name: userData.name || '',
         email: userData.email || '',
         bio: userData.bio || 'Front-End Developer',
-        country: userData.country || '',  // استرجاع البلد
-        specialty: userData.specialty || '',  // استرجاع التخصص
+        country: userData.country || '',
+        specialization: userData.specialization || '',
       });
     } else if (currentUser) {
       setUser({
         name: currentUser.name || '',
         email: currentUser.email || '',
         bio: currentUser.bio || 'Front-End Developer',
-        country: localStorage.getItem('userCountry') || '',  // استرجاع البلد من localStorage
-        specialty: localStorage.getItem('userSpecialty') || '',  // استرجاع التخصص من localStorage
+        country: currentUser.country || '', 
+        specialization: currentUser.specialization || '',
       });
     }
   }, [userData, currentUser]);
@@ -66,17 +66,13 @@ function ProfilePage() {
     e.preventDefault();
     try {
       await updateProfile({
-        token,
-        name: user.name?.trim(),
-        profileImage: profileImage,
-        country: user.country,  // إضافة البلد عند التحديث
-        specialty: user.specialty,  // إضافة التخصص عند التحديث
-      }).unwrap();
-
-      // حفظ القيم في localStorage
-      localStorage.setItem('userCountry', user.country);
-      localStorage.setItem('userSpecialty', user.specialty);
-
+  token,
+  name: user.name?.trim(),
+  profileImage: profileImage,
+  bio: user.bio,
+  country: user.country,
+ specialization: user.specialization,
+});
       setEditMode(false);
       const { data } = await refetch();
       if (data) {
@@ -122,7 +118,7 @@ function ProfilePage() {
               <p className={`mb-2 text-center md:text-left ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{user.bio}</p>
               <p className={`mb-4 text-sm text-center md:text-left ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{user.email}</p>
               <p className={`mb-4 text-sm text-center md:text-left ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t('Country')}: {user.country || t('Not specified')}</p>
-              <p className={`mb-4 text-sm text-center md:text-left ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t('Specialty')}: {user.specialty || t('Not specified')}</p>
+              <p className={`mb-4 text-sm text-center md:text-left ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t('Specialty')}: {user.specialization || t('Not specified')}</p>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -189,8 +185,8 @@ function ProfilePage() {
                 <label className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{t('Specialty')}</label>
               </div>
               <input
-                name="specialty"
-                value={user.specialty}
+                name="specialization"
+                value={user.specialization}
                 onChange={handleChange}
                 disabled={!editMode}
                 className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
