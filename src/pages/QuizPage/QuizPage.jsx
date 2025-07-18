@@ -74,12 +74,20 @@ const QuizPage = () => {
       setHasAttempted(attemptStatus.hasAttempted);
       setIsCompleted(hasCompletedAttempt);
       
+      // Always show result if there's a latest attempt
       if (attemptStatus.latestAttempt) {
-        setQuizResult(attemptStatus.latestAttempt);
+        setQuizResult({
+          score: attemptStatus.latestAttempt.score,
+          passed: attemptStatus.latestAttempt.score >= (currentQuiz?.passing_score || 60),
+          total_questions: currentQuiz?.questions?.length || 0,
+          correct_answers: Math.round((attemptStatus.latestAttempt.score / 100) * (currentQuiz?.questions?.length || 0)),
+          answers: attemptStatus.latestAttempt.answers || {}
+        });
         setShowResult(true);
+        setSelectedAnswers(attemptStatus.latestAttempt.answers || {});
       }
     }
-  }, [attemptStatus]);
+  }, [attemptStatus, currentQuiz]);
 
   useEffect(() => {
     if (quizzes && quizzes.length > 0) {
@@ -199,16 +207,15 @@ const QuizPage = () => {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8 flex justify-between items-center">
           <div>
-            {/* Edddddddddddddddit */}
             <h1 className="text-3xl font-bold text-primary mb-2">{currentQuiz?.title}</h1>
             <p className="text-gray-600 dark:text-gray-400">{currentQuiz?.description}</p>
-            {isCompleted && (
+            {(isCompleted || hasAttempted) && (
               <div className="mt-2 text-sm font-medium text-yellow-500">
-                {lang==='en'?'You have already completed this quiz':'لقد أكملت هذا الاختبار بالفعل'}
+                {t('You have already completed this quiz')}
               </div>
             )}
           </div>
-          {timeLeft !== null && !showResult && !isCompleted && (
+          {timeLeft !== null && !showResult && !isCompleted && !hasAttempted && (
             <div className={`px-6 py-3 rounded-lg text-lg font-mono font-bold ${
               timeLeft < 300 
                 ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-200' 
@@ -219,7 +226,7 @@ const QuizPage = () => {
           )}
         </div>
 
-        {(showResult || hasAttempted) ? (
+        {(showResult || hasAttempted || isCompleted) ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -277,28 +284,37 @@ const QuizPage = () => {
                   </h4>
                   <div className="space-y-2">
                     {question.options?.map((option) => {
-                      const isSelected = quizResult?.answers?.[question.id] === option.id;
-                      const isCorrect = option.is_correct === 1;
+                      const isSelected = selectedAnswers[question.id] === option.id;
+                      const isCorrect = option.is_correct;
+                      
+                      let bgColorClass = isDark ? 'bg-gray-600' : 'bg-white';
+                      let textColorClass = '';
+                      
+                      // Always highlight correct answers in green
+                      if (isCorrect) {
+                        bgColorClass = isDark ? 'bg-green-900' : 'bg-green-100';
+                        textColorClass = isDark ? 'text-green-200' : 'text-green-700';
+                      }
+                      
+                      // If an answer was selected and it's wrong, show it in red
+                      if (isSelected && !isCorrect) {
+                        bgColorClass = isDark ? 'bg-red-900' : 'bg-red-100';
+                        textColorClass = isDark ? 'text-red-200' : 'text-red-700';
+                      }
+
                       return (
                         <div
                           key={option.id}
-                          className={`p-3 rounded ${
-                            isSelected
-                              ? isCorrect
-                                ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200'
-                                : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
-                              : isCorrect
-                                ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200'
-                                : isDark
-                                  ? 'bg-gray-600'
-                                  : 'bg-white'
-                          }`}
+                          className={`p-3 rounded ${bgColorClass} ${textColorClass}`}
                         >
                           <div className="flex items-center">
                             {isSelected && (
                               <span className="mr-2">
                                 {isCorrect ? '✓' : '✗'}
                               </span>
+                            )}
+                            {isCorrect && !isSelected && (
+                              <span className="mr-2 text-green-500">✓</span>
                             )}
                             {option.option_text}
                           </div>
