@@ -1,17 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
-import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
-
+import { selectTranslate } from '../../redux/features/translateSlice';
+import { useAddContactMutation} from '../../redux/features/apiSlice'; // Ensure this mutation is imported correctly
 import email from '../../assets/images/footer/email.svg';
 import phone from '../../assets/images/ContactUs/phone.svg';
 import facebook from '../../assets/images/ContactUs/facebook.svg';
 import linked from '../../assets/images/ContactUs/linkind.svg';
 import location from '../../assets/images/ContactUs/location.svg';
 import twitter from '../../assets/images/ContactUs/twiter.svg';
-
 import email_w from '../../assets/images/footer-white/email_w.svg';
 import phone_w from '../../assets/images/footer-white/phone_w.svg';
 import facebook_w from '../../assets/images/footer-white/facebook_w.svg';
@@ -22,8 +21,59 @@ import twitter_w from '../../assets/images/footer-white/twitter_w.svg';
 const ContactUs = () => {
   const theme = useSelector(selectTheme);
   const isDark = theme === 'dark';
-    const lang = useSelector(selectTranslate);
-    const { t } = useTranslation();
+  const lang = useSelector(selectTranslate);
+  const { t } = useTranslation();
+
+  const [user, setUser] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
+  });
+
+  const [addContact, { isLoading, isSuccess, isError, error }] = useAddContactMutation();
+  const token = useSelector(state => state.auth.token);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUser((prevUser) => ({
+      ...prevUser,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (isLoading) return;
+
+  try {
+    const response = await addContact({
+      token: token,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      subject: user.subject,
+      message: user.message,
+    }).unwrap();
+
+    if (response) {
+      console.log('تم إرسال البيانات بنجاح!');
+      setUser({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: ''
+      });
+    }
+  } catch (err) {
+    console.error('حدث خطأ أثناء إرسال النموذج:', err);
+  }
+};
 
   const contactIcons = [
     { icon: isDark ? email_w : email, text: 'support@skillbridge.com' },
@@ -54,49 +104,84 @@ const ContactUs = () => {
         <div className='w-full lg:w-2/3'>
           <div className='flex flex-col items-center gap-10'>
             <div className='w-full flex flex-col gap-5'>
-
               <div className='flex flex-col md:flex-row gap-5'>
                 <div className='w-full'>
                   <h3>{t('First Name')}</h3>
-                  <input type='text' placeholder={t('Enter First Name')}
-                    className={`w-full mt-3 rounded-sm p-4 border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`} />
+                  <input
+                    type='text'
+                    name="firstName"
+                    value={user.firstName}
+                    onChange={handleInputChange}
+                    placeholder={t('Enter First Name')}
+                    className={`w-full mt-3 rounded-sm p-4 border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`}
+                  />
                 </div>
                 <div className='w-full'>
                   <h3>{t('Last Name')}</h3>
-                  <input type='text' placeholder={t('Enter Last Name')}
-                    className={`w-full mt-3 rounded-sm p-4 border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`} />
+                  <input
+                    type='text'
+                    name="lastName"
+                    value={user.lastName}
+                    onChange={handleInputChange}
+                    placeholder={t('Enter Last Name')}
+                    className={`w-full mt-3 rounded-sm p-4 border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`}
+                  />
                 </div>
               </div>
 
               <div className='flex flex-col md:flex-row gap-5'>
                 <div className='w-full'>
                   <h3>{t('Email')}</h3>
-                  <input type='email' placeholder={t('Enter Your Email')}
-                    className={`w-full mt-3 rounded-sm p-4 border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`} />
+                  <input
+                    type='email'
+                    name="email"
+                    value={user.email}
+                    onChange={handleInputChange}
+                    placeholder={t('Enter Your Email')}
+                    className={`w-full mt-3 rounded-sm p-4 border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`}
+                  />
                 </div>
                 <div className='w-full'>
                   <h3>{t('Phone')}</h3>
-                  <input type='text' placeholder={t('Enter Your Phone')}
-                    className={`w-full mt-3 rounded-sm p-4 border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`} />
+                  <input
+                    type='text'
+                    name="phone"
+                    value={user.phone}
+                    onChange={handleInputChange}
+                    placeholder={t('Enter Your Phone')}
+                    className={`w-full mt-3 rounded-sm p-4 border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`}
+                  />
                 </div>
               </div>
 
               <div>
                 <h3>{t('Subject')}</h3>
-                <input type='text' placeholder={t('Enter Your Subject')}
-                  className={`w-full mt-3 rounded-sm p-4 border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`} />
+                <input
+                  type='text'
+                  name="subject"
+                  value={user.subject}
+                  onChange={handleInputChange}
+                  placeholder={t('Enter Your Subject')}
+                  className={`w-full mt-3 rounded-sm p-4 border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`}
+                />
               </div>
 
               <div>
                 <h3>{t('Message')}</h3>
-                <textarea placeholder={t('Enter Your Message')}
-                  className={`w-full mt-3 rounded-sm p-4 h-32 resize-none border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`} />
+                <textarea
+                  name="message"
+                  value={user.message}
+                  onChange={handleInputChange}
+                  placeholder={t('Enter Your Message')}
+                  className={`w-full mt-3 rounded-sm p-4 h-32 resize-none border focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'}`}
+                />
               </div>
             </div>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={handleSubmit}
               className="bg-primary text-white px-6 py-3 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors duration-200"
             >
               {t('Send Your Message')}

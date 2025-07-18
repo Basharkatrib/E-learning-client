@@ -42,22 +42,47 @@ export const apiSlice = createApi({
         },
       }),
     }),
-    updateProfile: builder.mutation({
-      query: ({ token, name, profileImage }) => {
-        const formData = new FormData();
-        if (name) formData.append("name", name);
-        if (profileImage) formData.append("profile_image", profileImage);
-    
-        return {
-          url: 'v1/profile',
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        };
+   updateProfile: builder.mutation({
+  query: ({ token, name, profileImage, bio, country, specialization }) => {
+    const formData = new FormData();
+
+    if (name) formData.append("name", name);
+    if (profileImage) formData.append("profile_image", profileImage);
+    if (bio) formData.append("bio", bio);
+    if (country) formData.append("country", country);
+    if (specialization) formData.append("specialization", specialization);
+
+    return {
+      url: 'v1/profile',
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-    }),    
+      body: formData,
+    };
+  },
+}),   
+addContact: builder.mutation({
+  query: ({ token, firstName, lastName, email, phone, subject, message }) => {
+    const formData = new FormData();
+
+    if (firstName) formData.append("first_name", firstName);
+    if (lastName) formData.append("last_name", lastName);
+    if (email) formData.append("email", email);
+    if (phone) formData.append("phone", phone);
+    if (subject) formData.append("subject", subject);
+    if (message) formData.append("message", message);
+
+    return {
+      url: 'v1/contact',
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    };
+  }
+}),
     logout: builder.mutation({
       query: (token) => ({
         url: 'logout',
@@ -508,6 +533,7 @@ export const apiSlice = createApi({
   useCreateNoteMutation,
   useUpdateNoteMutation,
   useDeleteNoteMutation,
+  useAddContactMutation
 } = apiSlice;
 
 

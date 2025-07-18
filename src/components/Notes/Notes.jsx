@@ -133,7 +133,7 @@ const Notes = ({ courseId }) => {
                         className={`w-full p-3 rounded-lg border ${
                           isDark
                             ? 'bg-gray-700 border-gray-600 text-white'
-                            : 'bg-white border-gray-300'
+                            : 'bg-white border-gray-300 text-black'
                         } focus:ring-2 focus:ring-primary/50 outline-none`}
                         rows="4"
                         placeholder={lang === 'ar' ? 'اكتب ملاحظتك هنا...' : 'Write your note here...'}
@@ -247,16 +247,17 @@ const Notes = ({ courseId }) => {
                 
                 <form onSubmit={handleCreateNote} className="space-y-4">
                   <textarea
-                    value={newNote}
-                    onChange={(e) => setNewNote(e.target.value)}
-                    placeholder={lang === 'ar' ? 'اكتب ملاحظتك هنا...' : 'Write your note here...'}
-                    className={`w-full p-4 rounded-xl border ${
-                      isDark
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300'
-                    } focus:ring-2 focus:ring-primary/50 outline-none`}
-                    rows="6"
-                  />
+                     value={newNote}
+                     onChange={(e) => setNewNote(e.target.value)}
+                     placeholder={lang === 'ar' ? 'اكتب ملاحظتك هنا...' : 'Write your note here...'}
+                     className={`w-full p-4 rounded-xl border ${
+                     isDark
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-black'  // هنا تعديل اللون إلى أسود في الوضع الفاتح
+                      } focus:ring-2 focus:ring-primary/50 outline-none`}
+                       rows="6"
+                      />
+
                   <div className="flex justify-end gap-3">
                     <button
                       type="button"
