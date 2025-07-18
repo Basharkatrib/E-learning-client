@@ -42,6 +42,22 @@ export const apiSlice = createApi({
         },
       }),
     }),
+    updateProfile: builder.mutation({
+      query: ({ token, name, profileImage }) => {
+        const formData = new FormData();
+        if (name) formData.append("name", name);
+        if (profileImage) formData.append("profile_image", profileImage);
+    
+        return {
+          url: 'v1/profile',
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        };
+      },
+    }),    
     logout: builder.mutation({
       query: (token) => ({
         url: 'logout',
@@ -67,6 +83,15 @@ export const apiSlice = createApi({
     getCourses: builder.query({
       query: () => ({
         url: 'v1/courses',
+        method: 'GET',
+        headers: {
+          "ngrok-skip-browser-warning": "1",
+        }
+      }),
+    }),
+    getTrendingCourses: builder.query({
+      query: () => ({
+        url: 'v1/courses/trending',
         method: 'GET',
         headers: {
           "ngrok-skip-browser-warning": "1",
@@ -173,6 +198,8 @@ export const apiSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
+      // Skip the request if no token is available
+      skip: (arg) => !arg?.token,
     }),
     courseMyProgress: builder.query({
       query: ({ token, courseId }) => ({
@@ -182,6 +209,20 @@ export const apiSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
+      // Transform response to standardized format
+      transformResponse: (response) => ({
+        courseId: response.courseId,
+        progress: response.progress,
+        videosCompleted: response.videosCompleted,
+        completedAt: response.completedAt,
+        canTakeQuiz: response.canTakeQuiz
+      }),
+      // Provide tags for cache invalidation
+      providesTags: (result, error, { courseId }) => [
+        { type: 'CourseProgress', id: courseId }
+      ],
+      // Skip if no token or courseId
+      skip: (arg) => !arg?.token || !arg?.courseId,
     }),
     courseMyProgressUpdate: builder.mutation({
       query: ({ token, courseId, progress, videosCompleted }) => ({
@@ -196,6 +237,28 @@ export const apiSlice = createApi({
           videos_completed: videosCompleted,
         },
       }),
+      // Invalidate relevant queries after mutation
+      invalidatesTags: (result, error, { courseId }) => [
+        { type: 'CourseProgress', id: courseId },
+        'UserEnrollments'
+      ],
+      // Transform the response
+      transformResponse: (response) => {
+        return {
+          courseId: response.courseId,
+          progress: response.progress,
+          videosCompleted: response.videosCompleted,
+          completedAt: response.completedAt,
+          canTakeQuiz: response.canTakeQuiz
+        };
+      },
+      // Handle errors
+      transformErrorResponse: (response) => {
+        return {
+          status: response.status,
+          message: response?.data?.message || 'Failed to update progress'
+        };
+      }
     }),
     getWatchedVideos: builder.query({
       query: (token) => ({
@@ -216,13 +279,197 @@ export const apiSlice = createApi({
         },
       }),
     }),
+
+    // Quiz endpoints
+    getQuizzes: builder.query({
+      query: ({ courseId, token }) => ({
+        url: `v1/courses/${courseId}/quiz`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: (result, error, { courseId }) => [
+        { type: 'Quiz', id: courseId }
+      ]
+    }),
+
+    getQuiz: builder.query({
+      query: ({ courseId, token }) => ({
+        url: `v1/courses/${courseId}/quiz`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      transformResponse: (response) => {
+        console.log('Quiz API Response:', response);
+        return Array.isArray(response) ? response : response.data || [];
+      },
+      transformErrorResponse: (response) => {
+        console.error('Quiz API Error:', response);
+        return {
+          status: response.status,
+          message: response?.data?.message || 'Failed to fetch quiz'
+        };
+      },
+      providesTags: (result, error, { courseId }) => [
+        { type: 'Quiz', id: courseId }
+      ]
+    }),
+    checkQuizAttempt: builder.query({
+      query: ({ courseId, quizId, token }) => ({
+        url: `v1/courses/${courseId}/quizzes/${quizId}/attempt-status`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      transformResponse: (response) => ({
+        hasAttempted: response.has_attempted,
+        latestAttempt: response.latest_attempt,
+      }),
+    }),
+    // Get quiz attempt history
+    getQuizAttempts: builder.query({
+      query: ({ courseId, quizId, token }) => ({
+        url: `v1/courses/${courseId}/quiz/${quizId}/attempts`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: (result, error, { courseId, quizId }) => [
+        { type: 'QuizAttempts', id: `${courseId}-${quizId}` }
+      ]
+    }),
+
+    // Get latest quiz attempt result
+    getLatestQuizAttempt: builder.query({
+      query: ({ courseId, quizId, token }) => ({
+        url: `v1/courses/${courseId}/quiz/${quizId}/latest-attempt`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: (result, error, { courseId, quizId }) => [
+        { type: 'QuizAttempt', id: `${courseId}-${quizId}` }
+      ]
+    }),
+
+    // Submit quiz attempt
+    submitQuiz: builder.mutation({
+      query: ({ courseId, quizId, answers, token }) => ({
+        url: `v1/courses/${courseId}/quiz/${quizId}/submit`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: { answers },
+      }),
+      invalidatesTags: (result, error, { courseId, quizId }) => [
+        { type: 'QuizAttempts', id: `${courseId}-${quizId}` },
+        { type: 'QuizAttempt', id: `${courseId}-${quizId}` }
+      ]
+    }),
     
+    // Saved Courses endpoints
+    getSavedCourses: builder.query({
+      query: (token) => ({
+        url: 'v1/saved-courses',
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: ['SavedCourses']
+    }),
     
+    saveCourse: builder.mutation({
+      query: ({courseId, token}) => ({
+        url: `v1/saved-courses/${courseId}`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: ['SavedCourses']
+    }),
+    
+    unsaveCourse: builder.mutation({
+      query: ({courseId, token}) => ({
+        url: `v1/saved-courses/${courseId}`,
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: ['SavedCourses']
+    }),
+    
+    checkSavedCourse: builder.mutation({
+      query: ({courseId, token}) => ({
+        url: `v1/saved-courses/${courseId}/check`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: ['SavedCourses']
+    }),
+
+    // Notes endpoints
+    getNotes: builder.query({
+      query: ({ token, courseId }) => ({
+        url: `v1/notes?course_id=${courseId}`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: ['Notes'],
+    }),
+
+    createNote: builder.mutation({
+      query: ({ token, data }) => ({
+        url: 'v1/notes',
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: data,
+      }),
+      invalidatesTags: ['Notes'],
+    }),
+
+    updateNote: builder.mutation({
+      query: ({ token, noteId, data }) => ({
+        url: `v1/notes/${noteId}`,
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: data,
+      }),
+      invalidatesTags: ['Notes'],
+    }),
+
+    deleteNote: builder.mutation({
+      query: ({ token, noteId }) => ({
+        url: `v1/notes/${noteId}`,
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: ['Notes'],
+    }),
+
   }),
 
-});
-
-export const {
+});export const {
   useGetCategoriesQuery,
   useRegisterMutation,
   useLoginMutation,
@@ -245,5 +492,22 @@ export const {
   useCourseMyProgressQuery,
   useCourseMyProgressUpdateMutation,
   useGetWatchedVideosQuery,
-  useMarkVideoAsWatchedMutation
+  useMarkVideoAsWatchedMutation,
+  useUpdateProfileMutation,
+  useGetQuizzesQuery,
+  useGetQuizQuery,
+  useSubmitQuizMutation,
+  useGetLatestQuizAttemptQuery,
+  useCheckQuizAttemptQuery,
+  useGetTrendingCoursesQuery,
+  useGetSavedCoursesQuery,
+  useSaveCourseMutation,
+  useUnsaveCourseMutation,
+  useCheckSavedCourseMutation,
+  useGetNotesQuery,
+  useCreateNoteMutation,
+  useUpdateNoteMutation,
+  useDeleteNoteMutation,
 } = apiSlice;
+
+

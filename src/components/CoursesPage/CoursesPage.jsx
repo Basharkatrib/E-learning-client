@@ -77,18 +77,13 @@ export default function CoursesPage() {
 
     return coursesData.data.filter(course => {
       const courseTitle = (course.title?.[lang] || course.title?.en || '').toLowerCase();
-      const courseDescription = (course.description?.[lang] || course.description?.en || '').toLowerCase();
       const courseDuration = (course.duration?.[lang] || course.duration?.en || '').toLowerCase();
       const courseCategory = (course.category?.name?.[lang] || course.category?.name?.en || '').toLowerCase();
       const courseLevel = (course.difficulty_level || '').toLowerCase();
-      const teacherName = (course.teacher?.name || '').toLowerCase();
 
       const searchLower = searchQuery.toLowerCase();
 
-      const matchesSearch = searchQuery === '' || 
-        courseTitle.includes(searchLower) ||
-        courseDescription.includes(searchLower) ||
-        teacherName.includes(searchLower);
+      const matchesSearch = searchQuery === '' || courseTitle.includes(searchLower);
 
       const matchesLevel = selectedLevel === 'all' || courseLevel === selectedLevel;
       const matchesCategory = selectedCategory === 'all' || courseCategory === selectedCategory;

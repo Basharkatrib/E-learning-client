@@ -33,7 +33,8 @@ import ProtectedCourseRoute from './components/ProtectedCourse/ProtectedCourseRo
 import ViewMyCourses from './pages/ViewMyCourses/ViewMyCourses';
 import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 import { useGetCoursesQuery } from "./redux/features/apiSlice";
-
+import QuizPage from './pages/QuizPage/QuizPage';
+import SavedCourses from './pages/SavedCourses/SavedCourses';
 
 
 function App() {
@@ -150,6 +151,8 @@ function App() {
         />
         <Route path="/course-details/:id" element={<CourseDetailsPage />} />
         <Route path="/aboutus" element={<AboutUsPage />} />
+        <Route path="/quiz/:courseId/:quizId" element={<QuizPage />} />
+        <Route path="/saved-courses" element={<SavedCourses />} />
         <Route path="*" element={<ErrorPage />} />
       </Routes>
       <Footer />

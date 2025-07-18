@@ -123,7 +123,7 @@ export default function CourseDetails() {
         try {
             await unenrollUser({ id, token }).unwrap();
             setShowUnenrollConfirm(false);
-            setShowUnenrollSuccess(true); 
+            setShowUnenrollSuccess(true);
             toast.success(lang === 'ar' ? 'تم إلغاء التسجيل بنجاح' : 'Unenrolled successfully');
             setEnrollmentStatus(false);
             refetchEnrollments();
@@ -246,7 +246,7 @@ export default function CourseDetails() {
                         <p className="mb-6 text-center">{lang === 'ar' ? 'هل أنت متأكد أنك تريد إلغاء تسجيلك في هذه الدورة؟' : 'Are you sure you want to unenroll from this course?'}</p>
                         <div className="flex gap-4 justify-center">
                             <button
-                                onClick={handleUnenrollConfirm} 
+                                onClick={handleUnenrollConfirm}
                                 className="px-6 py-2 rounded-lg bg-red-600 text-white font-bold shadow hover:bg-red-700 transition"
                                 disabled={isUnenrolling}
                             >
@@ -301,6 +301,161 @@ export default function CourseDetails() {
                         {data.title?.[lang]}
                     </motion.h1>
                     <p className={`text-lg mb-2 font-medium text-gray-700 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.description?.[lang]}</p>
+                    
+                    {/* Rating Section - Compact Professional Design */}
+                    {enrollmentStatus && (
+                        <div className="mb-6">
+                            {!hideRating && myRatingData && myRatingData.rating ? (
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-1">
+                                        {[1,2,3,4,5].map((star) => (
+                                            <svg
+                                                key={star}
+                                                className={`h-5 w-5 ${myRatingData.rating.rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                fill="currentColor"
+                                                viewBox="0 0 20 20"
+                                            >
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+                                            </svg>
+                                        ))}
+                                    </div>
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => { setShowRating(true); setEditMode(true); }}
+                                        className={`text-sm ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} 
+                                            flex items-center gap-2 transition-colors duration-300`}
+                                    >
+                                        {lang === 'ar' ? 'تعديل تقييمك' : 'Edit your rating'}
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                    </motion.button>
+                                </div>
+                            ) : (
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => { setShowRating(true); setEditMode(false); }}
+                                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${isDark 
+                                        ? 'bg-gray-800/80 hover:bg-gray-700/80 text-white' 
+                                        : 'bg-white/80 hover:bg-gray-50/80 text-gray-900'} 
+                                        backdrop-blur-sm border border-gray-200/20 shadow-sm transition-all duration-300`}
+                                >
+                                    <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+                    </svg>
+                                    {lang === 'ar' ? 'قيّم هذه الدورة' : 'Rate this course'}
+                                </motion.button>
+                            )}
+
+                            {/* Rating Modal */}
+                            <AnimatePresence>
+                                {showRating && (
+                                    <motion.div 
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="fixed inset-0 z-50 flex items-center justify-center px-4"
+                                    >
+                                        <motion.div 
+                                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                                            onClick={() => setShowRating(false)}
+                                        />
+                                        <motion.div
+                                            initial={{ scale: 0.9, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            exit={{ scale: 0.9, opacity: 0 }}
+                                            className={`relative rounded-2xl ${isDark 
+                                                ? 'bg-gray-800 border border-gray-700' 
+                                                : 'bg-white border border-gray-200'} 
+                                                shadow-xl p-6 max-w-md w-full`}
+                                        >
+                                            <button 
+                                                onClick={() => setShowRating(false)}
+                                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
+                                            >
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+
+                                            <h3 className="text-xl font-bold mb-6 text-center">
+                                                {lang === 'ar' ? 'قيّم تجربتك مع الدورة' : 'Rate your experience'}
+                                            </h3>
+
+                                            <form onSubmit={handleSubmitRating} className="space-y-6">
+                                                <div className="flex justify-center gap-2">
+                                                    {[1,2,3,4,5].map((star) => (
+                                                        <motion.button
+                                                            key={star}
+                                                            type="button"
+                                                            onClick={() => handleStarClick(star)}
+                                                            whileHover={{ scale: 1.2 }}
+                                                            whileTap={{ scale: 0.9 }}
+                                                            className="focus:outline-none"
+                                                        >
+                                                            <svg
+                                                                className={`h-10 w-10 ${rating >= star ? 'text-yellow-400' : 'text-gray-300'} 
+                                                                transition-colors duration-300`}
+                                                                fill="currentColor"
+                                                                viewBox="0 0 20 20"
+                                                            >
+                                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+                                                            </svg>
+                                                        </motion.button>
+                                                    ))}
+                                                </div>
+
+                                                <div className={`relative rounded-xl overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                                                    <textarea
+                                                        className={`w-full p-4 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent
+                                                            text-base resize-none ${isDark ? 'text-white' : 'text-gray-900'}
+                                                            placeholder-gray-400`}
+                                                        rows={3}
+                                                        placeholder={lang === 'ar' ? 'اكتب مراجعتك هنا (اختياري)' : 'Write your review here (optional)'}
+                                                        value={review}
+                                                        onChange={e => setReview(e.target.value)}
+                                                    />
+                                                </div>
+
+                                                <div className="flex gap-3">
+                                                    {editMode && (
+                                                        <motion.button
+                                                            type="button"
+                                                            whileHover={{ scale: 1.02 }}
+                                                            whileTap={{ scale: 0.98 }}
+                                                            onClick={handleDeleteRating}
+                                                            disabled={isDeleteLoading}
+                                                            className="flex-1 py-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20
+                                                                font-semibold transition-all duration-300 disabled:opacity-50"
+                                                        >
+                                                            {lang === 'ar' ? 'حذف التقييم' : 'Delete Rating'}
+                                                        </motion.button>
+                                                    )}
+                                                    <motion.button
+                                                        type="submit"
+                                                        disabled={isRatingLoading || isUpdateLoading || rating === 0}
+                                                        whileHover={{ scale: 1.02 }}
+                                                        whileTap={{ scale: 0.98 }}
+                                                        className="flex-1 py-2.5 rounded-xl bg-primary text-white font-semibold
+                                                            transition-all duration-300 disabled:opacity-50"
+                                                    >
+                                                        {(isRatingLoading || isUpdateLoading)
+                                                            ? (lang === 'ar' ? 'جاري الإرسال...' : 'Submitting...')
+                                                            : (editMode
+                                                                ? (lang === 'ar' ? 'تحديث' : 'Update')
+                                                                : (lang === 'ar' ? 'إرسال' : 'Submit'))}
+                                                    </motion.button>
+                                                </div>
+                                            </form>
+                                        </motion.div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
+
                     <div className="flex items-center gap-2 mb-4">
                         <span className="text-sm font-semibold text-primary">Teacher:</span>
                         <span className={`text-sm font-medium text-gray-800 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.teacher.name}</span>
@@ -350,7 +505,7 @@ export default function CourseDetails() {
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => navigate(`/course/${id}`)}
-                                    className={`px-3 md:px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-sm md:text-lg flex items-center gap-2 
+                                    className={`px-3 md:px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-sm md:text-lg flex items-center gap-2
                                         bg-gradient-to-r from-primary to-blue-600 hover:from-blue-700 hover:to-primary text-white
                                         ${isDark ? '' : ''}`}
                                 >
@@ -528,99 +683,6 @@ export default function CourseDetails() {
                 </div>
             </div>
             <FAQ Faqs={data.faqs} />
-
-            <div className="pb-12 px-4 sm:px-6 lg:px-8">
-            {enrollmentStatus && (
-                <div className={`max-w-md mx-auto rounded-xl border border-gray-200 dark:border-gray-700 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-primary/5 to-transparent'} p-5 mt-8 mb-8 flex flex-col items-center`}>
-                    <div className="flex flex-col items-center mb-2">
-                        <svg className="h-12 w-12 text-yellow-400 mb-1 drop-shadow" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
-                        </svg>
-                        <h3 className={`text-lg font-bold text-center ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{lang === 'ar' ? 'تقييمك للدورة' : 'Your Course Rating'}</h3>
-                    </div>
-                    {isMyRatingLoading ? (
-                        <div className="text-center py-4 text-gray-400 text-sm">{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>
-                    ) : (!hideRating && myRatingData && myRatingData.rating) ? (
-                        <div className="mb-3 flex flex-col items-center gap-1 w-full">
-                            <div className="flex items-center gap-1 mb-1">
-                                {[1,2,3,4,5].map((star) => (
-                                    <svg
-                                        key={star}
-                                        className={`h-6 w-6 ${myRatingData.rating.rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                    >
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
-                                    </svg>
-                                ))}
-                            </div>
-                            <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} text-center mb-1 w-full break-words`}>{myRatingData.rating.review}</div>
-                            <div className="flex gap-2 mt-1">
-                                <button onClick={() => { setShowRating(true); setEditMode(true); }} className="px-3 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-medium border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition">{lang === 'ar' ? 'تعديل' : 'Edit'}</button>
-                                <button onClick={handleDeleteRating} disabled={isDeleteLoading} className="px-3 py-1 rounded bg-gray-100 dark:bg-gray-800 text-red-500 text-xs font-medium border border-gray-200 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-gray-700 transition disabled:opacity-50">{lang === 'ar' ? 'حذف' : 'Delete'}</button>
-                            </div>
-                        </div>
-                    ) : null}
-                    <div className="flex flex-col items-center gap-2 mb-2 w-full">
-                        <button
-                            onClick={() => { setShowRating((v) => !v); setEditMode(false); }}
-                            className="w-full py-2 rounded bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition"
-                        >
-                            {lang === 'ar' ? (showRating ? 'إخفاء التقييم' : 'قيّم هذه الدورة') : (showRating ? 'Hide Rating' : 'Rate this course')}
-                        </button>
-                    </div>
-                    <AnimatePresence>
-                    {showRating && (
-                        <motion.form 
-                            initial={{ opacity: 0, y: 20 }} 
-                            animate={{ opacity: 1, y: 0 }} 
-                            exit={{ opacity: 0, y: 20 }} 
-                            transition={{ duration: 0.3, type: 'spring' }}
-                            onSubmit={handleSubmitRating} 
-                            className="space-y-3 w-full"
-                        >
-                            <div className="flex items-center justify-center gap-1 mb-1">
-                                {[1,2,3,4,5].map((star) => (
-                                    <button
-                                        key={star}
-                                        type="button"
-                                        onClick={() => handleStarClick(star)}
-                                        className="focus:outline-none"
-                                    >
-                                        <svg
-                                            className={`h-7 w-7 ${rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20"
-                                        >
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
-                                        </svg>
-                                    </button>
-                                ))}
-                            </div>
-                            <textarea
-                                className="w-full rounded border border-gray-200 dark:border-gray-700 p-2 focus:outline-none focus:ring-1 focus:ring-primary bg-white dark:bg-gray-900 text-sm shadow-inner min-h-[50px] resize-none transition-all duration-200 text-black dark:text-white"
-                                rows={2}
-                                placeholder={lang === 'ar' ? 'اكتب مراجعتك هنا (اختياري)' : 'Write your review here (optional)'}
-                                value={review}
-                                onChange={e => setReview(e.target.value)}
-                            />
-                            <button
-                                type="submit"
-                                disabled={isRatingLoading || isUpdateLoading || rating === 0}
-                                className="w-full py-2 rounded bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition disabled:opacity-50"
-                            >
-                                {(isRatingLoading || isUpdateLoading)
-                                    ? (lang === 'ar' ? 'جاري الإرسال...' : 'Submitting...')
-                                    : (editMode
-                                        ? (lang === 'ar' ? 'تحديث التقييم' : 'Update Rating')
-                                        : (lang === 'ar' ? 'إرسال التقييم' : 'Submit Rating'))}
-                            </button>
-                        </motion.form>
-                    )}
-                    </AnimatePresence>
-                </div>
-            )}
-            </div>
 
         </div>
     );

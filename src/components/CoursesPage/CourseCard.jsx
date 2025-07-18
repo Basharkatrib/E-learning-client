@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-
+import { FaBookmark, FaRegBookmark, FaTrash } from 'react-icons/fa';
+import { useCheckSavedCourseMutation, useSaveCourseMutation, useUnsaveCourseMutation } from '../../redux/features/apiSlice';
+import { toast } from 'react-hot-toast';
+import { useSelector } from 'react-redux';
+import { selectToken } from '../../redux/features/authSlice';
 
 const CourseCard = ({
   id,
@@ -14,6 +18,8 @@ const CourseCard = ({
   category,
   thumbnail_url,
   isDark,
+  showSaveButton = true,
+  isSavedPage = false
 }) => {
   const cardBg = isDark ? 'bg-gray-800' : 'bg-white';
   const cardShadow = isDark
@@ -24,7 +30,45 @@ const CourseCard = ({
   const badgeBg = isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700';
   const borderColor = isDark ? 'border-gray-700' : 'border-gray-200';
   const { t } = useTranslation();
+  const token = useSelector(selectToken);
 
+  const [isLocalSaved, setIsLocalSaved] = useState(isSavedPage);
+  const [checkSaved, { data: savedStatus }] = useCheckSavedCourseMutation();
+  const [saveCourse] = useSaveCourseMutation();
+  const [unsaveCourse] = useUnsaveCourseMutation();
+
+  useEffect(() => {
+    if (token && !isSavedPage) {
+      checkSaved({ courseId: id, token });
+    }
+  }, [checkSaved, id, token, isSavedPage]);
+
+  useEffect(() => {
+    if (!isSavedPage && savedStatus?.is_saved !== undefined) {
+      setIsLocalSaved(savedStatus.is_saved);
+    }
+  }, [savedStatus, isSavedPage]);
+
+  const handleSaveToggle = async () => {
+    if (!token) {
+      toast.error(t('Please login to save courses'));
+      return;
+    }
+
+    try {
+      if (isLocalSaved) {
+        await unsaveCourse({ courseId: id, token }).unwrap();
+        setIsLocalSaved(false);
+        toast.success(t('Course removed from saved courses'));
+      } else {
+        await saveCourse({ courseId: id, token }).unwrap();
+        setIsLocalSaved(true);
+        toast.success(t('Course saved successfully'));
+      }
+    } catch (error) {
+      toast.error(t('Error updating saved status'));
+    }
+  };
 
   return (
     <motion.div
@@ -48,6 +92,21 @@ const CourseCard = ({
           <span className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-md bg-black/30 text-white`}>
             {t(level)}
           </span>
+          {showSaveButton && (
+            <button
+              onClick={handleSaveToggle}
+              className="w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-md bg-black/30 text-white hover:bg-black/40 transition-colors"
+              title={isSavedPage ? t('Remove from saved courses') : isLocalSaved ? t('Unsave course') : t('Save course')}
+            >
+              {isSavedPage ? (
+                <FaTrash className="text-red-400 hover:text-red-500" />
+              ) : isLocalSaved ? (
+                <FaBookmark className="text-yellow-400" />
+              ) : (
+                <FaRegBookmark />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
