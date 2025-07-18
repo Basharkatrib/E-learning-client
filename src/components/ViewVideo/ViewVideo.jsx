@@ -42,7 +42,10 @@ const ViewVideo = () => {
   const token = useSelector(selectToken);
   const videoPlayerRef = useRef(null);
   const videoContainerRef = useRef(null);
-
+  const [showQuizModal, setShowQuizModal] = useState(false);
+  
+  // Remove hasShownQuizModal state since we'll use localStorage
+  
   const { data: coursesData, isLoading, error } = useGetCourseQuery(id);
   const {
     data: progressData,
@@ -50,6 +53,11 @@ const ViewVideo = () => {
     error: progressError,
     refetch: refetchProgress,
   } = useCourseMyProgressQuery({ token, courseId: id });
+
+  const { data: quizData, isLoading: quizLoading } = useGetQuizQuery(
+    { courseId: id, token },
+    { skip: !token || !id }
+  );
 
   const [updateProgress] = useCourseMyProgressUpdateMutation();
   const [currentVideo, setCurrentVideo] = useState(null);
@@ -64,6 +72,7 @@ const ViewVideo = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCover, setShowCover] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [isChangingVideo, setIsChangingVideo] = useState(false);
 
   useEffect(() => {
     let ids = [];
@@ -82,7 +91,8 @@ const ViewVideo = () => {
   // Set and mark first video as watched when course data is loaded
   useEffect(() => {
     const initializeFirstVideo = async () => {
-      if (coursesData?.sections?.[0]?.videos?.[0]) {
+      if (coursesData?.sections?.[0]?.videos?.[0] && !currentVideo && !isChangingVideo) {
+        setIsChangingVideo(true);
         const firstVideo = coursesData.sections[0].videos[0];
         setCurrentVideo(firstVideo);
         setShowCover(false);
@@ -112,17 +122,19 @@ const ViewVideo = () => {
             console.error('Error marking first video as watched:', err);
           }
         }
+        setIsChangingVideo(false);
       }
     };
 
     if (coursesData && token) {
       initializeFirstVideo();
     }
-  }, [coursesData, token, watchedVideos]);
+  }, [coursesData, token, watchedVideos, currentVideo, isChangingVideo]);
 
   const handleVideoClick = async (video) => {
-    if (video.id === currentVideo?.id) return; // Don't reload if it's the same video
+    if (video.id === currentVideo?.id || isChangingVideo) return; // Don't reload if it's the same video or if we're already changing videos
     
+    setIsChangingVideo(true);
     setCurrentVideo(video);
     setShowCover(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -155,6 +167,7 @@ const ViewVideo = () => {
         console.error('Error marking video as watched:', err);
       }
     }
+    setIsChangingVideo(false);
   };
 
   // Add video completion tracking
@@ -184,6 +197,19 @@ const ViewVideo = () => {
     }
   }, [currentVideo, watchedVideos]);
 
+  // Function to check if quiz modal has been shown for this course
+  const hasQuizModalBeenShown = () => {
+    const shownQuizModals = JSON.parse(localStorage.getItem('shownQuizModals') || '{}');
+    return shownQuizModals[id] === true;
+  };
+
+  // Function to mark quiz modal as shown for this course
+  const markQuizModalAsShown = () => {
+    const shownQuizModals = JSON.parse(localStorage.getItem('shownQuizModals') || '{}');
+    shownQuizModals[id] = true;
+    localStorage.setItem('shownQuizModals', JSON.stringify(shownQuizModals));
+  };
+
   // Update progress whenever watched videos change
   useEffect(() => {
     const updateCourseProgress = async () => {
@@ -194,6 +220,12 @@ const ViewVideo = () => {
         const totalVideos = allVideos.length;
         const watchedCount = watchedInThisCourse.length;
         const calculatedProgress = totalVideos > 0 ? Math.round((watchedCount / totalVideos) * 100) : 0;
+        
+        // Show quiz modal when progress reaches 70% and hasn't been shown before
+        if (calculatedProgress >= 70 && !hasQuizModalBeenShown() && quizData?.length > 0) {
+          setShowQuizModal(true);
+          markQuizModalAsShown();
+        }
         
         if (calculatedProgress !== progress) {
           setProgress(calculatedProgress);
@@ -213,12 +245,7 @@ const ViewVideo = () => {
     };
 
     updateCourseProgress();
-  }, [coursesData, watchedVideos]);
-
-  const { data: quizData, isLoading: quizLoading } = useGetQuizQuery(
-    { courseId: id, token },
-    { skip: !token || !id }  // Remove the progress < 70 condition from here
-  );
+  }, [coursesData, watchedVideos, quizData, progress, token, id, updateProgress, refetchProgress]);
 
   // Add debug logging
   useEffect(() => {
@@ -577,6 +604,55 @@ const ViewVideo = () => {
           </div>
         </div>
       </div>
+
+      {/* Quiz Available Modal */}
+      {showQuizModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowQuizModal(false)} />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`relative w-full max-w-md p-6 rounded-2xl shadow-xl ${isDark ? 'bg-gray-800' : 'bg-white'}`}
+          >
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold">
+                {lang === 'ar' ? 'الاختبار متاح الآن!' : 'Quiz Now Available!'}
+              </h3>
+              <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                {lang === 'ar' 
+                  ? 'لقد أكملت 70% من الدورة. يمكنك الآن إجراء الاختبار لتقييم معرفتك.'
+                  : 'You have completed 70% of the course. You can now take the quiz to test your knowledge.'}
+              </p>
+              <div className="flex gap-3 w-full mt-4">
+                <button
+                  onClick={() => {
+                    setShowQuizModal(false);
+                    navigate(`/quiz/${id}/${quizData[0].id}`);
+                  }}
+                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all"
+                >
+                  {lang === 'ar' ? 'ابدأ الآن' : 'Start Now'}
+                </button>
+                <button
+                  onClick={() => setShowQuizModal(false)}
+                  className={`flex-1 px-4 py-2 rounded-lg border transition-all ${
+                    isDark 
+                      ? 'border-gray-600 hover:bg-gray-700' 
+                      : 'border-gray-300 hover:bg-gray-100'
+                  }`}
+                >
+                  {lang === 'ar' ? 'لاحقاً' : 'Later'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

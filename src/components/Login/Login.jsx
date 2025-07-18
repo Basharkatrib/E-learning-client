@@ -45,14 +45,52 @@ function Login() {
                     user: res.user,
                     token: res.token
                 }));
-                toast.success(t('You are logged in successfully'));
+                
+                toast.success(t('You are logged in successfully'), {
+                    duration: 5000,
+                    style: {
+                        background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+                        color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+                        border: `1px solid ${theme === 'dark' ? '#065F46' : '#D1FAE5'}`,
+                        padding: '16px',
+                        borderRadius: '12px',
+                    },
+                    icon: '✅',
+                });
+                
                 navigate('/');
             } catch (err) {
                 console.error('Login failed:', err);
-                toast.error(err?.data?.message || t('Login failed. Please try again.'));
+                
+                if (err?.data?.message?.toLowerCase().includes('verify')) {
+                    // Special case for email verification message
+                    toast.error(err.data.message, {
+                        duration: 6000,
+                        style: {
+                            background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+                            color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+                            border: `1px solid ${theme === 'dark' ? '#854D0E' : '#FEF3C7'}`,
+                            padding: '16px',
+                            borderRadius: '12px',
+                        },
+                        icon: '✉️',
+                    });
+                } else {
+                    // General error message
+                    toast.error(err?.data?.message || t('Login failed. Please try again.'), {
+                        duration: 5000,
+                        style: {
+                            background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+                            color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+                            border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+                            padding: '16px',
+                            borderRadius: '12px',
+                        },
+                        icon: '❌',
+                    });
+                }
             }
         }
-
     });
 
     return (

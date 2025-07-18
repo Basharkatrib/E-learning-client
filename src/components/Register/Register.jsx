@@ -38,14 +38,34 @@ function Register() {
     if (file) {
       // Validate file size (10MB max)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error(t('File size should not exceed 10MB'));
+        toast.error(t('File size should not exceed 10MB'), {
+          duration: 5000,
+          style: {
+            background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+            color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+            border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          icon: '⚠️',
+        });
         return;
       }
       
       // Validate file type
       const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
       if (!validTypes.includes(file.type)) {
-        toast.error(t('Invalid file type. Please upload PDF, JPG, JPEG, or PNG'));
+        toast.error(t('Invalid file type. Please upload PDF, JPG, JPEG, or PNG'), {
+          duration: 5000,
+          style: {
+            background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+            color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+            border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          icon: '⚠️',
+        });
         return;
       }
 
@@ -115,7 +135,17 @@ function Register() {
         }
 
         dispatch(setEmail(values.email));
-        toast.success(t('Registration successful. Please check your email for account verification. A verification link has been sent.'));
+        toast.success(t('Registration successful. Please check your email for account verification. A verification link has been sent.'), {
+          duration: 6000,
+          style: {
+            background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+            color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+            border: `1px solid ${theme === 'dark' ? '#065F46' : '#D1FAE5'}`,
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          icon: '✅',
+        });
         
         // Redirect to login page after successful registration
         setTimeout(() => {
@@ -127,11 +157,41 @@ function Register() {
         console.error('Registration error:', err);
         if (err.status === 500) {
           console.error('Server error details:', err);
-          toast.error(t('Server error. Please try again later.'));
+          toast.error(t('Server error. Please try again later.'), {
+            duration: 5000,
+            style: {
+              background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+              color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+              border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌',
+          });
         } else if (err.data?.message) {
-          toast.error(err.data.message);
+          toast.error(err.data.message, {
+            duration: 5000,
+            style: {
+              background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+              color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+              border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌',
+          });
         } else {
-          toast.error(t('Registration failed. Please try again.'));
+          toast.error(t('Registration failed. Please try again.'), {
+            duration: 5000,
+            style: {
+              background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+              color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+              border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌',
+          });
         }
       }
     }
@@ -140,9 +200,29 @@ function Register() {
   const handleResend = async () => {
     try {
       await resendVerification(email).unwrap();
-      toast.success('Verification email has been resent.');
+      toast.success(t('Verification email has been resent.'), {
+        duration: 5000,
+        style: {
+          background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+          color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+          border: `1px solid ${theme === 'dark' ? '#065F46' : '#D1FAE5'}`,
+          padding: '16px',
+          borderRadius: '12px',
+        },
+        icon: '✉️',
+      });
     } catch (err) {
-      toast.error(err?.data?.message || 'Failed to resend verification email.');
+      toast.error(err?.data?.message || t('Failed to resend verification email.'), {
+        duration: 5000,
+        style: {
+          background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+          color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+          border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+          padding: '16px',
+          borderRadius: '12px',
+        },
+        icon: '❌',
+      });
     }
   };
 
