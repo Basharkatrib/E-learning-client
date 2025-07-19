@@ -9,6 +9,7 @@ import {
   useGetQuizQuery,
   useSubmitQuizMutation,
   useCheckQuizAttemptQuery,
+  useGetCertificateMutation
 } from '../../redux/features/apiSlice';
 import LoadingPage from '../LoadingPage/LoadingPage';
 import { toast } from 'react-toastify';
@@ -31,6 +32,9 @@ const QuizPage = () => {
   const [showResult, setShowResult] = useState(false);
   const [hasAttempted, setHasAttempted] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [certificateUrl, setCertificateUrl] = useState(null);
+  const [isLoadingCertificate, setIsLoadingCertificate] = useState(false);
+  const [getCertificate] = useGetCertificateMutation();
 
   const { data: quizzes, isLoading: quizLoading } = useGetQuizQuery({
     courseId,
@@ -161,24 +165,131 @@ const QuizPage = () => {
       if (isTimeUp) {
         toast.error(t('Time is up! Quiz submitted automatically'));
       } else {
-        if (result.passed) {
-          toast.success(t('Congratulations! You passed the quiz'));
-        } else {
-          toast.warning(t('Quiz completed. Keep practicing to improve your score!'));
-        }
+        toast.success(t('Quiz submitted successfully'));
       }
     } catch (err) {
       console.error('Quiz submission error:', err);
-      if (err?.status === 403 && err?.data?.error?.includes('لقد قمت بإجراء هذا الاختبار')) {
-        toast.warning(t('You have already taken this quiz'));
-        setIsCompleted(true);
-        // Refetch attempt status to get latest results
-        await refetchAttemptStatus();
-      } else {
-        toast.error(t('Error submitting quiz'));
-      }
+      toast.error(t('Error submitting quiz'));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Add debug logging for attempt status
+  useEffect(() => {
+    if (attemptStatus) {
+      console.log('Attempt Status:', attemptStatus);
+      console.log('Latest Attempt:', attemptStatus.latestAttempt);
+      console.log('Is Completed:', isCompleted);
+    }
+  }, [attemptStatus, isCompleted]);
+
+  const handleGetCertificate = async () => {
+    // Log the data we're about to send
+    console.log('Sending certificate request with data:', {
+      courseId,
+      quizId: parseInt(quizId),
+      token: token ? 'Token exists' : 'No token'
+    });
+
+    try {
+      setIsLoadingCertificate(true);
+      const response = await getCertificate({
+        token,
+        courseId: parseInt(courseId),
+        quizId: parseInt(quizId)
+      }).unwrap();
+
+      console.log('Certificate API Response:', response);
+
+      // Handle both first-time and subsequent responses
+      let certificateUrl;
+      let isNewCertificate = false;
+
+      if (response.status === "success" && response.data?.certificateUrl) {
+        // First-time generation response
+        certificateUrl = response.data.certificateUrl;
+        isNewCertificate = true;
+      } else if (response.certificateUrl) {
+        // Subsequent request response
+        certificateUrl = response.certificateUrl;
+      }
+      
+      if (certificateUrl) {
+        setCertificateUrl(certificateUrl);
+        
+        // Function to try opening the certificate
+        const tryOpenCertificate = async (retryCount = 0) => {
+          try {
+            const newWindow = window.open(certificateUrl, '_blank');
+            if (newWindow === null) {
+              toast.error(t('Please allow pop-ups to view the certificate'));
+              return false;
+            }
+            return true;
+          } catch (error) {
+            if (retryCount < 3) { // Try up to 3 times
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              return tryOpenCertificate(retryCount + 1);
+            }
+            return false;
+          }
+        };
+
+        if (isNewCertificate) {
+          // For new certificates, wait longer and show progress
+          toast.success(t('Certificate generated, preparing to open...'));
+          await new Promise(resolve => setTimeout(resolve, 3000)); // Increased to 3 seconds
+          
+          const opened = await tryOpenCertificate();
+          if (!opened) {
+            // If all retries failed, show manual link
+            toast.info(
+              <div className="flex flex-col">
+                <span>{t('Certificate is ready but could not open automatically.')}</span>
+                <a 
+                  href={certificateUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="underline text-blue-500 mt-2"
+                >
+                  {t('Click here to view certificate')}
+                </a>
+              </div>,
+              { duration: 8000 }
+            );
+          } else {
+            toast.success(t('Certificate opened in new tab'));
+          }
+        } else {
+          // For existing certificates, try opening immediately
+          const opened = await tryOpenCertificate();
+          if (!opened) {
+            toast.info(
+              <div className="flex flex-col">
+                <a 
+                  href={certificateUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="underline text-blue-500"
+                >
+                  {t('Click here to view certificate')}
+                </a>
+              </div>,
+              { duration: 5000 }
+            );
+          } else {
+            toast.success(t('Opening existing certificate'));
+          }
+        }
+      } else {
+        throw new Error('Certificate URL not found in response');
+      }
+    } catch (error) {
+      console.error('Error getting certificate:', error);
+      toast.error(t('Error accessing certificate. Please try again.'));
+    } finally {
+      setIsLoadingCertificate(false);
     }
   };
 
@@ -270,6 +381,36 @@ const QuizPage = () => {
                 </p>
               </div>
             </div>
+
+            {/* Certificate Download Button - Updated Condition */}
+            {(isCompleted || attemptStatus?.latestAttempt?.status === 'completed') && (
+              <div className="mt-8 flex justify-center">
+                <button
+                  onClick={handleGetCertificate}
+                  disabled={isLoadingCertificate}
+                  className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all flex items-center gap-2 ${
+                    isLoadingCertificate ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isLoadingCertificate ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      {t('Generating Certificate...')}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      {t('Download Certificate')}
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* Show questions with correct/incorrect answers */}
             <div className="mt-8 space-y-6">

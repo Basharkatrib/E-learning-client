@@ -5,45 +5,47 @@ import { selectTheme } from '../../redux/features/themeSlice';
 import { selectCurrentUser } from '../../redux/features/authSlice';
 import { setCredentials } from '../../redux/features/authSlice';
 import profilePic from '../../assets/images/navbar/profilepic.jpg';
-import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
+import { selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
 import coverImg from '../../assets/images/navbar/logo.png';
 import { useUpdateProfileMutation, useGetCurrentUserQuery } from '../../redux/features/apiSlice';
+import { toast } from 'react-hot-toast';
 
 function ProfilePage() {
   const theme = useSelector(selectTheme);
+  const isDark = theme === 'dark';
   const currentUser = useSelector(selectCurrentUser);
   const dispatch = useDispatch();
   const [editMode, setEditMode] = useState(false);
   const lang = useSelector(selectTranslate);
   const { t } = useTranslation();
-  const [updateProfile, { isLoading, isSuccess, error }] = useUpdateProfileMutation();
+  const [updateProfile, { isLoading }] = useUpdateProfileMutation();
   const token = useSelector(state => state.auth.token);
   const { data: userData, refetch } = useGetCurrentUserQuery(token);
   const [profileImage, setProfileImage] = useState(null);
 
-  const [user, setUser] = useState({
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
-    bio: 'Front-End Developer',
+    bio: '',
     country: '', 
     specialization: '',
   });
 
   useEffect(() => {
     if (userData) {
-      setUser({
+      setFormData({
         name: userData.name || '',
         email: userData.email || '',
-        bio: userData.bio || 'Front-End Developer',
+        bio: userData.bio || '',
         country: userData.country || '',
         specialization: userData.specialization || '',
       });
     } else if (currentUser) {
-      setUser({
+      setFormData({
         name: currentUser.name || '',
         email: currentUser.email || '',
-        bio: currentUser.bio || 'Front-End Developer',
+        bio: currentUser.bio || '',
         country: currentUser.country || '', 
         specialization: currentUser.specialization || '',
       });
@@ -51,41 +53,115 @@ function ProfilePage() {
   }, [userData, currentUser]);
 
   const handleChange = (e) => {
-    setUser(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const toggleEdit = () => setEditMode(!editMode);
 
   const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setProfileImage(e.target.files[0]);
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (2MB max)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error(t('Image size should not exceed 2MB'), {
+          duration: 3000,
+          style: {
+            background: isDark ? '#1F2937' : '#FFFFFF',
+            color: isDark ? '#FFFFFF' : '#1F2937',
+            border: `1px solid ${isDark ? '#991B1B' : '#FEE2E2'}`,
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          icon: '⚠️',
+        });
+        return;
+      }
+      
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!validTypes.includes(file.type)) {
+        toast.error(t('Please upload JPG, JPEG, or PNG image'), {
+          duration: 3000,
+          style: {
+            background: isDark ? '#1F2937' : '#FFFFFF',
+            color: isDark ? '#FFFFFF' : '#1F2937',
+            border: `1px solid ${isDark ? '#991B1B' : '#FEE2E2'}`,
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          icon: '⚠️',
+        });
+        return;
+      }
+
+      setProfileImage(file);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const loadingToast = toast.loading(t('Updating profile...'), {
+      style: {
+        background: isDark ? '#1F2937' : '#FFFFFF',
+        color: isDark ? '#FFFFFF' : '#1F2937',
+        border: `1px solid ${isDark ? '#1E40AF' : '#DBEAFE'}`,
+        padding: '16px',
+        borderRadius: '12px',
+      },
+    });
+
     try {
-      await updateProfile({
-  token,
-  name: user.name?.trim(),
-  profileImage: profileImage,
-  bio: user.bio,
-  country: user.country,
- specialization: user.specialization,
-});
-      setEditMode(false);
+      const updatedData = {
+        token,
+        name: formData.name?.trim(),
+        profileImage,
+        bio: formData.bio?.trim(),
+        country: formData.country?.trim(),
+        specialization: formData.specialization?.trim(),
+      };
+
+      await updateProfile(updatedData).unwrap();
       const { data } = await refetch();
+      
       if (data) {
         const profileImageUrl = data.profileImage ? `${data.profileImage}?${Date.now()}` : null;
         dispatch(setCredentials({ user: { ...data, profileImage: profileImageUrl }, token }));
       }
+
+      toast.dismiss(loadingToast);
+      toast.success(t('Profile updated successfully!'), {
+        duration: 5000,
+        style: {
+          background: isDark ? '#1F2937' : '#FFFFFF',
+          color: isDark ? '#FFFFFF' : '#1F2937',
+          border: `1px solid ${isDark ? '#065F46' : '#D1FAE5'}`,
+          padding: '16px',
+          borderRadius: '12px',
+        },
+        icon: '✅',
+      });
+
+      setEditMode(false);
+      setProfileImage(null);
     } catch (err) {
-      console.error('Update error:', err);
+      toast.dismiss(loadingToast);
+      toast.error(t('Failed to update profile. Please try again.'), {
+        duration: 5000,
+        style: {
+          background: isDark ? '#1F2937' : '#FFFFFF',
+          color: isDark ? '#FFFFFF' : '#1F2937',
+          border: `1px solid ${isDark ? '#991B1B' : '#FEE2E2'}`,
+          padding: '16px',
+          borderRadius: '12px',
+        },
+        icon: '❌',
+      });
     }
   };
 
   return (
-    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen flex items-center justify-center px-4 mt-22 py-8 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen flex items-center justify-center px-4 mt-22 py-8 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -114,11 +190,11 @@ function ProfilePage() {
               />
             </div>
             <div className="mt-20 md:mt-16 w-full">
-              <h2 className={`text-2xl font-bold mb-2 text-center md:text-left ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user.name || t('Name')}</h2>
-              <p className={`mb-2 text-center md:text-left ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{user.bio}</p>
-              <p className={`mb-4 text-sm text-center md:text-left ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{user.email}</p>
-              <p className={`mb-4 text-sm text-center md:text-left ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t('Country')}: {user.country || t('Not specified')}</p>
-              <p className={`mb-4 text-sm text-center md:text-left ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t('Specialty')}: {user.specialization || t('Not specified')}</p>
+              <h2 className={`text-2xl font-bold mb-2 text-center md:text-left ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{userData?.name || t('Name')}</h2>
+              <p className={`mb-2 text-center md:text-left ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{userData?.bio}</p>
+              <p className={`mb-4 text-sm text-center md:text-left ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{userData?.email}</p>
+              <p className={`mb-4 text-sm text-center md:text-left ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t('Country')}: {userData?.country || t('Not specified')}</p>
+              <p className={`mb-4 text-sm text-center md:text-left ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t('Specialty')}: {userData?.specialization || t('Not specified')}</p>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -137,7 +213,7 @@ function ProfilePage() {
               </div>
               <input
                 name="name"
-                value={user.name}
+                value={formData.name}
                 onChange={handleChange}
                 disabled={!editMode}
                 className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
@@ -155,17 +231,19 @@ function ProfilePage() {
               <input
                 name="email"
                 type="email"
-                value={user.email}
-                onChange={handleChange}
-                disabled={!editMode}
-                className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                value={formData.email}
+                readOnly
+                tabIndex="-1"
+                className={`w-full px-4 py-2 rounded-lg border cursor-not-allowed opacity-70 ${
+                  isDark ? 'bg-gray-700/50 border-gray-600 text-gray-300' : 'bg-gray-100 border-gray-200 text-gray-600'
+                }`}
               />
               <div className="flex items-center gap-2 mb-2">
                 <label className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{t('Bio')}</label>
               </div>
               <textarea
                 name="bio"
-                value={user.bio}
+                value={formData.bio}
                 onChange={handleChange}
                 disabled={!editMode}
                 rows={4}
@@ -176,7 +254,7 @@ function ProfilePage() {
               </div>
               <input
                 name="country"
-                value={user.country}
+                value={formData.country}
                 onChange={handleChange}
                 disabled={!editMode}
                 className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
@@ -186,7 +264,7 @@ function ProfilePage() {
               </div>
               <input
                 name="specialization"
-                value={user.specialization}
+                value={formData.specialization}
                 onChange={handleChange}
                 disabled={!editMode}
                 className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
