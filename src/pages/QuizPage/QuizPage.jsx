@@ -288,18 +288,12 @@ const QuizPage = () => {
                       const isCorrect = option.is_correct;
                       
                       let bgColorClass = isDark ? 'bg-gray-600' : 'bg-white';
-                      let textColorClass = '';
+                      let textColorClass = isDark ? 'text-white' : 'text-gray-900';
                       
-                      // Always highlight correct answers in green
+                      // Only highlight correct answers in green
                       if (isCorrect) {
                         bgColorClass = isDark ? 'bg-green-900' : 'bg-green-100';
                         textColorClass = isDark ? 'text-green-200' : 'text-green-700';
-                      }
-                      
-                      // If an answer was selected and it's wrong, show it in red
-                      if (isSelected && !isCorrect) {
-                        bgColorClass = isDark ? 'bg-red-900' : 'bg-red-100';
-                        textColorClass = isDark ? 'text-red-200' : 'text-red-700';
                       }
 
                       return (
@@ -308,12 +302,7 @@ const QuizPage = () => {
                           className={`p-3 rounded ${bgColorClass} ${textColorClass}`}
                         >
                           <div className="flex items-center">
-                            {isSelected && (
-                              <span className="mr-2">
-                                {isCorrect ? '✓' : '✗'}
-                              </span>
-                            )}
-                            {isCorrect && !isSelected && (
+                            {isCorrect && (
                               <span className="mr-2 text-green-500">✓</span>
                             )}
                             {option.option_text}

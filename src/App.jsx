@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Routes, Route } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
-import { addNotification } from './redux/features/notificationsSlice';
 import logo from './assets/images/navbar/logo.png'
 import { motion } from 'framer-motion';
 import Navbar from './components/Navbar/Navbar';
