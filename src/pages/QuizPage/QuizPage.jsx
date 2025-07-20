@@ -12,7 +12,7 @@ import {
   useGetCertificateMutation
 } from '../../redux/features/apiSlice';
 import LoadingPage from '../LoadingPage/LoadingPage';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import { selectTranslate } from '../../redux/features/translateSlice';
 
 const QuizPage = () => {
@@ -35,6 +35,7 @@ const QuizPage = () => {
   const [certificateUrl, setCertificateUrl] = useState(null);
   const [isLoadingCertificate, setIsLoadingCertificate] = useState(false);
   const [getCertificate] = useGetCertificateMutation();
+  const [certificateStatus, setCertificateStatus] = useState('generate');
 
   const { data: quizzes, isLoading: quizLoading } = useGetQuizQuery({
     courseId,
@@ -121,6 +122,33 @@ const QuizPage = () => {
     return () => clearInterval(timer);
   }, [timeLeft, showResult, isCompleted]);
 
+  useEffect(() => {
+    const checkCertificateStatus = async () => {
+      if (!quizId || !isCompleted) return;
+      
+      try {
+        const response = await getCertificate({
+          token,
+          courseId: parseInt(courseId),
+          quizId: parseInt(quizId)
+        }).unwrap();
+
+        console.log('Certificate check response:', response);
+
+        if (response.status === "success") {
+          setCertificateStatus('generate');
+        } else {
+          setCertificateStatus('view');
+        }
+      } catch (error) {
+        console.error('Error checking certificate status:', error);
+        setCertificateStatus('generate');
+      }
+    };
+
+    checkCertificateStatus();
+  }, [quizId, isCompleted, courseId, token]);
+
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -137,12 +165,18 @@ const QuizPage = () => {
 
   const handleSubmit = async (isTimeUp = false) => {
     if (isCompleted) {
-      toast.warning(t('You have already completed this quiz'));
+      toast.warning(t('You have already completed this quiz'), {
+        position: "top-center",
+        duration: 3000
+      });
       return;
     }
-    
+
     if (!isTimeUp && Object.keys(selectedAnswers).length < currentQuiz?.questions?.length) {
-      toast.error(t('Please answer all questions'));
+      toast.error(t('Please answer all questions'), {
+        position: "top-center",
+        duration: 3000
+      });
       return;
     }
 
@@ -162,14 +196,44 @@ const QuizPage = () => {
       // Refetch attempt status after successful submission
       await refetchAttemptStatus();
 
-      if (isTimeUp) {
-        toast.error(t('Time is up! Quiz submitted automatically'));
-      } else {
-        toast.success(t('Quiz submitted successfully'));
+      toast.success(t('Quiz submitted successfully you can generate your certificate now!'), {
+        position: "top-center",
+        duration: 3000,
+        style: {
+          background: isDark ? '#1f2937' : '#ffffff',
+          color: isDark ? '#ffffff' : '#000000',
+        }
+      });
+
+      if (result.passed) {
+        setTimeout(() => {
+          toast.success(
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="font-semibold">{t('Congratulations!')}</span>
+              </div>
+              <span>{t('You can now generate your course certificate')}</span>
+            </div>,
+            {
+              position: "top-center",
+              duration: 5000,
+              style: {
+                background: isDark ? '#1f2937' : '#ffffff',
+                color: isDark ? '#ffffff' : '#000000',
+              }
+            }
+          );
+        }, 3000); 
       }
     } catch (err) {
       console.error('Quiz submission error:', err);
-      toast.error(t('Error submitting quiz'));
+      toast.error(t('Error submitting quiz'), {
+        position: "top-center",
+        duration: 3000
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -184,14 +248,8 @@ const QuizPage = () => {
     }
   }, [attemptStatus, isCompleted]);
 
+  // تحديث دالة handleGetCertificate
   const handleGetCertificate = async () => {
-    // Log the data we're about to send
-    console.log('Sending certificate request with data:', {
-      courseId,
-      quizId: parseInt(quizId),
-      token: token ? 'Token exists' : 'No token'
-    });
-
     try {
       setIsLoadingCertificate(true);
       const response = await getCertificate({
@@ -200,94 +258,22 @@ const QuizPage = () => {
         quizId: parseInt(quizId)
       }).unwrap();
 
-      console.log('Certificate API Response:', response);
-
-      // Handle both first-time and subsequent responses
-      let certificateUrl;
-      let isNewCertificate = false;
+      console.log('Certificate generation response:', response);
 
       if (response.status === "success" && response.data?.certificateUrl) {
-        // First-time generation response
-        certificateUrl = response.data.certificateUrl;
-        isNewCertificate = true;
+        setCertificateUrl(response.data.certificateUrl);
+        setCertificateStatus('view');
+        toast.success(t('Certificate generated successfully!'));
+        window.open(response.data.certificateUrl, '_blank');
       } else if (response.certificateUrl) {
-        // Subsequent request response
-        certificateUrl = response.certificateUrl;
-      }
-      
-      if (certificateUrl) {
-        setCertificateUrl(certificateUrl);
-        
-        // Function to try opening the certificate
-        const tryOpenCertificate = async (retryCount = 0) => {
-          try {
-            const newWindow = window.open(certificateUrl, '_blank');
-            if (newWindow === null) {
-              toast.error(t('Please allow pop-ups to view the certificate'));
-              return false;
-            }
-            return true;
-          } catch (error) {
-            if (retryCount < 3) { // Try up to 3 times
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              return tryOpenCertificate(retryCount + 1);
-            }
-            return false;
-          }
-        };
-
-        if (isNewCertificate) {
-          // For new certificates, wait longer and show progress
-          toast.success(t('Certificate generated, preparing to open...'));
-          await new Promise(resolve => setTimeout(resolve, 3000)); // Increased to 3 seconds
-          
-          const opened = await tryOpenCertificate();
-          if (!opened) {
-            // If all retries failed, show manual link
-            toast.info(
-              <div className="flex flex-col">
-                <span>{t('Certificate is ready but could not open automatically.')}</span>
-                <a 
-                  href={certificateUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="underline text-blue-500 mt-2"
-                >
-                  {t('Click here to view certificate')}
-                </a>
-              </div>,
-              { duration: 8000 }
-            );
-          } else {
-            toast.success(t('Certificate opened in new tab'));
-          }
-        } else {
-          // For existing certificates, try opening immediately
-          const opened = await tryOpenCertificate();
-          if (!opened) {
-            toast.info(
-              <div className="flex flex-col">
-                <a 
-                  href={certificateUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="underline text-blue-500"
-                >
-                  {t('Click here to view certificate')}
-                </a>
-              </div>,
-              { duration: 5000 }
-            );
-          } else {
-            toast.success(t('Opening existing certificate'));
-          }
-        }
-      } else {
-        throw new Error('Certificate URL not found in response');
+        setCertificateUrl(response.certificateUrl);
+        setCertificateStatus('view');
+        window.open(response.certificateUrl, '_blank');
+        toast.success(t('Opening your certificate...'));
       }
     } catch (error) {
-      console.error('Error getting certificate:', error);
-      toast.error(t('Error accessing certificate. Please try again.'));
+      console.error('Error with certificate:', error);
+      toast.error(t('Failed to process certificate. Please try again.'));
     } finally {
       setIsLoadingCertificate(false);
     }
@@ -383,32 +369,69 @@ const QuizPage = () => {
             </div>
 
             {/* Certificate Download Button - Updated Condition */}
-            {(isCompleted || attemptStatus?.latestAttempt?.status === 'completed') && (
-              <div className="mt-8 flex justify-center">
-                <button
-                  onClick={handleGetCertificate}
-                  disabled={isLoadingCertificate}
-                  className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all flex items-center gap-2 ${
-                    isLoadingCertificate ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {isLoadingCertificate ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      {t('Generating Certificate...')}
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      {t('Download Certificate')}
-                    </>
-                  )}
-                </button>
+            {isCompleted && (
+              <div className={`mt-12 p-8 rounded-xl border-2 ${
+                isDark ? 'bg-gray-700/50 border-gray-600' : 'bg-green-50 border-green-100'
+              }`}>
+                <div className="text-center space-y-6">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 text-green-600">
+                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-2xl font-bold mb-2">{t('Course Certificate')}</h3>
+                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} max-w-md mx-auto`}>
+                      {certificateStatus === 'generate' 
+                        ? t('Generate your course completion certificate now')
+                        : t('Your certificate is ready to view')}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleGetCertificate}
+                    disabled={isLoadingCertificate}
+                    className={`
+                      px-8 py-4 rounded-xl font-bold text-white
+                      transition-all duration-300 transform
+                      flex items-center justify-center gap-3
+                      w-full sm:w-auto mx-auto
+                      shadow-lg hover:shadow-xl hover:-translate-y-1
+                      ${isLoadingCertificate 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : certificateStatus === 'view'
+                          ? 'bg-green-600 hover:bg-green-700'
+                          : 'bg-primary hover:bg-primary/90'
+                      }
+                    `}
+                  >
+                    {isLoadingCertificate ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        <span>{t('Generating...')}</span>
+                      </>
+                    ) : certificateStatus === 'view' ? (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <span>{t('View Certificate')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>{t('Generate Certificate')}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
 
