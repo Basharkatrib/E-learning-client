@@ -514,6 +514,16 @@ addContact: builder.mutation({
       invalidatesTags: ['Notes'],
     }),
 
+    googleLogin: builder.mutation({
+        query: () => ({
+            url: '/auth/google',
+            method: 'GET',
+            headers: {
+                "ngrok-skip-browser-warning": "1",
+            }
+        }),
+    }),
+
   }),
 
 });export const {
@@ -557,7 +567,8 @@ addContact: builder.mutation({
   useDeleteNoteMutation,
   useAddContactMutation,
   useSubmitQuizAttemptMutation,
-  useGetCertificateMutation
+  useGetCertificateMutation,
+  useGoogleLoginMutation
 } = apiSlice;
 
 

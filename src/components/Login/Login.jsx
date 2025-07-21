@@ -1,16 +1,14 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
-import { useLoginMutation } from '../../redux/features/apiSlice';
+import { useLoginMutation, useGoogleLoginMutation } from '../../redux/features/apiSlice';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import Cookies from 'js-cookie';
 import { toast } from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../redux/features/authSlice';
-import { useLocation } from 'react-router-dom';
 import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
 
@@ -20,9 +18,66 @@ function Login() {
     const theme = useSelector(selectTheme);
     const navigate = useNavigate();
     const [loginUser, { isLoading, isError, error }] = useLoginMutation();
+    const [googleLogin, { isLoading: isGoogleLoading }] = useGoogleLoginMutation();
     const dispatch = useDispatch();
     const lang = useSelector(selectTranslate);
     const { t } = useTranslation();
+    const location = useLocation();
+    const hasShownToast = useRef(false);
+
+    useEffect(() => {
+        // Check URL parameters for token and user data
+        const urlParams = new URLSearchParams(location.search);
+        const token = urlParams.get('token');
+        const userStr = urlParams.get('user');
+
+        if (token && userStr && !hasShownToast.current) {
+            try {
+                const user = JSON.parse(decodeURIComponent(userStr));
+                
+                // Store in Redux
+                dispatch(setCredentials({
+                    user,
+                    token
+                }));
+
+                // Show success message
+                toast.success(t('You are logged in successfully with Google'), {
+                    duration: 5000,
+                    style: {
+                        background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+                        color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+                        border: `1px solid ${theme === 'dark' ? '#065F46' : '#D1FAE5'}`,
+                        padding: '16px',
+                        borderRadius: '12px',
+                    },
+                    icon: '✅',
+                });
+
+                hasShownToast.current = true;
+
+                // Clear URL parameters and redirect to home
+                window.history.replaceState({}, '', '/');
+                navigate('/');
+            } catch (err) {
+                console.error('Failed to parse user data:', err);
+                if (!hasShownToast.current) {
+                    toast.error(t('Failed to process login data'), {
+                        duration: 5000,
+                        style: {
+                            background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+                            color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+                            border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+                            padding: '16px',
+                            borderRadius: '12px',
+                        },
+                        icon: '❌',
+                    });
+                    hasShownToast.current = true;
+                }
+            }
+        }
+    }, [location, dispatch, navigate, t, theme]);
 
     const formik = useFormik({
         initialValues: {
@@ -92,6 +147,27 @@ function Login() {
             }
         }
     });
+
+    const handleGoogleLogin = async () => {
+        try {
+            const response = await googleLogin().unwrap();
+            if (response.url) {
+                window.location.href = response.url;
+            }
+        } catch (err) {
+            toast.error(t('Failed to connect with Google. Please try again.'), {
+                duration: 5000,
+                style: {
+                    background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+                    color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+                    border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+                    padding: '16px',
+                    borderRadius: '12px',
+                },
+                icon: '❌',
+            });
+        }
+    };
 
     return (
         <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen pt-16 pb-8 flex items-center justify-center mt-10">
@@ -222,26 +298,32 @@ function Login() {
 
                                 <button
                                     type="button"
+                                    onClick={handleGoogleLogin}
+                                    disabled={isGoogleLoading}
                                     className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg border ${theme === 'dark'
                                         ? 'border-gray-600 hover:bg-gray-700'
                                         : 'border-gray-300 hover:bg-gray-50'
-                                        } transition-colors duration-200`}
+                                        } transition-colors duration-200 disabled:opacity-50`}
                                 >
-                                    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <g clipPath="url(#clip0_38_3273)">
-                                            <path d="M29.7083 15.3456C29.7083 14.3259 29.6256 13.3007 29.4493 12.2976H15.3008V18.0738H23.4029C23.0667 19.9368 21.9864 21.5848 20.4046 22.632V26.3799H25.2383C28.0768 23.7674 29.7083 19.9092 29.7083 15.3456Z" fill="#4285F4" />
-                                            <path d="M15.2989 30.001C19.3445 30.001 22.7562 28.6727 25.242 26.3799L20.4082 22.6319C19.0634 23.5469 17.3272 24.065 15.3044 24.065C11.3911 24.065 8.07311 21.4249 6.88259 17.8754H1.89453V21.739C4.44092 26.8043 9.6274 30.001 15.2989 30.001Z" fill="#34A853" />
-                                            <path d="M6.87895 17.8753C6.25063 16.0124 6.25063 13.9951 6.87895 12.1322V8.26849H1.89641C-0.231095 12.507 -0.231095 17.5005 1.89641 21.739L6.87895 17.8753Z" fill="#FBBC04" />
-                                            <path d="M15.2989 5.93708C17.4374 5.90401 19.5043 6.70871 21.0531 8.18583L25.3356 3.90327C22.6239 1.35688 19.0248 -0.0430825 15.2989 0.00101083C9.6274 0.00101083 4.44092 3.19778 1.89453 8.26851L6.87708 12.1322C8.06209 8.57716 11.3856 5.93708 15.2989 5.93708Z" fill="#EA4335" />
-                                        </g>
-                                        <defs>
-                                            <clipPath id="clip0_38_3273">
-                                                <rect width="30" height="30" fill="white" />
-                                            </clipPath>
-                                        </defs>
-                                    </svg>
+                                    {isGoogleLoading ? (
+                                        <div className="w-6 h-6 border-2 border-t-2 border-primary rounded-full animate-spin"></div>
+                                    ) : (
+                                        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <g clipPath="url(#clip0_38_3273)">
+                                                <path d="M29.7083 15.3456C29.7083 14.3259 29.6256 13.3007 29.4493 12.2976H15.3008V18.0738H23.4029C23.0667 19.9368 21.9864 21.5848 20.4046 22.632V26.3799H25.2383C28.0768 23.7674 29.7083 19.9092 29.7083 15.3456Z" fill="#4285F4" />
+                                                <path d="M15.2989 30.001C19.3445 30.001 22.7562 28.6727 25.242 26.3799L20.4082 22.6319C19.0634 23.5469 17.3272 24.065 15.3044 24.065C11.3911 24.065 8.07311 21.4249 6.88259 17.8754H1.89453V21.739C4.44092 26.8043 9.6274 30.001 15.2989 30.001Z" fill="#34A853" />
+                                                <path d="M6.87895 17.8753C6.25063 16.0124 6.25063 13.9951 6.87895 12.1322V8.26849H1.89641C-0.231095 12.507 -0.231095 17.5005 1.89641 21.739L6.87895 17.8753Z" fill="#FBBC04" />
+                                                <path d="M15.2989 5.93708C17.4374 5.90401 19.5043 6.70871 21.0531 8.18583L25.3356 3.90327C22.6239 1.35688 19.0248 -0.0430825 15.2989 0.00101083C9.6274 0.00101083 4.44092 3.19778 1.89453 8.26851L6.87708 12.1322C8.06209 8.57716 11.3856 5.93708 15.2989 5.93708Z" fill="#EA4335" />
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_38_3273">
+                                                    <rect width="30" height="30" fill="white" />
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                    )}
                                     <span className={theme === 'dark' ? 'text-white' : 'text-gray-700'}>
-                                        {t('Login with Google')}
+                                        {isGoogleLoading ? t('Connecting to Google...') : t('Login with Google')}
                                     </span>
                                 </button>
 
