@@ -40,6 +40,7 @@ const EmailVerificationBanner = ({ user }) => {
         try {
             const response = await resendVerification(requestData).unwrap();
             console.log('Verification API Response:', response);
+            console.log('Full response object:', response);
             
             toast.success(t('Verification email has been sent successfully'), {
                 duration: 5000,
@@ -59,6 +60,8 @@ const EmailVerificationBanner = ({ user }) => {
                 data: err?.data,
                 originalError: err?.originalError
             });
+            // إضافة طباعة الخطأ بشكل كامل
+            console.log('Full error object:', err);
             
             toast.error(t(err?.data?.message || 'Failed to send verification email'), {
                 duration: 5000,

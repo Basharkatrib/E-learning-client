@@ -179,77 +179,89 @@ function Login() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: 0.2 }}
-                            className={`p-4 lg:p-8 rounded-2xl ${theme === 'dark'
-                                ? 'bg-gray-800'
-                                : 'bg-white shadow-xl'
-                                }`}
+                            className={`p-6 lg:p-8 rounded-2xl shadow-2xl ${theme === 'dark' ? 'bg-gray-800/95 backdrop-blur-sm border border-gray-700' : 'bg-white/95 backdrop-blur-sm border border-gray-200'}`}
                         >
-                            <h2 className={`text-2xl font-bold text-center mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                {t('Login')}
-                            </h2>
-                            <p className={`text-center mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                                {t('Welcome back! Please login to your account')}
-                            </p>
+                            <div className="text-center mb-8">
+                                <h2 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                    {t('Login')}
+                                </h2>
+                                <p className={`text-lg ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    {t('Welcome back! Please login to your account')}
+                                </p>
+                            </div>
 
-                            <form onSubmit={formik.handleSubmit} className="space-y-4">
+                            <form onSubmit={formik.handleSubmit} className="space-y-6">
                                 <div>
-                                    <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                                         {t('Email')}
                                     </label>
                                     <input
                                         type="email"
                                         name="email"
-                                        placeholder={t("Enter Your Email")}
+                                        placeholder={t("Enter your email")}
                                         onChange={formik.handleChange}
                                         onBlur={formik.handleBlur}
                                         value={formik.values.email}
-                                        className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark'
-                                            ? 'bg-gray-700 border-gray-600 text-white'
-                                            : 'bg-gray-50 border-gray-300 text-gray-900'
-                                            } focus:ring-2 focus:ring-primary focus:border-transparent`}
+                                        className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
+                                            theme === 'dark' 
+                                                ? 'bg-gray-700 border-gray-600 text-white focus:border-primary focus:ring-2 focus:ring-primary/20' 
+                                                : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20'
+                                        }`}
                                     />
                                     {formik.touched.email && formik.errors.email && (
-                                        <p className="text-red-500 text-sm">{formik.errors.email}</p>
+                                        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {formik.errors.email}
+                                        </p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                                         {t('Password')}
                                     </label>
                                     <div className="relative">
                                         <input
                                             type={showPassword ? "text" : "password"}
                                             name="password"
-                                            placeholder={t("Enter Your Password")}
+                                            placeholder={t("Enter your password")}
                                             onChange={formik.handleChange}
                                             onBlur={formik.handleBlur}
                                             value={formik.values.password}
-                                            className={`w-full px-4 py-2 rounded-lg border ${theme === 'dark'
-                                                ? 'bg-gray-700 border-gray-600 text-white'
-                                                : 'bg-gray-50 border-gray-300 text-gray-900'
-                                                } focus:ring-2 focus:ring-primary focus:border-transparent`}
+                                            className={`w-full px-4 py-3 pr-12 rounded-xl border-2 transition-all duration-200 ${
+                                                theme === 'dark' 
+                                                    ? 'bg-gray-700 border-gray-600 text-white focus:border-primary focus:ring-2 focus:ring-primary/20' 
+                                                    : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20'
+                                            }`}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className={`absolute ${lang === "ar"? "left-3" : "right-3"}  top-1/2 transform -translate-y-1/2`}
+                                            className={`absolute ${lang === "ar"? "left-3" : "right-3"} top-1/2 transform -translate-y-1/2 p-1 rounded-lg transition-colors ${
+                                                theme === 'dark' ? 'hover:bg-gray-600' : 'hover:bg-gray-200'
+                                            }`}
                                         >
                                             {showPassword ? (
-                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} viewBox="0 0 20 20" fill="currentColor">
-                                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
                                             ) : (
-                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
-                                                    <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                                                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
                                                 </svg>
                                             )}
                                         </button>
                                     </div>
                                     {formik.touched.password && formik.errors.password && (
-                                        <p className="text-red-500 text-sm">{formik.errors.password}</p>
+                                        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {formik.errors.password}
+                                        </p>
                                     )}
                                 </div>
 
@@ -266,7 +278,7 @@ function Login() {
                                             {t('Remember me')}
                                         </label>
                                     </div>
-                                    <Link to="/forget" className="text-sm text-primary hover:underline">
+                                    <Link to="/forget" className="text-sm text-primary hover:underline font-semibold">
                                         {t("Forgot Password?")}
                                     </Link>
                                 </div>
@@ -274,23 +286,33 @@ function Login() {
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50"
+                                    className="w-full bg-primary text-white py-3 rounded-xl font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all duration-200 transform hover:scale-[1.02] shadow-lg"
                                 >
-                                    {isLoading ? t('Logging in...') : t('Login')}
+                                    {isLoading ? (
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            {t('Logging in...')}
+                                        </div>
+                                    ) : (
+                                        t('Login')
+                                    )}
                                 </button>
 
                                 {isError && (
-                                    <p className="text-red-500 text-sm text-center mt-2">
+                                    <p className="text-red-500 text-sm text-center mt-2 flex items-center justify-center gap-1">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
                                         {error?.data?.message || t('Something went wrong. Please try again.')}
                                     </p>
                                 )}
 
-                                <div className="relative my-6">
+                                <div className="relative my-8">
                                     <div className={`absolute inset-0 flex items-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
                                         <div className={`w-full border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}></div>
                                     </div>
                                     <div className="relative flex justify-center text-sm">
-                                        <span className={`px-2 ${theme === 'dark' ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-500'}`}>
+                                        <span className={`px-4 py-2 rounded-full ${theme === 'dark' ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-500'}`}>
                                             {t('OR')}
                                         </span>
                                     </div>
@@ -300,13 +322,14 @@ function Login() {
                                     type="button"
                                     onClick={handleGoogleLogin}
                                     disabled={isGoogleLoading}
-                                    className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg border ${theme === 'dark'
-                                        ? 'border-gray-600 hover:bg-gray-700'
-                                        : 'border-gray-300 hover:bg-gray-50'
-                                        } transition-colors duration-200 disabled:opacity-50`}
+                                    className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02] shadow-lg ${
+                                        theme === 'dark'
+                                            ? 'border-gray-600 hover:bg-gray-700 hover:border-gray-500'
+                                            : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                                    } disabled:opacity-50`}
                                 >
                                     {isGoogleLoading ? (
-                                        <div className="w-6 h-6 border-2 border-t-2 border-primary rounded-full animate-spin"></div>
+                                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                                     ) : (
                                         <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <g clipPath="url(#clip0_38_3273)">
@@ -322,14 +345,14 @@ function Login() {
                                             </defs>
                                         </svg>
                                     )}
-                                    <span className={theme === 'dark' ? 'text-white' : 'text-gray-700'}>
-                                        {isGoogleLoading ? t('Connecting to Google...') : t('Login with Google')}
+                                    <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-700'}`}>
+                                        {isGoogleLoading ? t('Connecting to Google...') : t('Continue with Google')}
                                     </span>
                                 </button>
 
                                 <p className={`text-center text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                                     {t("Don't have an account?")}{' '}
-                                    <Link to="/signup" className="text-primary hover:underline">
+                                    <Link to="/signup" className="text-primary hover:underline font-semibold">
                                         {t('Sign Up')}
                                     </Link>
                                 </p>

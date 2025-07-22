@@ -73,6 +73,7 @@ const ViewVideo = () => {
   const [showCover, setShowCover] = useState(true);
   const [progress, setProgress] = useState(0);
   const [isChangingVideo, setIsChangingVideo] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
 
   useEffect(() => {
     let ids = [];
@@ -256,15 +257,84 @@ const ViewVideo = () => {
   }, [quizData, progress, id, token]);
 
   if (isLoading || progressLoading || quizLoading) return <LoadingPage />;
-  if (error || progressError) {
+  
+  // Check if course data exists and is valid
+  if (error || progressError || !coursesData || !coursesData.id) {
     return (
       <div className="flex justify-center items-center min-h-[60vh] px-4">
         <div className={`${isDark ? 'bg-[#1f2937]' : 'bg-white'} border border-red-600 text-red-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
           <svg className="mx-auto h-12 w-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 4a8 8 0 100 16 8 8 0 000-16z" />
           </svg>
-          <h2 className="text-xl font-semibold text-red-500">{t('Error loading courses')}</h2>
-          <p className="text-sm text-gray-400">{t('Please try again later')}</p>
+          <h2 className="text-xl font-semibold text-red-500">
+            {lang === 'ar' ? 'الدورة غير موجودة' : 'Course Not Found'}
+          </h2>
+          <p className="text-sm text-gray-400">
+            {lang === 'ar' 
+              ? 'عذراً، الدورة التي تبحث عنها غير موجودة أو تم حذفها.' 
+              : 'Sorry, the course you are looking for does not exist or has been removed.'}
+          </p>
+          <button
+            onClick={() => navigate('/courses')}
+            className="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            {lang === 'ar' ? 'العودة إلى الدورات' : 'Back to Courses'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if course has sections and videos
+  if (!coursesData.sections || coursesData.sections.length === 0) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh] px-4">
+        <div className={`${isDark ? 'bg-[#1f2937]' : 'bg-white'} border border-yellow-600 text-yellow-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
+          <svg className="mx-auto h-12 w-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <h2 className="text-xl font-semibold text-yellow-500">
+            {lang === 'ar' ? 'لا توجد أقسام متاحة' : 'No Sections Available'}
+          </h2>
+          <p className="text-sm text-gray-400">
+            {lang === 'ar' 
+              ? 'عذراً، هذه الدورة لا تحتوي على أي أقسام أو فيديوهات متاحة.' 
+              : 'Sorry, this course does not contain any sections or videos.'}
+          </p>
+          <button
+            onClick={() => navigate('/courses')}
+            className="mt-4 px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+          >
+            {lang === 'ar' ? 'العودة إلى الدورات' : 'Back to Courses'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if any section has videos
+  const hasVideos = coursesData.sections.some(section => section.videos && section.videos.length > 0);
+  if (!hasVideos) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh] px-4">
+        <div className={`${isDark ? 'bg-[#1f2937]' : 'bg-white'} border border-yellow-600 text-yellow-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
+          <svg className="mx-auto h-12 w-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <h2 className="text-xl font-semibold text-yellow-500">
+            {lang === 'ar' ? 'لا توجد فيديوهات متاحة' : 'No Videos Available'}
+          </h2>
+          <p className="text-sm text-gray-400">
+            {lang === 'ar' 
+              ? 'عذراً، هذه الدورة لا تحتوي على أي فيديوهات متاحة حالياً.' 
+              : 'Sorry, this course does not contain any videos at the moment.'}
+          </p>
+          <button
+            onClick={() => navigate('/courses')}
+            className="mt-4 px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+          >
+            {lang === 'ar' ? 'العودة إلى الدورات' : 'Back to Courses'}
+          </button>
         </div>
       </div>
     );
@@ -287,26 +357,46 @@ const ViewVideo = () => {
               </svg>
             </button>
             <h1 className="text-lg font-semibold truncate min-w-0">
-              {course?.title?.[lang]}
+              {course?.title?.[lang] || course?.title?.en || (lang === 'ar' ? 'دورة بدون عنوان' : 'Untitled Course')}
             </h1>
           </div>
           
-          {progressData && (
-            <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Notes Button */}
+            <button
+              onClick={() => setShowNotes(!showNotes)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                showNotes 
+                  ? 'bg-primary text-white' 
+                  : isDark 
+                    ? 'hover:bg-gray-800' 
+                    : 'hover:bg-gray-100'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span className="hidden sm:inline text-sm font-medium">
+                {lang === 'ar' ? 'الملاحظات' : 'Notes'}
+              </span>
+            </button>
+
+            {/* Progress */}
+            {progressData && (
               <div className="flex items-center gap-2">
                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   {lang === 'ar' ? 'تقدمك:' : 'Your Progress:'}
                 </span>
                 <span className="font-semibold text-primary">{progress}%</span>
+                <div className="w-20 sm:w-32 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-700"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-20 sm:w-32 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-700"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -331,46 +421,52 @@ const ViewVideo = () => {
                     <h3 className="font-medium text-base">{section.title?.[lang]}</h3>
                   </div>
                   <div className="space-y-2">
-                    {section?.videos?.map((video) => {
-                      const isWatched = watchedVideos.map(String).includes(String(video.id));
-                      const isActive = currentVideo?.id === video.id;
-                      return (
-                        <button
-                          key={video.id}
-                          onClick={() => handleVideoClick(video)}
-                          className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
-                            isActive
-                              ? `${isDark ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-primary'} font-medium`
-                              : isWatched
-                                ? `${isDark ? 'bg-green-500/10 text-green-400' : 'bg-green-50 text-green-600'}`
-                                : `${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'}`
-                          }`}
-                        >
-                          <div className="flex-shrink-0">
-                            {isActive ? (
-                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z"/>
-                              </svg>
-                            ) : isWatched ? (
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/>
-                              </svg>
-                            ) : (
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                              </svg>
-                            )}
-                          </div>
-                          <div className="flex-1 text-left">
-                            <p className="line-clamp-1">{video.title[lang]}</p>
-                            <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {video.duration} {lang === 'ar' ? 'دقيقة' : 'min'}
-                            </p>
-                          </div>
-                        </button>
-                      );
-                    })}
+                    {section?.videos && section.videos.length > 0 ? (
+                      section.videos.map((video) => {
+                        const isWatched = watchedVideos.map(String).includes(String(video.id));
+                        const isActive = currentVideo?.id === video.id;
+                        return (
+                          <button
+                            key={video.id}
+                            onClick={() => handleVideoClick(video)}
+                            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
+                              isActive
+                                ? `${isDark ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-primary'} font-medium`
+                                : isWatched
+                                  ? `${isDark ? 'bg-green-500/10 text-green-400' : 'bg-green-50 text-green-600'}`
+                                  : `${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'}`
+                            }`}
+                          >
+                            <div className="flex-shrink-0">
+                              {isActive ? (
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z"/>
+                                </svg>
+                              ) : isWatched ? (
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                              ) : (
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                              )}
+                            </div>
+                            <div className="flex-1 text-left">
+                              <p className="line-clamp-1">{video.title?.[lang] || video.title?.en || video.title || (lang === 'ar' ? 'فيديو بدون عنوان' : 'Untitled Video')}</p>
+                              <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                {video.duration || '0'} {lang === 'ar' ? 'دقيقة' : 'min'}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <p className={`text-sm text-center py-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {lang === 'ar' ? 'لا توجد فيديوهات في هذا القسم' : 'No videos in this section'}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -423,19 +519,24 @@ const ViewVideo = () => {
               <div className="mt-4 sm:mt-6 space-y-4">
                 <div className={`p-4 sm:p-6 rounded-xl ${isDark ? 'bg-gray-900/50' : 'bg-white'} shadow-lg backdrop-blur-sm`}>
                   <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-2">
-                    {currentVideo?.title?.[lang] || course?.sections?.[0]?.videos?.[0]?.title?.[lang]}
+                    {currentVideo?.title?.[lang] || currentVideo?.title?.en || currentVideo?.title || 
+                     course?.sections?.[0]?.videos?.[0]?.title?.[lang] || 
+                     course?.sections?.[0]?.videos?.[0]?.title?.en || 
+                     course?.sections?.[0]?.videos?.[0]?.title || 
+                     (lang === 'ar' ? 'فيديو بدون عنوان' : 'Untitled Video')}
                   </h2>
                   <p className={`text-sm sm:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {currentVideo?.description?.[lang] || course?.sections?.[0]?.videos?.[0]?.description?.[lang]}
+                    {currentVideo?.description?.[lang] || currentVideo?.description?.en || currentVideo?.description || 
+                     course?.sections?.[0]?.videos?.[0]?.description?.[lang] || 
+                     course?.sections?.[0]?.videos?.[0]?.description?.en || 
+                     course?.sections?.[0]?.videos?.[0]?.description || 
+                     (lang === 'ar' ? 'لا يوجد وصف متاح لهذا الفيديو' : 'No description available for this video')}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Notes Section with new styling */}
-            <div className={`rounded-xl ${isDark ? 'bg-gray-800/50' : 'bg-white'} shadow-lg overflow-hidden`}>
-              <Notes courseId={id} />
-            </div>
+
 
             {/* Quiz Section with enhanced styling */}
             {quizData && quizData.length > 0 && (
@@ -545,58 +646,64 @@ const ViewVideo = () => {
                     {section.title?.[lang]}
                   </h3>
                   <div className="space-y-2">
-                    {section.videos?.map((video) => (
-                      <button
-                        key={video.id}
-                        onClick={() => {
-                          handleVideoClick(video);
-                          setSidebarOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all ${
-                          currentVideo?.id === video.id
-                            ? isDark
-                              ? 'bg-primary text-white'
-                              : 'bg-primary/10 text-primary'
-                            : isDark
-                            ? 'hover:bg-gray-700/50'
-                            : 'hover:bg-gray-100'
-                        }`}
-                      >
-                        <div
-                          className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-                            watchedVideos.map(String).includes(String(video.id))
-                              ? 'bg-green-500'
+                    {section.videos && section.videos.length > 0 ? (
+                      section.videos.map((video) => (
+                        <button
+                          key={video.id}
+                          onClick={() => {
+                            handleVideoClick(video);
+                            setSidebarOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all ${
+                            currentVideo?.id === video.id
+                              ? isDark
+                                ? 'bg-primary text-white'
+                                : 'bg-primary/10 text-primary'
                               : isDark
-                              ? 'bg-gray-700'
-                              : 'bg-gray-200'
+                              ? 'hover:bg-gray-700/50'
+                              : 'hover:bg-gray-100'
                           }`}
                         >
-                          {watchedVideos.map(String).includes(String(video.id)) ? (
-                            <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          ) : (
-                            <svg className="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="flex-1 text-start text-sm truncate">
-                          {video.title?.[lang]}
-                        </span>
-                        <span className="flex-shrink-0 text-xs opacity-60">
-                          {video.duration}
-                        </span>
-                      </button>
-                    ))}
+                          <div
+                            className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+                              watchedVideos.map(String).includes(String(video.id))
+                                ? 'bg-green-500'
+                                : isDark
+                                ? 'bg-gray-700'
+                                : 'bg-gray-200'
+                            }`}
+                          >
+                            {watchedVideos.map(String).includes(String(video.id)) ? (
+                              <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                          <span className="flex-1 text-start text-sm truncate">
+                            {video.title?.[lang] || video.title?.en || video.title || (lang === 'ar' ? 'فيديو بدون عنوان' : 'Untitled Video')}
+                          </span>
+                          <span className="flex-shrink-0 text-xs opacity-60">
+                            {video.duration || '0'}
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <p className={`text-sm text-center py-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {lang === 'ar' ? 'لا توجد فيديوهات في هذا القسم' : 'No videos in this section'}
+                      </p>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -604,6 +711,43 @@ const ViewVideo = () => {
           </div>
         </div>
       </div>
+
+      {/* Notes Modal */}
+      {showNotes && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNotes(false)} />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`relative w-full max-w-4xl h-[80vh] rounded-2xl shadow-xl overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-white'}`}
+          >
+            {/* Modal Header */}
+            <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                {lang === 'ar' ? 'ملاحظات الدورة' : 'Course Notes'}
+              </h3>
+              <button
+                onClick={() => setShowNotes(false)}
+                className={`p-2 rounded-lg transition-all ${
+                  isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="h-full overflow-y-auto">
+              <Notes courseId={id} />
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Quiz Available Modal */}
       {showQuizModal && (

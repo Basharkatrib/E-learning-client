@@ -115,7 +115,25 @@ export default function CourseDetails() {
             }, 1800);
         } catch (e) {
             setShowConfirm(false);
-            toast.error(lang === 'ar' ? 'حدث خطأ أثناء التسجيل' : 'Error during enrollment');
+            if (e?.status === 402) {
+                toast.error(lang === 'ar' ? 'يرجى تفعيل بريدك الإلكتروني أولاً قبل التسجيل في الدورات.' : 'Please verify your email address before enrolling in courses.');
+            }
+            else if (e?.status === 401) {
+                toast.error(lang === 'ar' ? 'يرجى تسجيل الدخول أولاً' : 'Please login first');
+                navigate('/login');
+            }
+            else if (e?.status === 409) {
+                toast.error(lang === 'ar' ? 'أنت مسجل بالفعل في هذه الدورة' : 'You are already enrolled in this course');
+            }
+            else if (e?.status === 403) {
+                toast.error(lang === 'ar' ? 'أنت لست طالباً' : 'You are not a student');
+            }
+            else if (e?.status === 404) {
+                toast.error(lang === 'ar' ? 'الدورة غير موجودة' : 'Course not found');
+            }
+            else {
+                toast.error(lang === 'ar' ? 'حدث خطأ أثناء التسجيل' : 'Error during enrollment');
+            }
         }
     };
 
@@ -171,7 +189,9 @@ export default function CourseDetails() {
     };
 
     if (isLoading) return <LoadingPage />;
-    if (error) {
+    
+    // Check if course data exists and is valid
+    if (error || !data || !data.id) {
         return (
             <div className="flex justify-center items-center min-h-[60vh] px-4">
                 <div className={`${theme === 'dark' ? 'bg-[#1f2937]' : 'bg-white'} border border-red-600 text-red-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
@@ -189,11 +209,56 @@ export default function CourseDetails() {
                         />
                     </svg>
                     <h2 className="text-xl font-semibold text-red-500">
-                        {t('Error loading courses')}
+                        {lang === 'ar' ? 'الدورة غير موجودة' : 'Course Not Found'}
                     </h2>
                     <p className="text-sm text-gray-400">
-                        {t('Please try again later')}
+                        {lang === 'ar' 
+                            ? 'عذراً، الدورة التي تبحث عنها غير موجودة أو تم حذفها.' 
+                            : 'Sorry, the course you are looking for does not exist or has been removed.'}
                     </p>
+                    <button
+                        onClick={() => navigate('/courses')}
+                        className="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                        {lang === 'ar' ? 'العودة إلى الدورات' : 'Back to Courses'}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Check if essential course data is missing
+    if (!data.title || !data.description || !data.sections || !data.skills || !data.benefits) {
+        return (
+            <div className="flex justify-center items-center min-h-[60vh] px-4">
+                <div className={`${theme === 'dark' ? 'bg-[#1f2937]' : 'bg-white'} border border-yellow-600 text-yellow-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
+                    <svg
+                        className="mx-auto h-12 w-12 text-yellow-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                    </svg>
+                    <h2 className="text-xl font-semibold text-yellow-500">
+                        {lang === 'ar' ? 'بيانات الدورة غير مكتملة' : 'Incomplete Course Data'}
+                    </h2>
+                    <p className="text-sm text-gray-400">
+                        {lang === 'ar' 
+                            ? 'عذراً، بيانات هذه الدورة غير مكتملة. يرجى المحاولة مرة أخرى لاحقاً.' 
+                            : 'Sorry, this course data is incomplete. Please try again later.'}
+                    </p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="mt-4 px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                    >
+                        {lang === 'ar' ? 'إعادة المحاولة' : 'Try Again'}
+                    </button>
                 </div>
             </div>
         );
@@ -458,7 +523,9 @@ export default function CourseDetails() {
 
                     <div className="flex items-center gap-2 mb-4">
                         <span className="text-sm font-semibold text-primary">Teacher:</span>
-                        <span className={`text-sm font-medium text-gray-800 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.teacher.name}</span>
+                        <span className={`text-sm font-medium text-gray-800 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                            {data.teacher?.name || (lang === 'ar' ? 'غير محدد' : 'Not specified')}
+                        </span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-4">
                         {!enrollmentStatus ? (
@@ -527,7 +594,15 @@ export default function CourseDetails() {
                     </div>
                 </div>
                 <div className="flex-shrink-0 w-full md:w-80 h-48 md:h-64 rounded-2xl overflow-hidden shadow-xl bg-gray-200 dark:bg-gray-800">
-                    <img src={data.thumbnail_url} alt="course" className="w-full h-full object-cover" />
+                    {data.thumbnail_url ? (
+                        <img src={data.thumbnail_url} alt="course" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                            <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    )}
                 </div>
             </motion.div>
 
@@ -565,11 +640,17 @@ export default function CourseDetails() {
                 <motion.div {...fadeInUp}>
                     <h2 className="text-2xl font-bold mb-6">{t('Skills you will acquire')}</h2>
                     <div className="flex flex-wrap gap-3">
-                        {data.skills.map(skill => (
-                            <span key={skill} className="px-4 py-2 rounded-xl bg-primary/10 text-primary font-semibold text-sm shadow-sm">
-                                {skill.name.en}
-                            </span>
-                        ))}
+                        {data.skills && data.skills.length > 0 ? (
+                            data.skills.map(skill => (
+                                <span key={skill.id || skill} className="px-4 py-2 rounded-xl bg-primary/10 text-primary font-semibold text-sm shadow-sm">
+                                    {skill.name?.en || skill.name || skill}
+                                </span>
+                            ))
+                        ) : (
+                            <p className={`text-gray-500 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {lang === 'ar' ? 'لا توجد مهارات محددة لهذه الدورة' : 'No specific skills listed for this course'}
+                            </p>
+                        )}
                     </div>
                 </motion.div>
 
@@ -589,11 +670,19 @@ export default function CourseDetails() {
                 {/* Benefits Section */}
                 <div>
                     <h2 className="text-2xl font-bold mb-6">{t('The most important benefits gained from the course')}</h2>
-                    <ul className="list-disc p-6 pt-2 space-y-3 text-base">
-                        {data.benefits.map((b, i) => (
-                            <li key={i} className={`text-gray-800 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{b.title?.[lang]}</li>
-                        ))}
-                    </ul>
+                    {data.benefits && data.benefits.length > 0 ? (
+                        <ul className="list-disc p-6 pt-2 space-y-3 text-base">
+                            {data.benefits.map((b, i) => (
+                                <li key={i} className={`text-gray-800 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                    {b.title?.[lang] || b.title?.en || b.title || b}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className={`text-gray-500 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} p-6`}>
+                            {lang === 'ar' ? 'لا توجد فوائد محددة لهذه الدورة' : 'No specific benefits listed for this course'}
+                        </p>
+                    )}
                 </div>
 
                 {/* Course Groups Section */}
@@ -608,63 +697,71 @@ export default function CourseDetails() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {data.sections.map((section, id) => (
-                            <motion.div
-                                key={id}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: id * 0.1 }}
-                                className={`group relative overflow-hidden rounded-2xl shadow-xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 ${theme === 'dark'
-                                    ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950 border border-gray-700'
-                                    : 'bg-gradient-to-br from-white via-blue-50 to-gray-100 border border-gray-200'
-                                    }`}
-                            >
-                                {/* Background Pattern */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        {data.sections && data.sections.length > 0 ? (
+                            data.sections.map((section, id) => (
+                                <motion.div
+                                    key={id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5, delay: id * 0.1 }}
+                                    className={`group relative overflow-hidden rounded-2xl shadow-xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 ${theme === 'dark'
+                                        ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950 border border-gray-700'
+                                        : 'bg-gradient-to-br from-white via-blue-50 to-gray-100 border border-gray-200'
+                                        }`}
+                                >
+                                    {/* Background Pattern */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                                {/* Section Number Badge */}
-                                <div className={`absolute top-6 ${lang === 'ar' ? 'left-6' : 'right-6'} z-10`}>
-                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full ${theme === 'dark'
-                                        ? 'bg-primary/20 text-primary border border-primary/30'
-                                        : 'bg-primary/10 text-primary border border-primary/20'
-                                        } text-sm font-bold shadow-lg backdrop-blur-sm`}>
-                                        {id + 1}
-                                    </div>
-                                </div>
-
-                                {/* Content */}
-                                <div className="relative p-8 h-64 flex flex-col items-center justify-center text-center">
-                                    {/* Icon */}
-                                    <div className={`flex items-center justify-center w-20 h-20 rounded-full mb-6 ${theme === 'dark'
-                                        ? 'bg-gradient-to-br from-primary/20 to-blue-500/20 text-primary'
-                                        : 'bg-gradient-to-br from-primary/10 to-blue-500/10 text-primary'
-                                        } text-4xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                                        {id === 0 ? '🚀' : id === 1 ? '💡' : id === 2 ? '⚡' : id === 3 ? '🎯' : id === 4 ? '🏆' : '📚'}
+                                    {/* Section Number Badge */}
+                                    <div className={`absolute top-6 ${lang === 'ar' ? 'left-6' : 'right-6'} z-10`}>
+                                        <div className={`flex items-center justify-center w-10 h-10 rounded-full ${theme === 'dark'
+                                            ? 'bg-primary/20 text-primary border border-primary/30'
+                                            : 'bg-primary/10 text-primary border border-primary/20'
+                                            } text-sm font-bold shadow-lg backdrop-blur-sm`}>
+                                            {id + 1}
+                                        </div>
                                     </div>
 
-                                    {/* Title */}
-                                    <h3 className={`text-xl font-bold mb-3 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                                        } group-hover:text-primary transition-colors duration-300`}>
-                                        {section.title?.[lang] || section.title?.en}
-                                    </h3>
+                                    {/* Content */}
+                                    <div className="relative p-8 h-64 flex flex-col items-center justify-center text-center">
+                                        {/* Icon */}
+                                        <div className={`flex items-center justify-center w-20 h-20 rounded-full mb-6 ${theme === 'dark'
+                                            ? 'bg-gradient-to-br from-primary/20 to-blue-500/20 text-primary'
+                                            : 'bg-gradient-to-br from-primary/10 to-blue-500/10 text-primary'
+                                            } text-4xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                                            {id === 0 ? '🚀' : id === 1 ? '💡' : id === 2 ? '⚡' : id === 3 ? '🎯' : id === 4 ? '🏆' : '📚'}
+                                        </div>
 
-                                    {/* Progress Indicator */}
-                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
-                                        <div className="bg-gradient-to-r from-primary to-blue-500 h-2 rounded-full transition-all duration-500 group-hover:w-full" style={{ width: '0%' }} />
+                                        {/* Title */}
+                                        <h3 className={`text-xl font-bold mb-3 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                            } group-hover:text-primary transition-colors duration-300`}>
+                                            {section.title?.[lang] || section.title?.en || section.title || (lang === 'ar' ? 'قسم غير محدد' : 'Unnamed Section')}
+                                        </h3>
+
+                                        {/* Progress Indicator */}
+                                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
+                                            <div className="bg-gradient-to-r from-primary to-blue-500 h-2 rounded-full transition-all duration-500 group-hover:w-full" style={{ width: '0%' }} />
+                                        </div>
+
+                                        {/* Status */}
+                                        <div className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                                            }`}>
+                                            {section.videos?.length || 0} {t('lessons')}
+                                        </div>
                                     </div>
 
-                                    {/* Status */}
-                                    <div className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                                        }`}>
-                                        {section.videos?.length || 0} {t('lessons')}
-                                    </div>
-                                </div>
-
-                                {/* Hover Effect Overlay */}
-                                <div className={`absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl`} />
-                            </motion.div>
-                        ))}
+                                    {/* Hover Effect Overlay */}
+                                    <div className={`absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl`} />
+                                </motion.div>
+                            ))
+                        ) : (
+                            <div className="col-span-full text-center py-12">
+                                <p className={`text-gray-500 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    {lang === 'ar' ? 'لا توجد أقسام متاحة لهذه الدورة' : 'No sections available for this course'}
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Call to Action */}
