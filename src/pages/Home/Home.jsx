@@ -5,6 +5,7 @@ import FAQ from "../../components/FAQ/FAQ";
 import Footer from "../../components/Footer/Footer";
 import Slider from "../../components/Slider/Slider";
 import Testimonials from "../../components/Testimonials/Testimonials";
+import TrendingNews from "../../components/TrendingNews/TrendingNews";
 
 
 function Home() {
@@ -17,6 +18,7 @@ function Home() {
             <Slider />
             <Benefits />
             <Courses />
+            <TrendingNews/>
             <Testimonials />
             <FAQ />
         </div>

@@ -570,5 +570,3 @@ addContact: builder.mutation({
   useGetCertificateMutation,
   useGoogleLoginMutation
 } = apiSlice;
-
-
