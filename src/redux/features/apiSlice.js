@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://e-learning-server.test/api/' }),
+  baseQuery: fetchBaseQuery({ baseUrl: 'https://e-learning-server-me-production.up.railway.app/api/' }),
   endpoints: (builder) => ({
     register: builder.mutation({
       query: (userData) => ({
@@ -63,25 +63,18 @@ export const apiSlice = createApi({
   },
 }),   
 addContact: builder.mutation({
-  query: ({ token, firstName, lastName, email, phone, subject, message }) => {
-    const formData = new FormData();
-
-    if (firstName) formData.append("first_name", firstName);
-    if (lastName) formData.append("last_name", lastName);
-    if (email) formData.append("email", email);
-    if (phone) formData.append("phone", phone);
-    if (subject) formData.append("subject", subject);
-    if (message) formData.append("message", message);
-
-    return {
-      url: 'v1/contact',
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    };
-  }
+  query: (data) => ({
+    url: 'v1/contact',
+    method: 'POST',
+    body: {
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      subject: data.subject,
+      message: data.message,
+    },
+  }),
 }),
     logout: builder.mutation({
       query: (token) => ({
@@ -93,10 +86,10 @@ addContact: builder.mutation({
       }),
     }),
     resendVerification: builder.mutation({
-      query: (email) => ({
+      query: (data) => ({
         url: 'resend-email-verification-link',
         method: 'POST',
-        body: { email },
+        body: data,
       }),
     }),
     getCategories: builder.query({
@@ -400,6 +393,35 @@ addContact: builder.mutation({
       ]
     }),
     
+    submitQuizAttempt: builder.mutation({
+      query: ({ token, quizId, answers, score }) => ({
+        url: `v1/quizzes/${quizId}/submit`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          answers,
+          score,
+          completed_at: new Date().toISOString(),
+        },
+      }),
+    }),
+
+    getCertificate: builder.mutation({
+      query: ({ token, courseId, quizId }) => ({
+        url: `v1/courses/${courseId}/certificate`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Accept': 'application/pdf',
+        },
+        body: {
+          quiz_id: quizId
+        }
+      }),
+    }),
+    
     // Saved Courses endpoints
     getSavedCourses: builder.query({
       query: (token) => ({
@@ -492,6 +514,16 @@ addContact: builder.mutation({
       invalidatesTags: ['Notes'],
     }),
 
+    googleLogin: builder.mutation({
+        query: () => ({
+            url: '/auth/google',
+            method: 'GET',
+            headers: {
+                "ngrok-skip-browser-warning": "1",
+            }
+        }),
+    }),
+
   }),
 
 });export const {
@@ -533,7 +565,10 @@ addContact: builder.mutation({
   useCreateNoteMutation,
   useUpdateNoteMutation,
   useDeleteNoteMutation,
-  useAddContactMutation
+  useAddContactMutation,
+  useSubmitQuizAttemptMutation,
+  useGetCertificateMutation,
+  useGoogleLoginMutation
 } = apiSlice;
 
 

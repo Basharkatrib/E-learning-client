@@ -79,6 +79,7 @@ function Navbar() {
             setIsUserMenuOpen(false);
             setIsOpen(false);
             toast.success('Logged out successfully.');
+            navigate('/');
         } catch (err) {
             toast.error('Logout failed.');
         }

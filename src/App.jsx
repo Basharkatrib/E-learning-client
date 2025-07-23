@@ -33,6 +33,7 @@ import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 import { useGetCoursesQuery } from "./redux/features/apiSlice";
 import QuizPage from './pages/QuizPage/QuizPage';
 import SavedCourses from './pages/SavedCourses/SavedCourses';
+import EmailVerificationBanner from './components/EmailVerificationBanner/EmailVerificationBanner';
 
 
 function App() {
@@ -40,7 +41,7 @@ function App() {
   const theme = useSelector(selectTheme);
   const dispatch = useDispatch();
   const token = useSelector(selectToken);
-  const { error } = useGetCurrentUserQuery(token);
+  const { data: currentUser, error } = useGetCurrentUserQuery(token);
 
   const [showSplash, setShowSplash] = useState(true);
 
@@ -155,6 +156,7 @@ function App() {
       </Routes>
       <Footer />
       <Chat />
+      {currentUser && <EmailVerificationBanner user={currentUser} />}
     </div>
   );
 }
