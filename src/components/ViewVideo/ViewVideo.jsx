@@ -542,9 +542,9 @@ const ViewVideo = () => {
             {quizData && quizData.length > 0 && (
               <div className={`rounded-xl ${isDark ? 'bg-gray-800/50' : 'bg-white'} shadow-lg overflow-hidden p-6`}>
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold text-primary">
-                    {lang === 'ar' ? 'اختبار الدورة' : 'Course Quiz'}
-                  </h3>
+                 <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>
+                  {lang === 'ar' ? 'اختبار الدورة' : 'Course Quiz'}
+                   </h3>
                   {progress >= 70 ? (
                     <button
                       onClick={() => navigate(`/quiz/${id}/${quizData[0].id}`)}
@@ -570,7 +570,8 @@ const ViewVideo = () => {
                       key={quiz.id}
                       className={`p-4 rounded-lg ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'} border ${isDark ? 'border-gray-600' : 'border-gray-200'}`}
                     >
-                      <h4 className="font-semibold text-lg mb-2">{quiz.title}</h4>
+                      <h4 className={`font-semibold text-lg mb-2 ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>{quiz.title}</h4>
+
                       <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
                         {quiz.description}
                       </p>
