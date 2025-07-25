@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
 import { selectToken } from '../../redux/features/authSlice';
 import Notes from '../Notes/Notes';
+import { toast } from 'react-hot-toast';
 
 const stagger = {
   hidden: {},
@@ -42,9 +43,7 @@ const ViewVideo = () => {
   const token = useSelector(selectToken);
   const videoPlayerRef = useRef(null);
   const videoContainerRef = useRef(null);
-  const [showQuizModal, setShowQuizModal] = useState(false);
-  
-  // Remove hasShownQuizModal state since we'll use localStorage
+  // Remove showQuizModal state since we don't need the 70% popup anymore
   
   const { data: coursesData, isLoading, error } = useGetCourseQuery(id);
   const {
@@ -58,6 +57,10 @@ const ViewVideo = () => {
     { courseId: id, token },
     { skip: !token || !id }
   );
+
+  useEffect(() => {
+    console.log('Courses Data:', coursesData?.is_sequential);
+  }, [coursesData]);
 
   const [updateProgress] = useCourseMyProgressUpdateMutation();
   const [currentVideo, setCurrentVideo] = useState(null);
@@ -77,6 +80,48 @@ const ViewVideo = () => {
 
   // Add state for final quiz popup
   const [showFinalQuizPopup, setShowFinalQuizPopup] = useState(false);
+
+  // Helper function to get all videos in sequential order
+  const getAllVideosInOrder = () => {
+    if (!coursesData?.sections) return [];
+    return coursesData.sections.flatMap(section => section.videos || []);
+  };
+
+  // Helper function to check if a video is accessible
+  const isVideoAccessible = (video) => {
+    // If sequential mode is disabled (0), all videos are accessible
+    if (coursesData?.is_sequential !== 1) return true;
+    
+    const allVideos = getAllVideosInOrder();
+    const currentVideoIndex = allVideos.findIndex(v => v.id === video.id);
+    
+    // First video is always accessible
+    if (currentVideoIndex === 0) return true;
+    
+    // Check if previous video has been watched
+    const previousVideo = allVideos[currentVideoIndex - 1];
+    if (!previousVideo) return true;
+    
+    return watchedVideos.map(String).includes(String(previousVideo.id));
+  };
+
+  // Helper function to get the next accessible video
+  const getNextAccessibleVideo = () => {
+    if (coursesData?.is_sequential !== 1) return null;
+    
+    const allVideos = getAllVideosInOrder();
+    const currentVideoIndex = allVideos.findIndex(v => v.id === currentVideo?.id);
+    
+    // Find the next video that should be accessible
+    for (let i = currentVideoIndex + 1; i < allVideos.length; i++) {
+      const video = allVideos[i];
+      if (isVideoAccessible(video)) {
+        return video;
+      }
+    }
+    
+    return null;
+  };
 
   useEffect(() => {
     let ids = [];
@@ -107,12 +152,12 @@ const ViewVideo = () => {
             await markVideoAsWatched({ token, videoId: firstVideo.id });
             await refetchWatched();
             
-            // Calculate new progress
-            const allVideos = coursesData.sections.flatMap(section => section.videos || []);
-            const totalVideos = allVideos.length;
-            const newWatchedVideos = [...watchedVideos, firstVideo.id];
-            const watchedCount = newWatchedVideos.length;
-            const newProgress = Math.round((watchedCount / totalVideos) * 100);
+                    // Calculate new progress
+        const allVideos = coursesData.sections.flatMap(section => section.videos || []);
+        const totalVideos = allVideos.length;
+        const newWatchedVideos = [...watchedVideos, firstVideo.id];
+        const watchedCount = newWatchedVideos.length;
+        const newProgress = Math.min(Math.round((watchedCount / totalVideos) * 100), 100);
             
             // Update progress in backend
             await updateProgress({
@@ -138,6 +183,27 @@ const ViewVideo = () => {
   const handleVideoClick = async (video) => {
     if (video.id === currentVideo?.id || isChangingVideo) return; // Don't reload if it's the same video or if we're already changing videos
     
+    // Check if video is accessible in sequential mode
+    if (!isVideoAccessible(video)) {
+      toast.error(
+        lang === 'ar' 
+          ? 'يجب عليك مشاهدة الفيديو السابق أولاً' 
+          : 'You must watch the previous video first',
+        {
+          duration: 3000,
+          style: {
+            background: isDark ? '#1F2937' : '#FFFFFF',
+            color: isDark ? '#FFFFFF' : '#1F2937',
+            border: `1px solid ${isDark ? '#991B1B' : '#FEE2E2'}`,
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          icon: '🔒',
+        }
+      );
+      return;
+    }
+    
     setIsChangingVideo(true);
     setCurrentVideo(video);
     setShowCover(false);
@@ -153,7 +219,7 @@ const ViewVideo = () => {
         const totalVideos = allVideos.length;
         const newWatchedVideos = [...watchedVideos, video.id];
         const watchedCount = newWatchedVideos.length;
-        const newProgress = Math.round((watchedCount / totalVideos) * 100);
+        const newProgress = Math.min(Math.round((watchedCount / totalVideos) * 100), 100);
         
         // Update progress in backend
         try {
@@ -201,30 +267,29 @@ const ViewVideo = () => {
     }
   }, [currentVideo, watchedVideos]);
 
-  // Function to check if quiz modal has been shown for this course
-  const hasQuizModalBeenShown = () => {
-    const shownQuizModals = JSON.parse(localStorage.getItem('shownQuizModals') || '{}');
-    return shownQuizModals[id] === true;
-  };
-
-  // Function to mark quiz modal as shown for this course
-  const markQuizModalAsShown = () => {
-    const shownQuizModals = JSON.parse(localStorage.getItem('shownQuizModals') || '{}');
-    shownQuizModals[id] = true;
-    localStorage.setItem('shownQuizModals', JSON.stringify(shownQuizModals));
-  };
+  // Remove quiz modal functions since we don't need the 70% popup anymore
 
   // Function to check if final quiz popup has been shown for this course
   const hasFinalQuizPopupBeenShown = () => {
-    const shownFinalQuizPopups = JSON.parse(localStorage.getItem('shownFinalQuizPopups') || '{}');
-    return shownFinalQuizPopups[id] === true;
+    try {
+      const shownFinalQuizPopups = JSON.parse(localStorage.getItem('shownFinalQuizPopups') || '{}');
+      return shownFinalQuizPopups[id] === true;
+    } catch (error) {
+      console.error('Error reading from localStorage:', error);
+      return false;
+    }
   };
 
   // Function to mark final quiz popup as shown for this course
   const markFinalQuizPopupAsShown = () => {
-    const shownFinalQuizPopups = JSON.parse(localStorage.getItem('shownFinalQuizPopups') || '{}');
-    shownFinalQuizPopups[id] = true;
-    localStorage.setItem('shownFinalQuizPopups', JSON.stringify(shownFinalQuizPopups));
+    try {
+      const shownFinalQuizPopups = JSON.parse(localStorage.getItem('shownFinalQuizPopups') || '{}');
+      shownFinalQuizPopups[id] = true;
+      localStorage.setItem('shownFinalQuizPopups', JSON.stringify(shownFinalQuizPopups));
+      console.log('Marked final quiz popup as shown for course:', id);
+    } catch (error) {
+      console.error('Error writing to localStorage:', error);
+    }
   };
 
   // Update progress whenever watched videos change
@@ -236,22 +301,17 @@ const ViewVideo = () => {
         const watchedInThisCourse = watchedVideos.filter(id => allVideoIds.includes(String(id)));
         const totalVideos = allVideos.length;
         const watchedCount = watchedInThisCourse.length;
-        const calculatedProgress = totalVideos > 0 ? Math.round((watchedCount / totalVideos) * 100) : 0;
-        
-        // Show quiz modal when progress reaches 70% and hasn't been shown before
-        if (calculatedProgress >= 70 && !hasQuizModalBeenShown() && quizData?.length > 0) {
-          setShowQuizModal(true);
-          markQuizModalAsShown();
-        }
+        const calculatedProgress = totalVideos > 0 ? Math.min(Math.round((watchedCount / totalVideos) * 100), 100) : 0;
         
         if (calculatedProgress !== progress) {
+          console.log('Progress updated from', progress, 'to', calculatedProgress);
           setProgress(calculatedProgress);
           try {
             await updateProgress({
               token,
               courseId: id,
               progress: calculatedProgress,
-              videosCompleted: calculatedProgress === 100
+              videosCompleted: calculatedProgress >= 100
             });
             await refetchProgress();
           } catch (err) {
@@ -266,19 +326,25 @@ const ViewVideo = () => {
 
   // Show popup when progress reaches 100% and hasn't been shown before
   useEffect(() => {
-    if (progress === 100 && !hasFinalQuizPopupBeenShown() && quizData?.length > 0) {
+    console.log('Progress check:', progress, 'Quiz data:', quizData?.length, 'Has been shown:', hasFinalQuizPopupBeenShown());
+    if (progress >= 100 && !hasFinalQuizPopupBeenShown() && quizData?.length > 0) {
+      console.log('Showing final quiz popup!');
       setShowFinalQuizPopup(true);
       markFinalQuizPopupAsShown();
     }
-  }, [progress, quizData, id]);
+  }, [progress, quizData, id, hasFinalQuizPopupBeenShown]);
 
   // Add debug logging
   useEffect(() => {
+    console.log('=== DEBUG INFO ===');
     console.log('Quiz Data:', quizData);
     console.log('Progress:', progress);
     console.log('Course ID:', id);
     console.log('Token:', token);
-  }, [quizData, progress, id, token]);
+    console.log('Has Final Quiz Popup Been Shown:', hasFinalQuizPopupBeenShown());
+    console.log('Show Final Quiz Popup State:', showFinalQuizPopup);
+    console.log('==================');
+  }, [quizData, progress, id, token, showFinalQuizPopup]);
 
   if (isLoading || progressLoading || quizLoading) return <LoadingPage />;
   
@@ -428,12 +494,24 @@ const ViewVideo = () => {
         {/* Sidebar - Desktop */}
         <div className={`hidden lg:block w-80 xl:w-96 flex-shrink-0 h-[calc(100vh-64px)] sticky top-16 ${isDark ? 'bg-gray-900' : 'bg-white'} border-r ${isDark ? 'border-gray-800' : 'border-gray-200'} overflow-y-auto`}>
           <div className="p-4">
-            <div className="flex items-center gap-2 mb-6">
+                      <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/>
               </svg>
               <h2 className="font-semibold text-lg">{lang === 'ar' ? 'محتوى الدورة' : 'Course Content'}</h2>
             </div>
+            {coursesData?.is_sequential === 1 && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                <svg className="w-3 h-3 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                  {lang === 'ar' ? 'متسلسل' : 'Sequential'}
+                </span>
+              </div>
+            )}
+          </div>
             
             <div className="space-y-4">
               {course?.sections?.map((section, sidx) => (
@@ -453,12 +531,15 @@ const ViewVideo = () => {
                           <button
                             key={video.id}
                             onClick={() => handleVideoClick(video)}
+                            disabled={!isVideoAccessible(video)}
                             className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
                               isActive
                                 ? `${isDark ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-primary'} font-medium`
                                 : isWatched
                                   ? `${isDark ? 'bg-green-500/10 text-green-400' : 'bg-green-50 text-green-600'}`
-                                  : `${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'}`
+                                  : !isVideoAccessible(video)
+                                    ? `${isDark ? 'bg-gray-800/30 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`
+                                    : `${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'}`
                             }`}
                           >
                             <div className="flex-shrink-0">
@@ -482,6 +563,16 @@ const ViewVideo = () => {
                               <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 {video.duration || '0'} {lang === 'ar' ? 'دقيقة' : 'min'}
                               </p>
+                              {!isVideoAccessible(video) && (
+                                <div className="flex items-center gap-1 mt-1">
+                                  <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                  </svg>
+                                  <span className="text-xs text-gray-400">
+                                    {lang === 'ar' ? 'مقفل' : 'Locked'}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </button>
                         );
@@ -636,9 +727,21 @@ const ViewVideo = () => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-            <h2 className="font-semibold text-lg">
-              {lang === 'ar' ? 'محتوى الدورة' : 'Course Content'}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold text-lg">
+                {lang === 'ar' ? 'محتوى الدورة' : 'Course Content'}
+              </h2>
+              {coursesData?.is_sequential === 1 && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                  <svg className="w-3 h-3 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                    {lang === 'ar' ? 'متسلسل' : 'Sequential'}
+                  </span>
+                </div>
+              )}
+            </div>
             <button
               onClick={() => setSidebarOpen(false)}
               className={`p-2 rounded-lg ${
@@ -678,14 +781,19 @@ const ViewVideo = () => {
                             handleVideoClick(video);
                             setSidebarOpen(false);
                           }}
+                          disabled={!isVideoAccessible(video)}
                           className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all ${
                             currentVideo?.id === video.id
                               ? isDark
                                 ? 'bg-primary text-white'
                                 : 'bg-primary/10 text-primary'
-                              : isDark
-                              ? 'hover:bg-gray-700/50'
-                              : 'hover:bg-gray-100'
+                              : !isVideoAccessible(video)
+                                ? isDark
+                                  ? 'bg-gray-800/30 text-gray-500 cursor-not-allowed'
+                                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : isDark
+                                ? 'hover:bg-gray-700/50'
+                                : 'hover:bg-gray-100'
                           }`}
                         >
                           <div
@@ -718,9 +826,16 @@ const ViewVideo = () => {
                           <span className="flex-1 text-start text-sm truncate">
                             {video.title?.[lang] || video.title?.en || video.title || (lang === 'ar' ? 'فيديو بدون عنوان' : 'Untitled Video')}
                           </span>
-                          <span className="flex-shrink-0 text-xs opacity-60">
-                            {video.duration || '0'}
-                          </span>
+                          <div className="flex-shrink-0 flex items-center gap-1">
+                            <span className="text-xs opacity-60">
+                              {video.duration || '0'}
+                            </span>
+                            {!isVideoAccessible(video) && (
+                              <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                            )}
+                          </div>
                         </button>
                       ))
                     ) : (
@@ -773,54 +888,7 @@ const ViewVideo = () => {
         </div>
       )}
 
-      {/* Quiz Available Modal */}
-      {showQuizModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowQuizModal(false)} />
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className={`relative w-full max-w-md p-6 rounded-2xl shadow-xl ${isDark ? 'bg-gray-800' : 'bg-white'}`}
-          >
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-                <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold">
-                {lang === 'ar' ? 'الاختبار متاح الآن!' : 'Quiz Now Available!'}
-              </h3>
-              <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                {lang === 'ar' 
-                  ? 'لقد أكملت 70% من الدورة. يمكنك الآن إجراء الاختبار لتقييم معرفتك.'
-                  : 'You have completed 70% of the course. You can now take the quiz to test your knowledge.'}
-              </p>
-              <div className="flex gap-3 w-full mt-4">
-                <button
-                  onClick={() => {
-                    setShowQuizModal(false);
-                    navigate(`/quiz/${id}/${quizData[0].id}`);
-                  }}
-                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all"
-                >
-                  {lang === 'ar' ? 'ابدأ الآن' : 'Start Now'}
-                </button>
-                <button
-                  onClick={() => setShowQuizModal(false)}
-                  className={`flex-1 px-4 py-2 rounded-lg border transition-all ${
-                    isDark 
-                      ? 'border-gray-600 hover:bg-gray-700' 
-                      : 'border-gray-300 hover:bg-gray-100'
-                  }`}
-                >
-                  {lang === 'ar' ? 'لاحقاً' : 'Later'}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+
 
       {/* Final Quiz Popup */}
       {showFinalQuizPopup && (
