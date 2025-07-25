@@ -53,7 +53,7 @@ function App() {
   }, [error]);
   
   useEffect(() => {
-    if (error && (error.originalStatus === 401 || error.originalStatus === 405)) {
+    if (error && error.status === 401) {
       dispatch(logout());
     }
   }, [error, dispatch]);

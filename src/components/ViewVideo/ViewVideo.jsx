@@ -75,6 +75,9 @@ const ViewVideo = () => {
   const [isChangingVideo, setIsChangingVideo] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
 
+  // Add state for final quiz popup
+  const [showFinalQuizPopup, setShowFinalQuizPopup] = useState(false);
+
   useEffect(() => {
     let ids = [];
     if (watchedVideosData) {
@@ -211,6 +214,19 @@ const ViewVideo = () => {
     localStorage.setItem('shownQuizModals', JSON.stringify(shownQuizModals));
   };
 
+  // Function to check if final quiz popup has been shown for this course
+  const hasFinalQuizPopupBeenShown = () => {
+    const shownFinalQuizPopups = JSON.parse(localStorage.getItem('shownFinalQuizPopups') || '{}');
+    return shownFinalQuizPopups[id] === true;
+  };
+
+  // Function to mark final quiz popup as shown for this course
+  const markFinalQuizPopupAsShown = () => {
+    const shownFinalQuizPopups = JSON.parse(localStorage.getItem('shownFinalQuizPopups') || '{}');
+    shownFinalQuizPopups[id] = true;
+    localStorage.setItem('shownFinalQuizPopups', JSON.stringify(shownFinalQuizPopups));
+  };
+
   // Update progress whenever watched videos change
   useEffect(() => {
     const updateCourseProgress = async () => {
@@ -247,6 +263,14 @@ const ViewVideo = () => {
 
     updateCourseProgress();
   }, [coursesData, watchedVideos, quizData, progress, token, id, updateProgress, refetchProgress]);
+
+  // Show popup when progress reaches 100% and hasn't been shown before
+  useEffect(() => {
+    if (progress === 100 && !hasFinalQuizPopupBeenShown() && quizData?.length > 0) {
+      setShowFinalQuizPopup(true);
+      markFinalQuizPopupAsShown();
+    }
+  }, [progress, quizData, id]);
 
   // Add debug logging
   useEffect(() => {
@@ -545,7 +569,7 @@ const ViewVideo = () => {
                   <h3 className="text-2xl font-bold text-primary">
                     {lang === 'ar' ? 'اختبار الدورة' : 'Course Quiz'}
                   </h3>
-                  {progress >= 70 ? (
+                  {progress === 100 ? (
                     <button
                       onClick={() => navigate(`/quiz/${id}/${quizData[0].id}`)}
                       className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all transform hover:scale-105"
@@ -558,7 +582,7 @@ const ViewVideo = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0 0v2m0-2h2m-2 0h-2m-6 0h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                       </svg>
                       <span className="text-yellow-500">
-                        {lang === 'ar' ? `اكمل ${70 - progress}% للفتح` : `Complete ${70 - progress}% to unlock`}
+                        {lang === 'ar' ? `اكمل ${70 - progress}% للفتح` : `Complete ${100 - progress}% to unlock`}
                       </span>
                     </div>
                   )}
@@ -788,6 +812,54 @@ const ViewVideo = () => {
                     isDark 
                       ? 'border-gray-600 hover:bg-gray-700' 
                       : 'border-gray-300 hover:bg-gray-100'
+                  }`}
+                >
+                  {lang === 'ar' ? 'لاحقاً' : 'Later'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Final Quiz Popup */}
+      {showFinalQuizPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowFinalQuizPopup(false)} />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`relative w-full max-w-md p-6 rounded-2xl shadow-xl ${isDark ? 'bg-gray-800' : 'bg-white'}`}
+          >
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+                <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-green-500">
+                {lang === 'ar' ? 'مبروك! يمكنك الآن بدء الامتحان النهائي.' : 'Congratulations! You can now take the final quiz.'}
+              </h3>
+              <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                {lang === 'ar' 
+                  ? 'لقد أكملت جميع فيديوهات الدورة بنجاح! يمكنك الآن إجراء الاختبار النهائي للحصول على شهادة الدورة.'
+                  : 'You have successfully completed all course videos! You can now take the final quiz to earn your course certificate.'}
+              </p>
+              <div className="flex gap-3 w-full mt-4">
+                <button
+                  onClick={() => {
+                    setShowFinalQuizPopup(false);
+                    navigate(`/quiz/${id}/${quizData[0].id}`);
+                  }}
+                  className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all transform hover:scale-105"
+                >
+                  {lang === 'ar' ? 'ابدأ الاختبار النهائي' : 'Take Final Quiz'}
+                </button>
+                <button
+                  onClick={() => setShowFinalQuizPopup(false)}
+                  className={`flex-1 px-4 py-2 rounded-lg border transition-all ${
+                    isDark 
+                      ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-100'
                   }`}
                 >
                   {lang === 'ar' ? 'لاحقاً' : 'Later'}

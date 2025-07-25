@@ -9,7 +9,8 @@ import {
   useGetQuizQuery,
   useSubmitQuizMutation,
   useCheckQuizAttemptQuery,
-  useGetCertificateMutation
+  useGetCertificateMutation,
+  useGetQuizResultsMutation
 } from '../../redux/features/apiSlice';
 import LoadingPage from '../LoadingPage/LoadingPage';
 import { toast } from 'react-hot-toast';
@@ -23,6 +24,18 @@ const QuizPage = () => {
   const token = useSelector(selectToken);
   const lang = useSelector(selectTranslate);
   const isDark = theme === 'dark';
+
+  const { 
+    data: attemptStatus, 
+    isLoading: attemptStatusLoading,
+    refetch: refetchAttemptStatus 
+  } = useCheckQuizAttemptQuery({
+    courseId,
+    quizId,
+    token
+  }, {
+    skip: !token || !courseId || !quizId
+  });
 
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(null);
@@ -42,24 +55,37 @@ const QuizPage = () => {
     token
   });
 
+  const [getQuizResults] = useGetQuizResultsMutation();
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      const attemptId = attemptStatus?.latestAttempt?.id;
+      if (attemptId && token && attemptStatus?.latestAttempt?.status === 'completed') {
+        try {
+          console.log('Fetching quiz results for attempt:', attemptId);
+          const { data } = await getQuizResults({ attemptId, token });
+          if (data) {
+            console.log('Quiz results fetched successfully:', data);
+            setQuizResult(data);
+            setShowResult(true);
+            setIsCompleted(true);
+            setHasAttempted(true);
+          }
+        } catch (e) {
+          console.error('Error fetching quiz results:', e);
+        }
+      }
+    };
+    fetchResults();
+  }, [attemptStatus?.latestAttempt?.id, token, getQuizResults]);
+
   // Add debug logging
   useEffect(() => {
     console.log('Quiz Data:', quizzes);
     console.log('Course ID:', courseId);
     console.log('Quiz ID:', quizId);
-  }, [quizzes, courseId, quizId]);
-
-  const { 
-    data: attemptStatus, 
-    isLoading: attemptStatusLoading,
-    refetch: refetchAttemptStatus 
-  } = useCheckQuizAttemptQuery({
-    courseId,
-    quizId,
-    token
-  }, {
-    skip: !token || !courseId || !quizId
-  });
+    console.log('Current Quiz:', currentQuiz);
+  }, [quizzes, courseId, quizId, currentQuiz]);
 
   // Add useEffect to refetch attempt status on mount
   useEffect(() => {
@@ -79,17 +105,9 @@ const QuizPage = () => {
       setHasAttempted(attemptStatus.hasAttempted);
       setIsCompleted(hasCompletedAttempt);
       
-      // Always show result if there's a latest attempt
-      if (attemptStatus.latestAttempt) {
-        setQuizResult({
-          score: attemptStatus.latestAttempt.score,
-          passed: attemptStatus.latestAttempt.score >= (currentQuiz?.passing_score || 60),
-          total_questions: currentQuiz?.questions?.length || 0,
-          correct_answers: Math.round((attemptStatus.latestAttempt.score / 100) * (currentQuiz?.questions?.length || 0)),
-          answers: attemptStatus.latestAttempt.answers || {}
-        });
-        setShowResult(true);
+      if (attemptStatus.latestAttempt && attemptStatus.latestAttempt.status === 'completed') {
         setSelectedAnswers(attemptStatus.latestAttempt.answers || {});
+        console.log('Quiz completed, will fetch detailed results...');
       }
     }
   }, [attemptStatus, currentQuiz]);
@@ -189,7 +207,32 @@ const QuizPage = () => {
         token,
       }).unwrap();
 
-      setQuizResult(result);
+      let attemptId = result?.attemptId;
+      if (!attemptId && attemptStatus?.latestAttempt?.id) {
+        attemptId = attemptStatus.latestAttempt.id;
+      }
+      if (attemptId) {
+        console.log('Attempt ID after submit:', attemptId);
+      } else {
+        console.warn('No attemptId found after submit!');
+      }
+
+      if (attemptId) {
+        try {
+          const { data: detailedResults } = await getQuizResults({ attemptId, token });
+          if (detailedResults) {
+            setQuizResult(detailedResults);
+          } else {
+            setQuizResult(result);
+          }
+        } catch (error) {
+          console.error('Error fetching detailed results:', error);
+          setQuizResult(result);
+        }
+      } else {
+        setQuizResult(result);
+      }
+
       setShowResult(true);
       setIsCompleted(true);
 
@@ -239,16 +282,8 @@ const QuizPage = () => {
     }
   };
 
-  // Add debug logging for attempt status
-  useEffect(() => {
-    if (attemptStatus) {
-      console.log('Attempt Status:', attemptStatus);
-      console.log('Latest Attempt:', attemptStatus.latestAttempt);
-      console.log('Is Completed:', isCompleted);
-    }
-  }, [attemptStatus, isCompleted]);
+ 
 
-  // تحديث دالة handleGetCertificate
   const handleGetCertificate = async () => {
     try {
       setIsLoadingCertificate(true);
@@ -258,7 +293,6 @@ const QuizPage = () => {
         quizId: parseInt(quizId)
       }).unwrap();
 
-      console.log('Certificate generation response:', response);
 
       if (response.status === "success" && response.data?.certificateUrl) {
         setCertificateUrl(response.data.certificateUrl);
@@ -272,7 +306,6 @@ const QuizPage = () => {
         toast.success(t('Opening your certificate...'));
       }
     } catch (error) {
-      console.error('Error with certificate:', error);
       toast.error(t('Failed to process certificate. Please try again.'));
     } finally {
       setIsLoadingCertificate(false);
@@ -327,7 +360,7 @@ const QuizPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-8 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}
+            className={`p-2 md:p-8 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}
           >
             <div className="text-center mb-6">
               <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 ${
@@ -438,38 +471,70 @@ const QuizPage = () => {
             {/* Show questions with correct/incorrect answers */}
             <div className="mt-8 space-y-6">
               <h3 className="text-xl font-bold mb-4">{t('Question Review')}</h3>
-              {currentQuiz?.questions?.map((question, index) => (
+              {quizResult?.answer_analysis?.map((questionAnalysis, index) => (
                 <div
-                  key={question.id}
+                  key={questionAnalysis.question_id}
                   className={`p-6 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}
                 >
                   <h4 className="font-semibold mb-3">
-                    {index + 1}. {question.question_text}
+                    {index + 1}. {questionAnalysis.question_text}
                   </h4>
                   <div className="space-y-2">
-                    {question.options?.map((option) => {
-                      const isSelected = selectedAnswers[question.id] === option.id;
-                      const isCorrect = option.is_correct;
+                    {questionAnalysis.all_options?.map((option) => {
+                      const isUserAnswer = questionAnalysis.user_answer?.option_id === option.id;
+                      const isCorrectAnswer = questionAnalysis.correct_answer?.option_id === option.id;
+                      const isUserCorrect = questionAnalysis.user_answer?.is_correct === 1;
                       
                       let bgColorClass = isDark ? 'bg-gray-600' : 'bg-white';
                       let textColorClass = isDark ? 'text-white' : 'text-gray-900';
+                      let borderClass = isDark ? 'border-gray-500' : 'border-gray-300';
                       
-                      // Only highlight correct answers in green
-                      if (isCorrect) {
+                      if (isUserAnswer && !isUserCorrect) {
+                        bgColorClass = isDark ? 'bg-red-900' : 'bg-red-100';
+                        textColorClass = isDark ? 'text-red-200' : 'text-red-700';
+                        borderClass = isDark ? 'border-red-500' : 'border-red-300';
+                      } else if (isUserAnswer && isUserCorrect) {
                         bgColorClass = isDark ? 'bg-green-900' : 'bg-green-100';
                         textColorClass = isDark ? 'text-green-200' : 'text-green-700';
+                        borderClass = isDark ? 'border-green-500' : 'border-green-300';
+                      } else if (isCorrectAnswer && !isUserAnswer) {
+                        bgColorClass = isDark ? 'bg-green-800' : 'bg-green-50';
+                        textColorClass = isDark ? 'text-green-300' : 'text-green-600';
+                        borderClass = isDark ? 'border-green-400' : 'border-green-200';
                       }
 
                       return (
                         <div
                           key={option.id}
-                          className={`p-3 rounded ${bgColorClass} ${textColorClass}`}
+                          className={`p-3 rounded border-2 ${bgColorClass} ${textColorClass} ${borderClass}`}
                         >
-                          <div className="flex items-center">
-                            {isCorrect && (
-                              <span className="mr-2 text-green-500">✓</span>
-                            )}
-                            {option.option_text}
+                          <div className="flex items-center justify-between">
+                            <span>{option.text}</span>
+                            <div className="flex items-center gap-2">
+                              {isUserAnswer && (
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  isUserCorrect 
+                                    ? (isDark ? 'bg-green-700 text-green-200' : 'bg-green-200 text-green-800')
+                                    : (isDark ? 'bg-red-700 text-red-200' : 'bg-red-200 text-red-800')
+                                }`}>
+                                  {isUserCorrect ? t('Your Answer ✓') : t('Your Answer ✗')}
+                                </span>
+                              )}
+                              {isCorrectAnswer && !isUserAnswer && (
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  isDark ? 'bg-green-700 text-green-200' : 'bg-green-200 text-green-800'
+                                }`}>
+                                  {t('Correct Answer ✓')}
+                                </span>
+                              )}
+                              {isCorrectAnswer && isUserAnswer && (
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  isDark ? 'bg-green-700 text-green-200' : 'bg-green-200 text-green-800'
+                                }`}>
+                                  {t('Correct ✓')}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
