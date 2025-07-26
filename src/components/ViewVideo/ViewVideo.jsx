@@ -269,26 +269,106 @@ const ViewVideo = () => {
 
   // Remove quiz modal functions since we don't need the 70% popup anymore
 
+  // State to track the previous progress to detect when it reaches 100%
+  const [previousProgress, setPreviousProgress] = useState(0);
+  
   // Function to check if final quiz popup has been shown for this course
   const hasFinalQuizPopupBeenShown = () => {
     try {
       const shownFinalQuizPopups = JSON.parse(localStorage.getItem('shownFinalQuizPopups') || '{}');
-      return shownFinalQuizPopups[id] === true;
+      const popupData = shownFinalQuizPopups[id];
+      
+      // Handle old format (boolean)
+      if (typeof popupData === 'boolean') {
+        return popupData;
+      }
+      
+      // Handle new format (object with timestamp)
+      if (popupData && popupData.shown) {
+        const currentTime = Date.now();
+        
+        // Check if expired
+        if (popupData.expiresAt && currentTime > popupData.expiresAt) {
+          // Remove expired entry
+          delete shownFinalQuizPopups[id];
+          localStorage.setItem('shownFinalQuizPopups', JSON.stringify(shownFinalQuizPopups));
+          console.log('Removed expired popup for course:', id);
+          return false;
+        }
+        
+        return true;
+      }
+      
+      return false;
     } catch (error) {
       console.error('Error reading from localStorage:', error);
       return false;
     }
   };
 
-  // Function to mark final quiz popup as shown for this course
+  // Function to mark final quiz popup as shown for this course with timestamp
   const markFinalQuizPopupAsShown = () => {
     try {
       const shownFinalQuizPopups = JSON.parse(localStorage.getItem('shownFinalQuizPopups') || '{}');
-      shownFinalQuizPopups[id] = true;
+      shownFinalQuizPopups[id] = {
+        shown: true,
+        timestamp: Date.now(),
+        expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
+      };
       localStorage.setItem('shownFinalQuizPopups', JSON.stringify(shownFinalQuizPopups));
-      console.log('Marked final quiz popup as shown for course:', id);
+      console.log('Marked final quiz popup as shown for course:', id, 'with expiration');
     } catch (error) {
       console.error('Error writing to localStorage:', error);
+    }
+  };
+
+  // Function to check if popup has expired and clean up
+  const checkAndCleanupExpiredPopups = () => {
+    try {
+      const shownFinalQuizPopups = JSON.parse(localStorage.getItem('shownFinalQuizPopups') || '{}');
+      const currentTime = Date.now();
+      let hasChanges = false;
+
+      // Check each course's popup status
+      Object.keys(shownFinalQuizPopups).forEach(courseId => {
+        const popupData = shownFinalQuizPopups[courseId];
+        
+        // If it's the old format (just boolean), convert to new format
+        if (typeof popupData === 'boolean') {
+          shownFinalQuizPopups[courseId] = {
+            shown: popupData,
+            timestamp: Date.now(),
+            expiresAt: Date.now() + (24 * 60 * 60 * 1000)
+          };
+          hasChanges = true;
+        }
+        
+        // Check if expired
+        if (popupData.expiresAt && currentTime > popupData.expiresAt) {
+          delete shownFinalQuizPopups[courseId];
+          hasChanges = true;
+          console.log('Removed expired popup for course:', courseId);
+        }
+      });
+
+      // Save changes if any
+      if (hasChanges) {
+        localStorage.setItem('shownFinalQuizPopups', JSON.stringify(shownFinalQuizPopups));
+      }
+    } catch (error) {
+      console.error('Error cleaning up expired popups:', error);
+    }
+  };
+
+  // Function to reset popup state for this course (for debugging/testing)
+  const resetPopupStateForCourse = () => {
+    try {
+      const shownFinalQuizPopups = JSON.parse(localStorage.getItem('shownFinalQuizPopups') || '{}');
+      delete shownFinalQuizPopups[id];
+      localStorage.setItem('shownFinalQuizPopups', JSON.stringify(shownFinalQuizPopups));
+      console.log('Reset popup state for course:', id);
+    } catch (error) {
+      console.error('Error resetting popup state:', error);
     }
   };
 
@@ -324,27 +404,66 @@ const ViewVideo = () => {
     updateCourseProgress();
   }, [coursesData, watchedVideos, quizData, progress, token, id, updateProgress, refetchProgress]);
 
-  // Show popup when progress reaches 100% and hasn't been shown before
+  // Show popup when progress reaches 100% for the first time ever for this course
   useEffect(() => {
-    console.log('Progress check:', progress, 'Quiz data:', quizData?.length, 'Has been shown:', hasFinalQuizPopupBeenShown());
-    if (progress >= 100 && !hasFinalQuizPopupBeenShown() && quizData?.length > 0) {
-      console.log('Showing final quiz popup!');
+    console.log('Progress check:', progress, 'Previous progress:', previousProgress, 'Quiz data:', quizData?.length, 'Has been shown:', hasFinalQuizPopupBeenShown());
+    
+    // Check if progress just reached 100% (was less than 100 before)
+    const justReached100 = previousProgress < 100 && progress >= 100;
+    
+    if (justReached100 && !hasFinalQuizPopupBeenShown() && quizData?.length > 0) {
+      console.log('Progress just reached 100%! Showing final quiz popup!');
       setShowFinalQuizPopup(true);
       markFinalQuizPopupAsShown();
     }
-  }, [progress, quizData, id, hasFinalQuizPopupBeenShown]);
+    
+    // Update previous progress
+    setPreviousProgress(progress);
+  }, [progress, quizData, previousProgress, id]);
+
+  // Clean up expired popups on component mount and set up periodic cleanup
+  useEffect(() => {
+    // Clean up on mount
+    checkAndCleanupExpiredPopups();
+    
+    // Set up periodic cleanup every hour
+    const cleanupInterval = setInterval(() => {
+      checkAndCleanupExpiredPopups();
+    }, 60 * 60 * 1000); // 1 hour
+    
+    // Cleanup on unmount
+    return () => {
+      clearInterval(cleanupInterval);
+    };
+  }, []);
+
+  // Initialize previous progress when progress data is loaded
+  useEffect(() => {
+    if (progressData && progress !== undefined) {
+      setPreviousProgress(progress);
+      console.log('Initialized previous progress to:', progress);
+      
+      // Also check if we should show popup on initial load (in case user already has 100% progress)
+      if (progress >= 100 && !hasFinalQuizPopupBeenShown() && quizData?.length > 0) {
+        console.log('User already has 100% progress! Showing final quiz popup!');
+        setShowFinalQuizPopup(true);
+        markFinalQuizPopupAsShown();
+      }
+    }
+  }, [progressData, progress, quizData, id]);
 
   // Add debug logging
   useEffect(() => {
     console.log('=== DEBUG INFO ===');
     console.log('Quiz Data:', quizData);
     console.log('Progress:', progress);
+    console.log('Previous Progress:', previousProgress);
     console.log('Course ID:', id);
     console.log('Token:', token);
     console.log('Has Final Quiz Popup Been Shown:', hasFinalQuizPopupBeenShown());
     console.log('Show Final Quiz Popup State:', showFinalQuizPopup);
     console.log('==================');
-  }, [quizData, progress, id, token, showFinalQuizPopup]);
+  }, [quizData, progress, previousProgress, id, token, showFinalQuizPopup]);
 
   if (isLoading || progressLoading || quizLoading) return <LoadingPage />;
   
@@ -440,10 +559,32 @@ const ViewVideo = () => {
           <div className="flex items-center gap-4 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className={`lg:hidden flex-shrink-0 flex items-center gap-2 p-2 rounded-lg ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'} transition-all`}
+              className={`lg:hidden flex-shrink-0 flex items-center gap-3 px-2 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${
+                isDark 
+                  ? 'bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white border border-primary/30' 
+                  : 'bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white border border-primary/20'
+              }`}
             >
-              <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-                <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16"/>
+              {/* Icon */}
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+              </div>
+              
+              {/* Text */}
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-bold leading-tight">
+                  {lang === 'ar' ? 'الدروس' : 'Lessons'}
+                </span>
+                <span className="text-xs opacity-80 leading-tight">
+                  {lang === 'ar' ? 'عرض المحتوى' : 'View Content'}
+                </span>
+              </div>
+              
+              {/* Arrow Icon */}
+              <svg className="w-4 h-4 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/>
               </svg>
             </button>
             <h1 className="text-lg font-semibold truncate min-w-0">
@@ -685,7 +826,7 @@ const ViewVideo = () => {
                       key={quiz.id}
                       className={`p-4 rounded-lg ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'} border ${isDark ? 'border-gray-600' : 'border-gray-200'}`}
                     >
-                      <h4 className="font-semibold text-lg mb-2">{quiz.title}</h4>
+                      <h4 className={`font-semibold text-lg mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{quiz.title}</h4>
                       <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
                         {quiz.description}
                       </p>
@@ -694,13 +835,13 @@ const ViewVideo = () => {
                           <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>
-                          <span>{lang === 'ar' ? 'درجة النجاح:' : 'Passing Score:'} {quiz.passing_score}%</span>
+                          <span className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{lang === 'ar' ? 'درجة النجاح:' : 'Passing Score:'} {quiz.passing_score}%</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>
-                          <span>{lang === 'ar' ? 'الوقت:' : 'Time Limit:'} {quiz.time_limit} {lang === 'ar' ? 'دقيقة' : 'min'}</span>
+                          <span className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{lang === 'ar' ? 'الوقت:' : 'Time Limit:'} {quiz.time_limit} {lang === 'ar' ? 'دقيقة' : 'min'}</span>
                         </div>
                       </div>
                     </div>
