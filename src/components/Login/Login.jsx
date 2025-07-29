@@ -3,12 +3,12 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
-import { useLoginMutation, useGoogleLoginMutation } from '../../redux/features/apiSlice';
+import { useLoginMutation, useGoogleLoginMutation, useResendVerificationMutation } from '../../redux/features/apiSlice';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
-import { setCredentials } from '../../redux/features/authSlice';
+import { setCredentials, selectEmail } from '../../redux/features/authSlice';
 import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
 
@@ -19,11 +19,13 @@ function Login() {
     const navigate = useNavigate();
     const [loginUser, { isLoading, isError, error }] = useLoginMutation();
     const [googleLogin, { isLoading: isGoogleLoading }] = useGoogleLoginMutation();
+    const [resendVerification, { isLoading: isResending }] = useResendVerificationMutation();
     const dispatch = useDispatch();
     const lang = useSelector(selectTranslate);
     const { t } = useTranslation();
     const location = useLocation();
     const hasShownToast = useRef(false);
+    const email = useSelector(selectEmail);
 
     useEffect(() => {
         // Check URL parameters for token and user data
@@ -117,8 +119,26 @@ function Login() {
             } catch (err) {
                 console.error('Login failed:', err);
                 
-                if (err?.data?.message?.toLowerCase().includes('verify')) {
-                    // Special case for email verification message
+                // Check if it's an email verification error (403 status)
+                if (err?.status === 403 && err?.data?.email_verification_required) {
+                    toast.error(err.data.message, {
+                        duration: 8000,
+                        style: {
+                            background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+                            color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+                            border: `1px solid ${theme === 'dark' ? '#854D0E' : '#FEF3C7'}`,
+                            padding: '16px',
+                            borderRadius: '12px',
+                        },
+                        icon: '✉️',
+                    });
+                    
+                    // Store the email for resend functionality
+                    if (err.data.email) {
+                        dispatch(setEmail(err.data.email));
+                    }
+                } else if (err?.data?.message?.toLowerCase().includes('verify')) {
+                    // Fallback for other verification messages
                     toast.error(err.data.message, {
                         duration: 6000,
                         style: {
@@ -169,6 +189,52 @@ function Login() {
         }
     };
 
+    const handleResend = async () => {
+        try {
+            await resendVerification({ email }).unwrap();
+            toast.success('Verification email has been resent.', {
+                duration: 5000,
+                style: {
+                    background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+                    color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+                    border: `1px solid ${theme === 'dark' ? '#065F46' : '#D1FAE5'}`,
+                    padding: '16px',
+                    borderRadius: '12px',
+                },
+                icon: '✅',
+            });
+        } catch (err) {
+            console.error('Resend verification error:', err);
+            
+            // Handle specific validation errors
+            let errorMessage = 'Failed to resend verification email.';
+            
+            if (err?.data?.errors) {
+                // Handle Laravel validation errors
+                const errors = err.data.errors;
+                if (errors.email) {
+                    errorMessage = errors.email[0];
+                } else if (err.data.message) {
+                    errorMessage = err.data.message;
+                }
+            } else if (err?.data?.message) {
+                errorMessage = err.data.message;
+            }
+            
+            toast.error(errorMessage, {
+                duration: 5000,
+                style: {
+                    background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+                    color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+                    border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+                    padding: '16px',
+                    borderRadius: '12px',
+                },
+                icon: '❌',
+            });
+        }
+    };
+
     return (
         <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen pt-16 pb-8 flex items-center justify-center mt-10">
             <div className="container mx-auto px-4">
@@ -190,7 +256,7 @@ function Login() {
                                 </p>
                             </div>
 
-                            <form onSubmit={formik.handleSubmit} className="space-y-6">
+                            <form onSubmit={formik.handleSubmit} className="space-y-3">
                                 <div>
                                     <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                                         {t('Email')}
@@ -307,7 +373,7 @@ function Login() {
                                     </p>
                                 )}
 
-                                <div className="relative my-8">
+                                <div className="relative">
                                     <div className={`absolute inset-0 flex items-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
                                         <div className={`w-full border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}></div>
                                     </div>
@@ -356,6 +422,37 @@ function Login() {
                                         {t('Sign Up')}
                                     </Link>
                                 </p>
+
+                                {/* Email Verification Resend Button - Only show if email is available */}
+                                {email && (
+                                    <div className="mt-4 p-4 rounded-xl border-2 border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <svg className="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                                                {t('Email Verification Required')}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-3">
+                                            {t('Please verify your email address to access your account.')}
+                                        </p>
+                                        <div className="space-y-2">
+                                            <Link
+                                                to={`/email-verification?email=${encodeURIComponent(email)}`}
+                                                className="w-full bg-yellow-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-yellow-700 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                </svg>
+                                                {t('Go to Email Verification')}
+                                            </Link>
+                                          
+                                        </div>
+                                    </div>
+                                )}
+
+                                
                             </form>
                         </motion.div>
                     </div>

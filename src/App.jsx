@@ -34,6 +34,7 @@ import { useGetCoursesQuery } from "./redux/features/apiSlice";
 import QuizPage from './pages/QuizPage/QuizPage';
 import SavedCourses from './pages/SavedCourses/SavedCourses';
 import EmailVerificationBanner from './components/EmailVerificationBanner/EmailVerificationBanner';
+import EmailVerification from './pages/EmailVerification/EmailVerification';
 
 
 function App() {
@@ -139,6 +140,7 @@ function App() {
         <Route path="/error" element={<ErrorPage />} />
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/email-verification" element={<EmailVerification />} />
         <Route path="/my-courses" element={<ViewMyCourses />} />
         <Route
           path="/course/:id"

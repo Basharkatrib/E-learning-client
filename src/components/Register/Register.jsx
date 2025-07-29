@@ -7,7 +7,6 @@ import { toggleLanguage, selectTranslate } from '../../redux/features/translateS
 import { useTranslation } from 'react-i18next';
 import {
   useRegisterMutation,
-  useResendVerificationMutation,
   useGoogleLoginMutation
 } from '../../redux/features/apiSlice';
 import { setEmail, selectEmail, setCredentials } from '../../redux/features/authSlice';
@@ -23,7 +22,6 @@ function Register() {
   const [certificatePreview, setCertificatePreview] = useState(null);
   const theme = useSelector(selectTheme);
   const [registerUser, { isLoading }] = useRegisterMutation();
-  const [resendVerification, { isLoading: isResending }] = useResendVerificationMutation();
   const [googleLogin, { isLoading: isGoogleLoading }] = useGoogleLoginMutation();
   const dispatch = useDispatch();
   const email = useSelector(selectEmail);
@@ -150,9 +148,9 @@ function Register() {
           icon: '✅',
         });
 
-        // Redirect to login page after successful registration
+        // Redirect to email verification page after successful registration
         setTimeout(() => {
-          navigate('/login');
+          navigate(`/email-verification?email=${encodeURIComponent(values.email)}`);
         }, 2000);
 
         setShowResend(true);
@@ -161,6 +159,34 @@ function Register() {
         if (err.status === 500) {
           console.error('Server error details:', err);
           toast.error(t('Server error. Please try again later.'), {
+            duration: 5000,
+            style: {
+              background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+              color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+              border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌',
+          });
+        } else if (err.data?.errors) {
+          // Handle Laravel validation errors
+          const errors = err.data.errors;
+          let errorMessage = t('Registration failed. Please check your information.');
+          
+          if (errors.email) {
+            errorMessage = errors.email[0];
+          } else if (errors.name) {
+            errorMessage = errors.name[0];
+          } else if (errors.password) {
+            errorMessage = errors.password[0];
+          } else if (errors.certificate) {
+            errorMessage = errors.certificate[0];
+          } else if (err.data.message) {
+            errorMessage = err.data.message;
+          }
+          
+          toast.error(errorMessage, {
             duration: 5000,
             style: {
               background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
@@ -200,34 +226,7 @@ function Register() {
     }
   });
 
-  const handleResend = async () => {
-    try {
-      await resendVerification(email).unwrap();
-      toast.success('Verification email has been resent.', {
-        duration: 5000,
-        style: {
-          background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
-          color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
-          border: `1px solid ${theme === 'dark' ? '#065F46' : '#D1FAE5'}`,
-          padding: '16px',
-          borderRadius: '12px',
-        },
-        icon: '✅',
-      });
-    } catch (err) {
-      toast.error(err?.data?.message || 'Failed to resend verification email.', {
-        duration: 5000,
-        style: {
-          background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
-          color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
-          border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
-          padding: '16px',
-          borderRadius: '12px',
-        },
-        icon: '❌',
-      });
-    }
-  };
+
 
   return (
     <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen pt-16 pb-8 flex items-center justify-center mt-10">
@@ -292,7 +291,7 @@ function Register() {
                 </div>
               </div>
 
-              <form onSubmit={formik.handleSubmit} className="space-y-6">
+              <form onSubmit={formik.handleSubmit} className="space-y-3">
                 {/* Full Name */}
                 <div>
                   <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -517,27 +516,10 @@ function Register() {
                   )}
                 </button>
 
-                {/* Resend Verification Button */}
-                {showResend && (
-                  <button
-                    type="button"
-                    onClick={handleResend}
-                    disabled={isResending}
-                    className="w-full mt-3 bg-secondary text-white py-3 rounded-xl font-semibold hover:bg-secondary/90 disabled:opacity-50 transition-all duration-200 transform hover:scale-[1.02] shadow-lg"
-                  >
-                    {isResending ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        {t('Resending...')}
-                      </div>
-                    ) : (
-                      t('Resend Verification Link')
-                    )}
-                  </button>
-                )}
+
 
                 {/* OR divider */}
-                <div className="relative my-8">
+                <div className="relative">
                   <div className={`absolute inset-0 flex items-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
                     <div className={`w-full border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}></div>
                   </div>
