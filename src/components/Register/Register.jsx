@@ -87,14 +87,18 @@ function Register() {
 
   const formik = useFormik({
     initialValues: {
-      fullName: '',
+      firstName: '',
+      lastName: '',
+      phoneNumber: '',
       email: '',
       password: '',
       confirmPassword: '',
       terms: false
     },
     validationSchema: Yup.object({
-      fullName: Yup.string().required(t('Full name is required')),
+      firstName: Yup.string().required(t('First name is required')),
+      lastName: Yup.string().required(t('Last name is required')),
+      phoneNumber: Yup.string().required(t('Phone number is required')),
       email: Yup.string().email(t('Invalid email')).required(t('Email is required')),
       password: Yup.string().min(6, t('Password must be at least 6 characters')).required(t('Password is required')),
       confirmPassword: Yup.string()
@@ -107,7 +111,9 @@ function Register() {
         if (isTeacher && certificate) {
           // Handle registration with certificate
           const formData = new FormData();
-          formData.append('name', values.fullName);
+          formData.append('firstName', values.firstName);
+          formData.append('lastName', values.lastName);
+          formData.append('phoneNumber', values.phoneNumber);
           formData.append('email', values.email);
           formData.append('password', values.password);
           formData.append('password_confirmation', values.confirmPassword);
@@ -125,7 +131,9 @@ function Register() {
         } else {
           // Handle regular registration without certificate
           const userData = {
-            name: values.fullName,
+            firstName: values.firstName,
+            lastName: values.lastName,
+            phoneNumber: values.phoneNumber,
             email: values.email,
             password: values.password,
             password_confirmation: values.confirmPassword,
@@ -292,31 +300,77 @@ function Register() {
               </div>
 
               <form onSubmit={formik.handleSubmit} className="space-y-3">
-                {/* Full Name */}
+                {/* First Name */}
                 <div>
                   <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {t("Full Name")}
+                    {t("First Name")}
                   </label>
                   <input
                     type="text"
-                    name="fullName"
-                    placeholder={t("Enter your full name")}
+                    name="firstName"
+                    placeholder={t("Enter your first name")}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    value={formik.values.fullName}
+                    value={formik.values.firstName}
                     className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${theme === 'dark'
                         ? 'bg-gray-700 border-gray-600 text-white focus:border-primary focus:ring-2 focus:ring-primary/20'
                         : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20'
                       }`}
                   />
-                  {formik.touched.fullName && formik.errors.fullName && (
+                  {formik.touched.firstName && formik.errors.firstName && (
                     <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      {formik.errors.fullName}
+                      {formik.errors.firstName}
                     </p>
                   )}
+                </div>
+
+                {/* Last Name */}
+                <div>
+                  <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {t("Last Name")}
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    placeholder={t("Enter your last name")}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.lastName}
+                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${theme === 'dark'
+                        ? 'bg-gray-700 border-gray-600 text-white focus:border-primary focus:ring-2 focus:ring-primary/20'
+                        : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20'
+                      }`}
+                  />
+                  {formik.touched.lastName && formik.errors.lastName && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {formik.errors.lastName}
+                    </p>
+                  )}
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {t("Phone Number")}
+                  </label>
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    placeholder={t("Enter your phone number")}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.phoneNumber}
+                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${theme === 'dark'
+                        ? 'bg-gray-700 border-gray-600 text-white focus:border-primary focus:ring-2 focus:ring-primary/20'
+                        : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20'
+                      }`}
+                  />
                 </div>
 
                 {/* Email */}

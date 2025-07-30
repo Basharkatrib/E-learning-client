@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://e-learning-server-me-production.up.railway.app/api/' }),
+  baseQuery: fetchBaseQuery({ baseUrl: 'https://e-learning-server.test/api/' }),
   endpoints: (builder) => ({
     register: builder.mutation({
       query: (userData) => ({
@@ -43,10 +43,12 @@ export const apiSlice = createApi({
       }),
     }),
    updateProfile: builder.mutation({
-  query: ({ token, name, profileImage, bio, country, specialization }) => {
+  query: ({ token, firstName, lastName, phoneNumber, profileImage, bio, country, specialization }) => {
     const formData = new FormData();
 
-    if (name) formData.append("name", name);
+    if (firstName) formData.append("firstName", firstName);
+    if (lastName) formData.append("lastName", lastName);
+    if (phoneNumber) formData.append("phoneNumber", phoneNumber);
     if (profileImage) formData.append("profile_image", profileImage);
     if (bio) formData.append("bio", bio);
     if (country) formData.append("country", country);
@@ -60,6 +62,10 @@ export const apiSlice = createApi({
       },
       body: formData,
     };
+  },
+  transformErrorResponse: (response) => {
+    console.error('Update Profile API Error:', response);
+    return response;
   },
 }),   
 addContact: builder.mutation({
