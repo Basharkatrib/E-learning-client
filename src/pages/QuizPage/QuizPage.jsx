@@ -17,7 +17,7 @@ import { toast } from 'react-hot-toast';
 import { selectTranslate } from '../../redux/features/translateSlice';
 
 const QuizPage = () => {
-  const { courseId, quizId } = useParams();
+  const { id: courseId, quizId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const theme = useSelector(selectTheme);
@@ -322,7 +322,7 @@ const QuizPage = () => {
           <h2 className="text-2xl font-bold text-primary mb-2">{t('Quiz Not Found')}</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{t('The requested quiz could not be found.')}</p>
           <button
-            onClick={() => navigate(`/course/${courseId}`)}
+            onClick={() => navigate(`/courses/${courseId}`)}
             className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all"
           >
             {t('Return to Course')}
@@ -546,7 +546,7 @@ const QuizPage = () => {
 
             <div className="flex justify-center mt-8">
               <button
-                onClick={() => navigate(`/course/${courseId}`)}
+                onClick={() => navigate(`/courses/${courseId}`)}
                 className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all"
               >
                 {t('Return to Course')}
@@ -619,7 +619,7 @@ const QuizPage = () => {
                   </div>
                   <div className="flex gap-4">
                     <button
-                      onClick={() => navigate(`/course/${courseId}`)}
+                      onClick={() => navigate(`/courses/${courseId}`)}
                       className="px-6 py-3 rounded-lg font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
                     >
                       {t('Cancel')}

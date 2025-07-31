@@ -119,7 +119,7 @@ const CourseCard = ({
               <p className={`text-sm ${subTextColor} mt-1`}>By {author}</p>
             </div>
             <Link 
-              to={`/course-details/${id}`}
+              to={`/courses/${id}`}
               className="px-5 py-2 rounded-lg bg-primary text-white font-semibold shadow-md hover:bg-primary/90 transition"
             >
               {t('View Course')}

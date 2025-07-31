@@ -814,7 +814,7 @@ const ViewVideo = () => {
                     
                     return canTakeQuiz ? (
                       <button
-                        onClick={() => navigate(`/quiz/${id}/${quizData[0].id}`)}
+                        onClick={() => navigate(`/courses/${id}/quiz/${quizData[0]?.id}`)}
                         className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all transform hover:scale-105"
                       >
                         {lang === 'ar' ? 'ابدأ الاختبار' : 'Take Quiz'}
@@ -1076,7 +1076,7 @@ const ViewVideo = () => {
                 <button
                   onClick={() => {
                     setShowFinalQuizPopup(false);
-                    navigate(`/quiz/${id}/${quizData[0].id}`);
+                    navigate(`/courses/${id}/quiz/${quizData[0].id}`);
                   }}
                   className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all transform hover:scale-105"
                 >
