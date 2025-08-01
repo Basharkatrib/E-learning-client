@@ -67,7 +67,6 @@ const TrendingNews = () => {
             />
             <h3 className="text-lg font-semibold mt-4">{article.title}</h3>
             <p className={`text-sm mt-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-              {/* إذا كانت الكرت موسعة، نعرض النص الكامل */}
               {expandedIndex === index ? article.content || article.description : article.description.substring(0, 100) + '...'}
             </p>
             <button
