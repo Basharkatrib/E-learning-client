@@ -7,7 +7,6 @@ import { toggleLanguage, selectTranslate } from '../../redux/features/translateS
 import { useTranslation } from 'react-i18next';
 import {
   useRegisterMutation,
-  useResendVerificationMutation,
   useGoogleLoginMutation
 } from '../../redux/features/apiSlice';
 import { setEmail, selectEmail, setCredentials } from '../../redux/features/authSlice';
@@ -23,7 +22,6 @@ function Register() {
   const [certificatePreview, setCertificatePreview] = useState(null);
   const theme = useSelector(selectTheme);
   const [registerUser, { isLoading }] = useRegisterMutation();
-  const [resendVerification, { isLoading: isResending }] = useResendVerificationMutation();
   const [googleLogin, { isLoading: isGoogleLoading }] = useGoogleLoginMutation();
   const dispatch = useDispatch();
   const email = useSelector(selectEmail);
@@ -89,14 +87,18 @@ function Register() {
 
   const formik = useFormik({
     initialValues: {
-      fullName: '',
+      firstName: '',
+      lastName: '',
+      phoneNumber: '',
       email: '',
       password: '',
       confirmPassword: '',
       terms: false
     },
     validationSchema: Yup.object({
-      fullName: Yup.string().required(t('Full name is required')),
+      firstName: Yup.string().required(t('First name is required')),
+      lastName: Yup.string().required(t('Last name is required')),
+      phoneNumber: Yup.string().required(t('Phone number is required')),
       email: Yup.string().email(t('Invalid email')).required(t('Email is required')),
       password: Yup.string().min(6, t('Password must be at least 6 characters')).required(t('Password is required')),
       confirmPassword: Yup.string()
@@ -109,7 +111,9 @@ function Register() {
         if (isTeacher && certificate) {
           // Handle registration with certificate
           const formData = new FormData();
-          formData.append('name', values.fullName);
+          formData.append('firstName', values.firstName);
+          formData.append('lastName', values.lastName);
+          formData.append('phoneNumber', values.phoneNumber);
           formData.append('email', values.email);
           formData.append('password', values.password);
           formData.append('password_confirmation', values.confirmPassword);
@@ -127,7 +131,9 @@ function Register() {
         } else {
           // Handle regular registration without certificate
           const userData = {
-            name: values.fullName,
+            firstName: values.firstName,
+            lastName: values.lastName,
+            phoneNumber: values.phoneNumber,
             email: values.email,
             password: values.password,
             password_confirmation: values.confirmPassword,
@@ -150,9 +156,9 @@ function Register() {
           icon: '✅',
         });
 
-        // Redirect to login page after successful registration
+        // Redirect to email verification page after successful registration
         setTimeout(() => {
-          navigate('/login');
+          navigate(`/email-verification?email=${encodeURIComponent(values.email)}`);
         }, 2000);
 
         setShowResend(true);
@@ -161,6 +167,34 @@ function Register() {
         if (err.status === 500) {
           console.error('Server error details:', err);
           toast.error(t('Server error. Please try again later.'), {
+            duration: 5000,
+            style: {
+              background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+              color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
+              border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌',
+          });
+        } else if (err.data?.errors) {
+          // Handle Laravel validation errors
+          const errors = err.data.errors;
+          let errorMessage = t('Registration failed. Please check your information.');
+          
+          if (errors.email) {
+            errorMessage = errors.email[0];
+          } else if (errors.name) {
+            errorMessage = errors.name[0];
+          } else if (errors.password) {
+            errorMessage = errors.password[0];
+          } else if (errors.certificate) {
+            errorMessage = errors.certificate[0];
+          } else if (err.data.message) {
+            errorMessage = err.data.message;
+          }
+          
+          toast.error(errorMessage, {
             duration: 5000,
             style: {
               background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
@@ -200,34 +234,7 @@ function Register() {
     }
   });
 
-  const handleResend = async () => {
-    try {
-      await resendVerification(email).unwrap();
-      toast.success('Verification email has been resent.', {
-        duration: 5000,
-        style: {
-          background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
-          color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
-          border: `1px solid ${theme === 'dark' ? '#065F46' : '#D1FAE5'}`,
-          padding: '16px',
-          borderRadius: '12px',
-        },
-        icon: '✅',
-      });
-    } catch (err) {
-      toast.error(err?.data?.message || 'Failed to resend verification email.', {
-        duration: 5000,
-        style: {
-          background: theme === 'dark' ? '#1F2937' : '#FFFFFF',
-          color: theme === 'dark' ? '#FFFFFF' : '#1F2937',
-          border: `1px solid ${theme === 'dark' ? '#991B1B' : '#FEE2E2'}`,
-          padding: '16px',
-          borderRadius: '12px',
-        },
-        icon: '❌',
-      });
-    }
-  };
+
 
   return (
     <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen pt-16 pb-8 flex items-center justify-center mt-10">
@@ -292,32 +299,78 @@ function Register() {
                 </div>
               </div>
 
-              <form onSubmit={formik.handleSubmit} className="space-y-6">
-                {/* Full Name */}
+              <form onSubmit={formik.handleSubmit} className="space-y-3">
+                {/* First Name */}
                 <div>
                   <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {t("Full Name")}
+                    {t("First Name")}
                   </label>
                   <input
                     type="text"
-                    name="fullName"
-                    placeholder={t("Enter your full name")}
+                    name="firstName"
+                    placeholder={t("Enter your first name")}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    value={formik.values.fullName}
+                    value={formik.values.firstName}
                     className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${theme === 'dark'
                         ? 'bg-gray-700 border-gray-600 text-white focus:border-primary focus:ring-2 focus:ring-primary/20'
                         : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20'
                       }`}
                   />
-                  {formik.touched.fullName && formik.errors.fullName && (
+                  {formik.touched.firstName && formik.errors.firstName && (
                     <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      {formik.errors.fullName}
+                      {formik.errors.firstName}
                     </p>
                   )}
+                </div>
+
+                {/* Last Name */}
+                <div>
+                  <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {t("Last Name")}
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    placeholder={t("Enter your last name")}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.lastName}
+                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${theme === 'dark'
+                        ? 'bg-gray-700 border-gray-600 text-white focus:border-primary focus:ring-2 focus:ring-primary/20'
+                        : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20'
+                      }`}
+                  />
+                  {formik.touched.lastName && formik.errors.lastName && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {formik.errors.lastName}
+                    </p>
+                  )}
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {t("Phone Number")}
+                  </label>
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    placeholder={t("Enter your phone number")}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.phoneNumber}
+                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${theme === 'dark'
+                        ? 'bg-gray-700 border-gray-600 text-white focus:border-primary focus:ring-2 focus:ring-primary/20'
+                        : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20'
+                      }`}
+                  />
                 </div>
 
                 {/* Email */}
@@ -436,18 +489,37 @@ function Register() {
                   <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                     {t("Confirm Password")}
                   </label>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="confirmPassword"
-                    placeholder={t("Confirm your password")}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.confirmPassword}
-                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${theme === 'dark'
-                        ? 'bg-gray-700 border-gray-600 text-white focus:border-primary focus:ring-2 focus:ring-primary/20'
-                        : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20'
-                      }`}
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      placeholder={t("Confirm your password")}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.confirmPassword}
+                      className={`w-full px-4 py-3 pr-12 rounded-xl border-2 transition-all duration-200 ${theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-white focus:border-primary focus:ring-2 focus:ring-primary/20'
+                          : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20'
+                        }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className={`absolute ${lang === 'ar' ? 'left-3' : 'right-3'} top-1/2 transform -translate-y-1/2 p-1 rounded-lg transition-colors ${theme === 'dark' ? 'hover:bg-gray-600' : 'hover:bg-gray-200'
+                        }`}
+                    >
+                      {showPassword ? (
+                        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   {formik.touched.confirmPassword && formik.errors.confirmPassword && (
                     <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -498,27 +570,10 @@ function Register() {
                   )}
                 </button>
 
-                {/* Resend Verification Button */}
-                {showResend && (
-                  <button
-                    type="button"
-                    onClick={handleResend}
-                    disabled={isResending}
-                    className="w-full mt-3 bg-secondary text-white py-3 rounded-xl font-semibold hover:bg-secondary/90 disabled:opacity-50 transition-all duration-200 transform hover:scale-[1.02] shadow-lg"
-                  >
-                    {isResending ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        {t('Resending...')}
-                      </div>
-                    ) : (
-                      t('Resend Verification Link')
-                    )}
-                  </button>
-                )}
+
 
                 {/* OR divider */}
-                <div className="relative my-8">
+                <div className="relative">
                   <div className={`absolute inset-0 flex items-center ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
                     <div className={`w-full border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}></div>
                   </div>

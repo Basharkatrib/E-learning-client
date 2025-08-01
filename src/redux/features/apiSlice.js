@@ -43,10 +43,12 @@ export const apiSlice = createApi({
       }),
     }),
    updateProfile: builder.mutation({
-  query: ({ token, name, profileImage, bio, country, specialization }) => {
+  query: ({ token, firstName, lastName, phoneNumber, profileImage, bio, country, specialization }) => {
     const formData = new FormData();
 
-    if (name) formData.append("name", name);
+    if (firstName) formData.append("firstName", firstName);
+    if (lastName) formData.append("lastName", lastName);
+    if (phoneNumber) formData.append("phoneNumber", phoneNumber);
     if (profileImage) formData.append("profile_image", profileImage);
     if (bio) formData.append("bio", bio);
     if (country) formData.append("country", country);
@@ -60,6 +62,10 @@ export const apiSlice = createApi({
       },
       body: formData,
     };
+  },
+  transformErrorResponse: (response) => {
+    console.error('Update Profile API Error:', response);
+    return response;
   },
 }),   
 addContact: builder.mutation({
@@ -407,7 +413,15 @@ addContact: builder.mutation({
         },
       }),
     }),
-
+    getQuizResults: builder.mutation({
+      query: ({ attemptId, token }) => ({
+        url: `v1/quiz-attempts/${attemptId}/results`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
     getCertificate: builder.mutation({
       query: ({ token, courseId, quizId }) => ({
         url: `v1/courses/${courseId}/certificate`,
@@ -568,5 +582,6 @@ addContact: builder.mutation({
   useAddContactMutation,
   useSubmitQuizAttemptMutation,
   useGetCertificateMutation,
-  useGoogleLoginMutation
+  useGoogleLoginMutation,
+  useGetQuizResultsMutation
 } = apiSlice;

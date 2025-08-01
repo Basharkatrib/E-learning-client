@@ -11,6 +11,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
 import toast from 'react-hot-toast';
 import { useIsEnrolledMutation } from '../../redux/features/apiSlice';
+import { Link } from 'react-router-dom';
 import { useCourseRatingsMutation, useCourseRatingsUpdateMutation, useCourseRatingsDeleteMutation, useCourseMyRatingQuery } from '../../redux/features/apiSlice';
 
 const dummyCourse = {
@@ -111,7 +112,7 @@ export default function CourseDetails() {
             setEnrollmentStatus(true);
             setTimeout(() => {
                 setShowCongrats(false);
-                navigate(`/course/${id}`);
+                navigate(`/courses/${id}`);
             }, 1800);
         } catch (e) {
             setShowConfirm(false);
@@ -568,20 +569,23 @@ export default function CourseDetails() {
                                         : (lang === 'ar' ? 'إلغاء التسجيل من الدورة' : 'Unenroll from course')}
                                 </motion.button>
                                 {/* زر مشاهدة الفيديوهات */}
-                                <motion.button
+                                <motion.div
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.97 }}
-                                    onClick={() => navigate(`/course/${id}`)}
-                                    className={`px-3 md:px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-sm md:text-lg flex items-center gap-2
-                                        bg-gradient-to-r from-primary to-blue-600 hover:from-blue-700 hover:to-primary text-white
-                                        ${isDark ? '' : ''}`}
                                 >
+                                    <Link
+                                        to={`/courses/${id}/videos`}
+                                        className={`px-3 md:px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-sm md:text-lg flex items-center gap-2
+                                            bg-gradient-to-r from-primary to-blue-600 hover:from-blue-700 hover:to-primary text-white
+                                            ${isDark ? '' : ''}`}
+                                    >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-5.197-3.027A1 1 0 008 9.027v5.946a1 1 0 001.555.832l5.197-3.027a1 1 0 000-1.664z" />
                                         <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="2" fill="none" />
                                     </svg>
                                     {lang === 'ar' ? 'مشاهدة الفيديوهات' : 'Watch Videos'}
-                                </motion.button>
+                                    </Link>
+                                </motion.div>
                             </div>
                         )}
 

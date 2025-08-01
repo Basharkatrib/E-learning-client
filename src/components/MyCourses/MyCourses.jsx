@@ -77,7 +77,7 @@ const MyCourses = () => {
                                         {(lang === "en") ? " Go to Course" : "الذهاب الى الدورة "}
                                     </Link>
                                     <Link
-                                        to={`/course-details/${course.courseId}`}
+                                        to={`/courses/${course.courseId}`}
                                         className="inline-block mt-2 text-sm font-semibold text-blue-500 hover:text-blue-700 transition"
                                     >
                                         {(lang === "en") ? "View details" : "عرض التفاصيل"}

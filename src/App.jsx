@@ -34,6 +34,7 @@ import { useGetCoursesQuery } from "./redux/features/apiSlice";
 import QuizPage from './pages/QuizPage/QuizPage';
 import SavedCourses from './pages/SavedCourses/SavedCourses';
 import EmailVerificationBanner from './components/EmailVerificationBanner/EmailVerificationBanner';
+import EmailVerification from './pages/EmailVerification/EmailVerification';
 
 
 function App() {
@@ -53,7 +54,7 @@ function App() {
   }, [error]);
   
   useEffect(() => {
-    if (error && (error.originalStatus === 401 || error.originalStatus === 405)) {
+    if (error && error.status === 401) {
       dispatch(logout());
     }
   }, [error, dispatch]);
@@ -135,22 +136,24 @@ function App() {
           </ProtectedRoute>}
           />
         <Route path="/contactus" element={<Contact />} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/error" element={<ErrorPage />} />
-        <Route path="/loading" element={<LoadingPage />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/my-courses" element={<ViewMyCourses />} />
-        <Route
-          path="/course/:id"
+        <Route path="/courses" element={<Courses />}>
+          <Route path=":id" element={<CourseDetailsPage />} />
+          <Route
+          path=":id/videos"
           element={
             <ProtectedCourseRoute>
               <VedioPage />
             </ProtectedCourseRoute>
           }
         />
-        <Route path="/course-details/:id" element={<CourseDetailsPage />} />
+        <Route path=":id/quiz/:quizId" element={<QuizPage />} />
+        </Route>
+        <Route path="/error" element={<ErrorPage />} />
+        <Route path="/loading" element={<LoadingPage />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/email-verification" element={<EmailVerification />} />
+        <Route path="/my-courses" element={<ViewMyCourses />} />
         <Route path="/aboutus" element={<AboutUsPage />} />
-        <Route path="/quiz/:courseId/:quizId" element={<QuizPage />} />
         <Route path="/saved-courses" element={<SavedCourses />} />
         <Route path="*" element={<ErrorPage />} />
       </Routes>

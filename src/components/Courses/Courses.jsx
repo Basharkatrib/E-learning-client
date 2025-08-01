@@ -150,7 +150,7 @@ function Courses() {
                                     By {course.teacher?.name || 'Unknown Teacher'}
                                 </span>
                                 <Link
-                                    to={`/course-details/${course.id}`}
+                                    to={`/courses/${course.id}`}
                                     className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors duration-200"
                                 >
                                     {t('Get it Now')}
