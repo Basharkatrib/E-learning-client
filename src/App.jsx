@@ -67,20 +67,6 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (showSplash) {
-    return (
-      <div className="relative w-full h-screen overflow-hidden bg-gray-900">
-        <motion.img
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: [0, 1, 0.8, 1], scale: [0.8, 1.6, 1.4, 1.6] }}
-          transition={{ duration: 5 }}
-          src={logo}
-          alt="Logo"
-          className="absolute inset-0 m-auto w-56  md:w-72 h-72 object-contain"
-        />
-      </div>
-    );
-  }
   
 
   // useEffect(() => {
@@ -117,6 +103,23 @@ function App() {
   //     channel.unsubscribe();
   //   };
   // }, [theme, dispatch]);
+
+
+  
+  if (showSplash) {
+    return (
+      <div className="relative w-full h-screen overflow-hidden bg-gray-900">
+        <motion.img
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: [0, 1, 0.8, 1], scale: [0.8, 1.6, 1.4, 1.6] }}
+          transition={{ duration: 5 }}
+          src={logo}
+          alt="Logo"
+          className="absolute inset-0 m-auto w-56  md:w-72 h-72 object-contain"
+        />
+      </div>
+    );
+  }
 
 
   return (

@@ -67,7 +67,7 @@ const MyCourses = () => {
                                     </p>
                                     <div className='flex items-center justify-between w-full'>
                                     <Link
-                                        to={`/course/${course.courseId}`}
+                                        to={`/courses/${course.courseId}/videos`}
                                         className="mt-2 text-sm font-semibold text-blue-500 hover:text-blue-700 transition flex items-center gap-1"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

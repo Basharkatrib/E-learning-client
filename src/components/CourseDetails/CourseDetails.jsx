@@ -112,7 +112,7 @@ export default function CourseDetails() {
             setEnrollmentStatus(true);
             setTimeout(() => {
                 setShowCongrats(false);
-                navigate(`/courses/${id}`);
+                navigate(`/courses/${id}/videos`);
             }, 1800);
         } catch (e) {
             setShowConfirm(false);
