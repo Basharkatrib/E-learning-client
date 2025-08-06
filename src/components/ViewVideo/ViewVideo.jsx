@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
@@ -53,14 +53,14 @@ const ViewVideo = () => {
     refetch: refetchProgress,
   } = useCourseMyProgressQuery({ token, courseId: id });
 
-  const { data: quizData, isLoading: quizLoading } = useGetQuizQuery(
+  const { data: quizData, isLoading: quizLoading, refetch: refetchQuiz } = useGetQuizQuery(
     { courseId: id, token },
     { skip: !token || !id }
   );
 
   useEffect(() => {
     console.log('Courses Data:', coursesData?.is_sequential);
-  }, [coursesData]);
+  }, [coursesData?.is_sequential]); // Only depend on is_sequential property
 
   const [updateProgress] = useCourseMyProgressUpdateMutation();
   const [currentVideo, setCurrentVideo] = useState(null);
@@ -75,20 +75,26 @@ const ViewVideo = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCover, setShowCover] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [previousProgress, setPreviousProgress] = useState(0);
   const [isChangingVideo, setIsChangingVideo] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
 
   // Add state for final quiz popup
   const [showFinalQuizPopup, setShowFinalQuizPopup] = useState(false);
+  
+  // Add state for quiz section visibility
+  const [showQuizSection, setShowQuizSection] = useState(false);
 
   // Helper function to get all videos in sequential order
-  const getAllVideosInOrder = () => {
+  const getAllVideosInOrder = useCallback(() => {
     if (!coursesData?.sections) return [];
-    return coursesData.sections.flatMap(section => section.videos || []);
-  };
+    const videos = coursesData.sections.flatMap(section => section.videos || []);
+    console.log('All videos in order:', videos.map(v => ({ id: v.id, title: v.title })));
+    return videos;
+  }, [coursesData?.sections]);
 
   // Helper function to check if a video is accessible
-  const isVideoAccessible = (video) => {
+  const isVideoAccessible = useCallback((video) => {
     // If sequential mode is disabled (0), all videos are accessible
     if (coursesData?.is_sequential !== 1) return true;
     
@@ -102,11 +108,25 @@ const ViewVideo = () => {
     const previousVideo = allVideos[currentVideoIndex - 1];
     if (!previousVideo) return true;
     
-    return watchedVideos.map(String).includes(String(previousVideo.id));
-  };
+    // Check if the previous video is in the watched videos list
+    const isPreviousWatched = watchedVideos.some(watchedId => 
+      String(watchedId) === String(previousVideo.id)
+    );
+    
+    console.log('Video accessibility check:', {
+      videoId: video.id,
+      currentVideoIndex,
+      previousVideoId: previousVideo?.id,
+      isPreviousWatched,
+      watchedVideos,
+      isSequential: coursesData?.is_sequential
+    });
+    
+    return isPreviousWatched;
+  }, [coursesData?.is_sequential, watchedVideos, getAllVideosInOrder]);
 
   // Helper function to get the next accessible video
-  const getNextAccessibleVideo = () => {
+  const getNextAccessibleVideo = useCallback(() => {
     if (coursesData?.is_sequential !== 1) return null;
     
     const allVideos = getAllVideosInOrder();
@@ -121,7 +141,7 @@ const ViewVideo = () => {
     }
     
     return null;
-  };
+  }, [coursesData?.is_sequential, currentVideo?.id, getAllVideosInOrder, isVideoAccessible]);
 
   useEffect(() => {
     let ids = [];
@@ -135,56 +155,347 @@ const ViewVideo = () => {
       }
     }
     setWatchedVideos(ids);
-  }, [watchedVideosData]);
+    
+    // Calculate progress from watched videos when data is loaded (only if no progress is set yet)
+    if (coursesData?.sections && ids.length > 0 && progress === 0) {
+      const allVideos = coursesData.sections.flatMap(section => section.videos || []);
+      const allVideoIds = allVideos.map(v => String(v.id));
+      const watchedInThisCourse = ids.filter(watchedId => 
+        allVideoIds.includes(String(watchedId))
+      );
+      const totalVideos = allVideos.length;
+      const watchedCount = watchedInThisCourse.length;
+      const calculatedProgress = totalVideos > 0 ? Math.min(Math.round((watchedCount / totalVideos) * 100), 100) : 0;
+      
+      console.log('Calculated progress from watched videos:', {
+        totalVideos,
+        watchedCount,
+        calculatedProgress,
+        currentProgress: progress
+      });
+      
+      if (calculatedProgress > 0) {
+        setProgress(calculatedProgress);
+        setPreviousProgress(calculatedProgress);
+        console.log('Progress updated from watched videos:', calculatedProgress);
+      }
+    }
+  }, [watchedVideosData?.watched, watchedVideosData?.data, watchedVideosData, coursesData?.sections]); // Added coursesData.sections dependency
+
+  // Calculate initial progress when both course data and watched videos are loaded (only on refresh)
+  useEffect(() => {
+    if (coursesData?.sections && watchedVideos.length > 0 && progress === 0 && currentVideo) {
+      const allVideos = coursesData.sections.flatMap(section => section.videos || []);
+      const allVideoIds = allVideos.map(v => String(v.id));
+      const watchedInThisCourse = watchedVideos.filter(watchedId => 
+        allVideoIds.includes(String(watchedId))
+      );
+      const totalVideos = allVideos.length;
+      const watchedCount = watchedInThisCourse.length;
+      const calculatedProgress = totalVideos > 0 ? Math.min(Math.round((watchedCount / totalVideos) * 100), 100) : 0;
+      
+      console.log('Initial progress calculation (refresh):', {
+        totalVideos,
+        watchedCount,
+        calculatedProgress,
+        currentVideo: currentVideo?.id
+      });
+      
+      if (calculatedProgress > 0) {
+        setProgress(calculatedProgress);
+        setPreviousProgress(calculatedProgress);
+        console.log('Initial progress set from refresh:', calculatedProgress);
+      }
+    }
+  }, [coursesData?.sections, watchedVideos, progress, currentVideo]);
+
+  // Force recalculate progress when both course data and watched videos are loaded
+  useEffect(() => {
+    if (coursesData?.sections && watchedVideos.length > 0) {
+      const allVideos = coursesData.sections.flatMap(section => section.videos || []);
+      const allVideoIds = allVideos.map(v => String(v.id));
+      const watchedInThisCourse = watchedVideos.filter(watchedId => 
+        allVideoIds.includes(String(watchedId))
+      );
+      const totalVideos = allVideos.length;
+      const watchedCount = watchedInThisCourse.length;
+      const calculatedProgress = totalVideos > 0 ? Math.min(Math.round((watchedCount / totalVideos) * 100), 100) : 0;
+      
+      console.log('Force progress calculation:', {
+        totalVideos,
+        watchedCount,
+        calculatedProgress,
+        currentProgress: progress,
+        watchedVideos: watchedVideos,
+        allVideoIds: allVideoIds,
+        watchedInThisCourse: watchedInThisCourse
+      });
+      
+      // Always update progress if calculated is different from current
+      if (calculatedProgress !== progress) {
+        setProgress(calculatedProgress);
+        setPreviousProgress(calculatedProgress);
+        console.log('Progress force updated:', calculatedProgress);
+      }
+    }
+  }, [coursesData?.sections, watchedVideos]);
+
+  // Helper function to calculate and update progress in backend
+  const calculateAndUpdateProgress = useCallback(async () => {
+    if (coursesData?.sections && watchedVideos.length > 0) {
+      const allVideos = coursesData.sections.flatMap(section => section.videos || []);
+      const allVideoIds = allVideos.map(v => String(v.id));
+      const watchedInThisCourse = watchedVideos.filter(watchedId => 
+        allVideoIds.includes(String(watchedId))
+      );
+      const totalVideos = allVideos.length;
+      const watchedCount = watchedInThisCourse.length;
+      const calculatedProgress = totalVideos > 0 ? Math.min(Math.round((watchedCount / totalVideos) * 100), 100) : 0;
+      
+      console.log('Calculate and update progress:', {
+        totalVideos,
+        watchedCount,
+        calculatedProgress,
+        currentProgress: progress,
+        watchedVideos: watchedVideos,
+        watchedInThisCourse: watchedInThisCourse
+      });
+      
+      // Update progress in backend
+      try {
+        await updateProgress({
+          token,
+          courseId: id,
+          progress: calculatedProgress,
+          videosCompleted: calculatedProgress >= 100
+        });
+        
+        // Update local state
+        setProgress(calculatedProgress);
+        setPreviousProgress(calculatedProgress);
+        
+        await refetchProgress();
+        console.log('Progress updated in backend:', calculatedProgress);
+      } catch (err) {
+        console.error('Error updating progress in backend:', err);
+      }
+    }
+  }, [coursesData?.sections, watchedVideos, progress, updateProgress, token, id, refetchProgress]);
+
+  // Update progress in backend when watched videos change
+  useEffect(() => {
+    if (coursesData?.sections && watchedVideos.length > 0 && token) {
+      calculateAndUpdateProgress();
+    }
+  }, [watchedVideos, calculateAndUpdateProgress]);
+
+  // Control quiz section visibility based on progress and quiz data
+  useEffect(() => {
+    if (quizData && quizData.length > 0 && coursesData) {
+      const requiredProgress = coursesData.is_sequential === 1 ? 100 : 80;
+      const shouldShow = progress >= requiredProgress;
+      
+      console.log('Quiz section visibility check:', {
+        quizDataLength: quizData.length,
+        progress,
+        requiredProgress,
+        shouldShow,
+        currentShowQuizSection: showQuizSection
+      });
+      
+      setShowQuizSection(shouldShow);
+      console.log('Quiz section visibility updated:', shouldShow);
+    } else {
+      setShowQuizSection(false);
+    }
+  }, [quizData?.length, coursesData?.is_sequential, progress]);
+
+  // Immediate quiz section visibility update when progress changes
+  useEffect(() => {
+    if (quizData && quizData.length > 0 && coursesData && progress > 0) {
+      const requiredProgress = coursesData.is_sequential === 1 ? 100 : 80;
+      const shouldShow = progress >= requiredProgress;
+      
+      console.log('Immediate quiz section visibility check:', {
+        progress,
+        requiredProgress,
+        shouldShow,
+        currentShowQuizSection: showQuizSection
+      });
+      
+      if (shouldShow !== showQuizSection) {
+        setShowQuizSection(shouldShow);
+        console.log('Immediate quiz section visibility updated:', shouldShow);
+      }
+    }
+  }, [progress, quizData?.length, coursesData?.is_sequential, showQuizSection]);
+
+  // Initialize quiz section visibility on data load
+  useEffect(() => {
+    if (quizData && quizData.length > 0 && coursesData && progressData) {
+      const requiredProgress = coursesData.is_sequential === 1 ? 100 : 80;
+      const shouldShow = progressData.progress >= requiredProgress;
+      
+      console.log('Initialize quiz section visibility:', {
+        progressData: progressData.progress,
+        requiredProgress,
+        shouldShow,
+        currentShowQuizSection: showQuizSection
+      });
+      
+      setShowQuizSection(shouldShow);
+      console.log('Quiz section visibility initialized:', shouldShow);
+    }
+  }, [quizData?.length, coursesData?.is_sequential, progressData?.progress]);
+
+  // Update quiz section visibility when watched videos change
+  useEffect(() => {
+    if (quizData && quizData.length > 0 && coursesData && watchedVideos.length > 0) {
+      const allVideos = coursesData.sections.flatMap(section => section.videos || []);
+      const allVideoIds = allVideos.map(v => String(v.id));
+      const watchedInThisCourse = watchedVideos.filter(watchedId => 
+        allVideoIds.includes(String(watchedId))
+      );
+      const totalVideos = allVideos.length;
+      const watchedCount = watchedInThisCourse.length;
+      const calculatedProgress = totalVideos > 0 ? Math.min(Math.round((watchedCount / totalVideos) * 100), 100) : 0;
+      const requiredProgress = coursesData.is_sequential === 1 ? 100 : 80;
+      const shouldShow = calculatedProgress >= requiredProgress;
+      
+      console.log('Quiz section visibility from watched videos:', {
+        totalVideos,
+        watchedCount,
+        calculatedProgress,
+        requiredProgress,
+        shouldShow,
+        currentShowQuizSection: showQuizSection
+      });
+      
+      setShowQuizSection(shouldShow);
+      console.log('Quiz section visibility updated from watched videos:', shouldShow);
+    }
+  }, [watchedVideos, quizData?.length, coursesData?.sections, coursesData?.is_sequential]);
+
+  // Fetch quiz immediately when progress reaches required threshold
+  useEffect(() => {
+    if (coursesData && progress > 0 && token && id) {
+      const requiredProgress = coursesData.is_sequential === 1 ? 100 : 80;
+      
+      if (progress >= requiredProgress && (!quizData || quizData.length === 0)) {
+        console.log('Progress reached required threshold, fetching quiz immediately:', {
+          progress,
+          requiredProgress,
+          hasQuizData: !!quizData,
+          quizDataLength: quizData?.length || 0
+        });
+        
+        refetchQuiz();
+      }
+    }
+  }, [progress, coursesData?.is_sequential, quizData?.length, token, id, refetchQuiz]);
+
+  // Show quiz section immediately when quiz data is loaded and progress is sufficient
+  useEffect(() => {
+    if (quizData && quizData.length > 0 && coursesData && progress > 0) {
+      const requiredProgress = coursesData.is_sequential === 1 ? 100 : 80;
+      const shouldShow = progress >= requiredProgress;
+      
+      console.log('Quiz data loaded, checking visibility:', {
+        quizDataLength: quizData.length,
+        progress,
+        requiredProgress,
+        shouldShow,
+        currentShowQuizSection: showQuizSection
+      });
+      
+      if (shouldShow && !showQuizSection) {
+        setShowQuizSection(true);
+        console.log('Quiz section shown immediately after quiz data loaded');
+      }
+    }
+  }, [quizData?.length, coursesData?.is_sequential, progress, showQuizSection]);
+
+  // Force show quiz section when progress reaches threshold (even without quiz data)
+  useEffect(() => {
+    if (coursesData && progress > 0) {
+      const requiredProgress = coursesData.is_sequential === 1 ? 100 : 80;
+      const shouldShow = progress >= requiredProgress;
+      
+      console.log('Force quiz section visibility check:', {
+        progress,
+        requiredProgress,
+        shouldShow,
+        currentShowQuizSection: showQuizSection,
+        hasQuizData: !!quizData,
+        quizDataLength: quizData?.length || 0
+      });
+      
+      if (shouldShow && !showQuizSection) {
+        setShowQuizSection(true);
+        console.log('Quiz section force shown due to progress threshold');
+      }
+    }
+  }, [progress, coursesData?.is_sequential, showQuizSection, quizData?.length]);
+
+  // Initialize first video function
+  const initializeFirstVideo = useCallback(async () => {
+    if (coursesData?.sections?.[0]?.videos?.[0] && !isChangingVideo && !currentVideo) {
+      setIsChangingVideo(true);
+      const firstVideo = coursesData.sections[0].videos[0];
+      
+      // Set current video and show it immediately
+      setCurrentVideo(firstVideo);
+      setShowCover(false);
+
+      // Check if first video is already watched
+      const isFirstVideoWatched = watchedVideos.some(watchedId => 
+        String(watchedId) === String(firstVideo.id)
+      );
+
+      // Only mark as watched if not already watched
+      if (!isFirstVideoWatched) {
+        try {
+          await markVideoAsWatched({ token, videoId: firstVideo.id });
+          await refetchWatched();
+          console.log('First video marked as watched');
+        } catch (err) {
+          console.error('Error marking first video as watched:', err);
+        }
+      } else {
+        console.log('First video already watched');
+      }
+      setIsChangingVideo(false);
+    }
+  }, [coursesData?.sections, isChangingVideo, currentVideo, token, markVideoAsWatched, refetchWatched, updateProgress, id, refetchProgress, watchedVideos]);
 
   // Set and mark first video as watched when course data is loaded
   useEffect(() => {
-    const initializeFirstVideo = async () => {
-      if (coursesData?.sections?.[0]?.videos?.[0] && !currentVideo && !isChangingVideo) {
-        setIsChangingVideo(true);
-        const firstVideo = coursesData.sections[0].videos[0];
-        setCurrentVideo(firstVideo);
-        setShowCover(false);
-
-        // Mark first video as watched if not already watched
-        if (!watchedVideos.map(String).includes(String(firstVideo.id))) {
-          try {
-            await markVideoAsWatched({ token, videoId: firstVideo.id });
-            await refetchWatched();
-            
-                    // Calculate new progress
-        const allVideos = coursesData.sections.flatMap(section => section.videos || []);
-        const totalVideos = allVideos.length;
-        const newWatchedVideos = [...watchedVideos, firstVideo.id];
-        const watchedCount = newWatchedVideos.length;
-        const newProgress = Math.min(Math.round((watchedCount / totalVideos) * 100), 100);
-            
-            // Update progress in backend
-            await updateProgress({
-              token,
-              courseId: id,
-              progress: newProgress,
-              videosCompleted: newProgress === 100
-            });
-            await refetchProgress();
-          } catch (err) {
-            console.error('Error marking first video as watched:', err);
-          }
-        }
-        setIsChangingVideo(false);
-      }
-    };
-
     if (coursesData && token) {
       initializeFirstVideo();
     }
-  }, [coursesData, token, watchedVideos, currentVideo, isChangingVideo]);
+  }, [coursesData, token, initializeFirstVideo]);
 
-  const handleVideoClick = async (video) => {
+  // Function to update progress when watching a video
+  const updateProgressWhenWatchingVideo = useCallback(async (videoId) => {
+    console.log('Updating progress for video:', videoId);
+    await calculateAndUpdateProgress();
+  }, [calculateAndUpdateProgress]);
+
+  const handleVideoClick = useCallback(async (video) => {
+    console.log('Video click:', {
+      videoId: video.id,
+      currentVideoId: currentVideo?.id,
+      isChangingVideo,
+      isSequential: coursesData?.is_sequential,
+      isAccessible: isVideoAccessible(video),
+      watchedVideos
+    });
+    
     if (video.id === currentVideo?.id || isChangingVideo) return; // Don't reload if it's the same video or if we're already changing videos
     
     // Check if video is accessible in sequential mode
     if (!isVideoAccessible(video)) {
+      console.log('Video not accessible:', video.id);
       toast.error(
         lang === 'ar' 
           ? 'يجب عليك مشاهدة الفيديو السابق أولاً' 
@@ -209,68 +520,81 @@ const ViewVideo = () => {
     setShowCover(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    if (!watchedVideos.map(String).includes(String(video.id))) {
+    // Check if video is already watched
+    const isAlreadyWatched = watchedVideos.some(watchedId => 
+      String(watchedId) === String(video.id)
+    );
+    
+    // Only mark as watched and update progress if video is not already watched
+    if (!isAlreadyWatched) {
       try {
         await markVideoAsWatched({ token, videoId: video.id });
         await refetchWatched();
         
-        // Calculate new progress after marking video as watched
-        const allVideos = coursesData.sections.flatMap(section => section.videos || []);
-        const totalVideos = allVideos.length;
-        const newWatchedVideos = [...watchedVideos, video.id];
-        const watchedCount = newWatchedVideos.length;
-        const newProgress = Math.min(Math.round((watchedCount / totalVideos) * 100), 100);
-        
-        // Update progress in backend
-        try {
-          await updateProgress({
-            token,
-            courseId: id,
-            progress: newProgress,
-            videosCompleted: newProgress === 100
-          });
-          await refetchProgress();
-        } catch (err) {
-          console.error('Error updating progress:', err);
-        }
+        // Update progress when watching new video
+        await updateProgressWhenWatchingVideo(video.id);
       } catch (err) {
         console.error('Error marking video as watched:', err);
       }
     }
     setIsChangingVideo(false);
-  };
+  }, [currentVideo?.id, isChangingVideo, coursesData?.is_sequential, isVideoAccessible, watchedVideos, markVideoAsWatched, refetchWatched, updateProgressWhenWatchingVideo, token, lang, isDark]);
 
   // Add video completion tracking
   useEffect(() => {
-    if (currentVideo && !watchedVideos.map(String).includes(String(currentVideo.id))) {
-      const videoElement = document.querySelector('iframe');
-      if (videoElement) {
-        // Add message listener for video progress
-        const handleMessage = async (event) => {
-          // Check if message is from Vimeo
-          if (event.origin === "https://player.vimeo.com") {
-            try {
-              const data = JSON.parse(event.data);
-              // Check if video ended
-              if (data.event === 'ended') {
-                await handleVideoClick(currentVideo);
+    if (currentVideo) {
+      const isAlreadyWatched = watchedVideos.some(watchedId => 
+        String(watchedId) === String(currentVideo.id)
+      );
+      
+      if (!isAlreadyWatched) {
+        const videoElement = document.querySelector('iframe');
+        if (videoElement) {
+          // Add message listener for video progress
+          const handleMessage = async (event) => {
+            // Check if message is from Vimeo
+            if (event.origin === "https://player.vimeo.com") {
+              try {
+                const data = JSON.parse(event.data);
+                // Check if video ended
+                if (data.event === 'ended') {
+                  await handleVideoClick(currentVideo);
+                }
+              } catch (e) {
+                // Ignore parsing errors
               }
-            } catch (e) {
-              // Ignore parsing errors
             }
-          }
-        };
+          };
 
-        window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
+          window.addEventListener('message', handleMessage);
+          return () => window.removeEventListener('message', handleMessage);
+        }
       }
     }
-  }, [currentVideo, watchedVideos]);
+  }, [currentVideo?.id, watchedVideos]); // Only depend on currentVideo.id instead of entire currentVideo object
 
   // Remove quiz modal functions since we don't need the 70% popup anymore
 
+  // Initialize progress from backend data (only if no progress is set yet and no watched videos calculation)
+  useEffect(() => {
+    if (progressData && progressData.progress !== undefined && progress === 0 && watchedVideos.length === 0) {
+      setProgress(progressData.progress);
+      setPreviousProgress(progressData.progress);
+      console.log('Initialized progress from backend:', progressData.progress);
+    }
+  }, [progressData?.progress, progress, watchedVideos.length]); // Only depend on progressData.progress, not the entire progressData object
+
+  // Ensure first video is loaded when course data is first loaded
+  useEffect(() => {
+    if (coursesData?.sections?.[0]?.videos?.[0] && !currentVideo && !isLoading) {
+      const firstVideo = coursesData.sections[0].videos[0];
+      setCurrentVideo(firstVideo);
+      setShowCover(false);
+      console.log('First video set as current video:', firstVideo.id);
+    }
+  }, [coursesData?.sections, isLoading, currentVideo]); // Added currentVideo back to ensure it runs when needed
+
   // State to track the previous progress to detect when it reaches 100%
-  const [previousProgress, setPreviousProgress] = useState(0);
   
   // Function to check if final quiz popup has been shown for this course
   const hasFinalQuizPopupBeenShown = () => {
@@ -372,38 +696,6 @@ const ViewVideo = () => {
     }
   };
 
-  // Update progress whenever watched videos change
-  useEffect(() => {
-    const updateCourseProgress = async () => {
-      if (coursesData?.sections && watchedVideos.length >= 0) {
-        const allVideos = coursesData.sections.flatMap(section => section.videos || []);
-        const allVideoIds = allVideos.map(v => String(v.id));
-        const watchedInThisCourse = watchedVideos.filter(id => allVideoIds.includes(String(id)));
-        const totalVideos = allVideos.length;
-        const watchedCount = watchedInThisCourse.length;
-        const calculatedProgress = totalVideos > 0 ? Math.min(Math.round((watchedCount / totalVideos) * 100), 100) : 0;
-        
-        if (calculatedProgress !== progress) {
-          console.log('Progress updated from', progress, 'to', calculatedProgress);
-          setProgress(calculatedProgress);
-          try {
-            await updateProgress({
-              token,
-              courseId: id,
-              progress: calculatedProgress,
-              videosCompleted: calculatedProgress >= 100
-            });
-            await refetchProgress();
-          } catch (err) {
-            console.error('Error updating progress:', err);
-          }
-        }
-      }
-    };
-
-    updateCourseProgress();
-  }, [coursesData, watchedVideos, quizData, progress, token, id, updateProgress, refetchProgress]);
-
   // Show popup when progress reaches the required percentage based on sequential mode
   useEffect(() => {
     console.log('Progress check:', progress, 'Previous progress:', previousProgress, 'Quiz data:', quizData?.length, 'Has been shown:', hasFinalQuizPopupBeenShown(), 'Sequential mode:', coursesData?.is_sequential);
@@ -422,7 +714,7 @@ const ViewVideo = () => {
     
     // Update previous progress
     setPreviousProgress(progress);
-  }, [progress, quizData, previousProgress, id, coursesData?.is_sequential]);
+  }, [progress, quizData?.length, id, coursesData?.is_sequential]); // Removed previousProgress from dependencies to prevent infinite loop
 
   // Clean up expired popups on component mount and set up periodic cleanup
   useEffect(() => {
@@ -442,21 +734,21 @@ const ViewVideo = () => {
 
   // Initialize previous progress when progress data is loaded
   useEffect(() => {
-    if (progressData && progress !== undefined) {
-      setPreviousProgress(progress);
-      console.log('Initialized previous progress to:', progress);
+    if (progressData?.progress !== undefined) {
+      setPreviousProgress(progressData.progress);
+      console.log('Initialized previous progress to:', progressData.progress);
       
       // Determine the required progress based on sequential mode
       const requiredProgress = coursesData?.is_sequential === 1 ? 100 : 80;
       
       // Also check if we should show popup on initial load (in case user already has required progress)
-      if (progress >= requiredProgress && !hasFinalQuizPopupBeenShown() && quizData?.length > 0) {
+      if (progressData.progress >= requiredProgress && !hasFinalQuizPopupBeenShown() && quizData?.length > 0) {
         console.log(`User already has ${requiredProgress}% progress! Showing final quiz popup!`);
         setShowFinalQuizPopup(true);
         markFinalQuizPopupAsShown();
       }
     }
-  }, [progressData, progress, quizData, id, coursesData?.is_sequential]);
+  }, [progressData?.progress, quizData?.length, id, coursesData?.is_sequential]); // Use specific properties instead of entire objects
 
   // Add debug logging
   useEffect(() => {
@@ -469,7 +761,7 @@ const ViewVideo = () => {
     console.log('Has Final Quiz Popup Been Shown:', hasFinalQuizPopupBeenShown());
     console.log('Show Final Quiz Popup State:', showFinalQuizPopup);
     console.log('==================');
-  }, [quizData, progress, previousProgress, id, token, showFinalQuizPopup]);
+  }, [quizData?.length, progress, previousProgress, id, token, showFinalQuizPopup]); // Use quizData.length instead of entire quizData object
 
   if (isLoading || progressLoading || quizLoading) return <LoadingPage />;
   
@@ -558,7 +850,7 @@ const ViewVideo = () => {
   const course = coursesData;
 
   return (
-    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full mt-22 flex flex-col min-h-screen ${isDark ? 'bg-[#0A0A0A] text-white' : 'bg-[#F9FAFB] text-gray-900'}`}>
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full mt-22 flex flex-col min-h-screen ${isDark ? 'bg-[#0A0A0A] text-white' : 'bg-[#F9FAFB] text-gray-900'} `}>
       {/* Top Navigation Bar */}
       <div className={`sticky top-0 z-40 w-full ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-md border-b ${isDark ? 'border-gray-800' : 'border-gray-200'} px-4 py-3`}>
         <div className="max-w-[1920px] mx-auto flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
@@ -672,7 +964,9 @@ const ViewVideo = () => {
                   <div className="space-y-2">
                     {section?.videos && section.videos.length > 0 ? (
                       section.videos.map((video) => {
-                        const isWatched = watchedVideos.map(String).includes(String(video.id));
+                        const isWatched = watchedVideos.some(watchedId => 
+                          String(watchedId) === String(video.id)
+                        );
                         const isActive = currentVideo?.id === video.id;
                         return (
                           <button
@@ -780,7 +1074,7 @@ const ViewVideo = () => {
               {/* Video Details */}
               <div className="mt-4 sm:mt-6 space-y-4">
                 <div className={`p-4 sm:p-6 rounded-xl ${isDark ? 'bg-gray-900/50' : 'bg-white'} shadow-lg backdrop-blur-sm`}>
-                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-2">
+                  <h2 className={`text-lg sm:text-xl md:text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     {currentVideo?.title?.[lang] || currentVideo?.title?.en || currentVideo?.title || 
                      course?.sections?.[0]?.videos?.[0]?.title?.[lang] || 
                      course?.sections?.[0]?.videos?.[0]?.title?.en || 
@@ -845,12 +1139,6 @@ const ViewVideo = () => {
                         {quiz.description}
                       </p>
                       <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                          </svg>
-                          <span className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{lang === 'ar' ? 'درجة النجاح:' : 'Passing Score:'} {quiz.passing_score}%</span>
-                        </div>
                         <div className="flex items-center gap-2">
                           <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -953,14 +1241,14 @@ const ViewVideo = () => {
                         >
                           <div
                             className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-                              watchedVideos.map(String).includes(String(video.id))
+                              watchedVideos.some(watchedId => String(watchedId) === String(video.id))
                                 ? 'bg-green-500'
                                 : isDark
                                 ? 'bg-gray-700'
                                 : 'bg-gray-200'
                             }`}
                           >
-                            {watchedVideos.map(String).includes(String(video.id)) ? (
+                            {watchedVideos.some(watchedId => String(watchedId) === String(video.id)) ? (
                               <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
                                 <path
                                   fillRule="evenodd"
@@ -1005,6 +1293,102 @@ const ViewVideo = () => {
           </div>
         </div>
       </div>
+
+      {/* Quiz Section - Fixed at Bottom */}
+      {/* {showQuizSection && coursesData && (
+        <div className={`fixed bottom-0 left-0 right-0 z-40 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-md border-t ${isDark ? 'border-gray-700' : 'border-gray-200'} shadow-xl`}>
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-blue-500/20' : 'bg-blue-100'} shadow-lg`}>
+                  <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {lang === 'ar' ? 'الاختبار النهائي' : 'Final Quiz'}
+                  </h3>
+                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} font-medium`}>
+                    {lang === 'ar' 
+                      ? coursesData?.is_sequential === 1 
+                        ? `أكمل جميع الفيديوهات للوصول للاختبار (${progress}/100%)`
+                        : `أكمل 80% من الدورة للوصول للاختبار (${progress}/80%)`
+                      : coursesData?.is_sequential === 1
+                        ? `Complete all videos to access the quiz (${progress}/100%)`
+                        : `Complete 80% of the course to access the quiz (${progress}/80%)`}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <div className={`text-sm font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {progress}%
+                  </div>
+                  <div className={`w-20 h-2 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'} overflow-hidden`}>
+                    <div 
+                      className={`h-full rounded-full transition-all duration-700 ${
+                        progress >= (coursesData?.is_sequential === 1 ? 100 : 80) 
+                          ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                          : 'bg-gradient-to-r from-blue-500 to-blue-600'
+                      }`}
+                      style={{ width: `${Math.min(progress, 100)}%` }}
+                    />
+                  </div>
+                  <div className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {coursesData?.is_sequential === 1 ? '100%' : '80%'}
+                  </div>
+                </div>
+                
+                {progress >= (coursesData?.is_sequential === 1 ? 100 : 80) ? (
+                  quizData && quizData.length > 0 ? (
+                    <button
+                      onClick={() => {
+                        setShowFinalQuizPopup(true);
+                      }}
+                      className="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 font-medium flex items-center gap-2 shadow-lg hover:shadow-xl"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                      {lang === 'ar' ? 'ابدأ الاختبار' : 'Take Quiz'}
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className={`px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-all ${
+                        isDark 
+                          ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed border border-gray-600' 
+                          : 'bg-gray-200/50 text-gray-500 cursor-not-allowed border border-gray-300'
+                      }`}
+                    >
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      {lang === 'ar' ? 'جاري تحميل الاختبار...' : 'Loading Quiz...'}
+                    </button>
+                  )
+                ) : (
+                  <button
+                    disabled
+                    className={`px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-all ${
+                      isDark 
+                        ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed border border-gray-600' 
+                        : 'bg-gray-200/50 text-gray-500 cursor-not-allowed border border-gray-300'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M12 4a8 8 0 100 16 8 8 0 000-16z" />
+                    </svg>
+                    {lang === 'ar' ? 'أكمل الدورة أولاً' : 'Complete Course First'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )} */}
 
       {/* Notes Modal */}
       {showNotes && (
@@ -1072,6 +1456,19 @@ const ViewVideo = () => {
                     ? 'You have successfully completed all course videos! You can now take the final quiz to earn your course certificate.'
                     : 'You have completed 80% of the course! You can now take the final quiz to earn your course certificate.'}
               </p>
+              <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} bg-gray-100 dark:bg-gray-800 rounded-lg p-3 mt-2`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium">{lang === 'ar' ? 'معلومات الاختبار:' : 'Quiz Information:'}</span>
+                </div>
+                <ul className="space-y-1 text-left">
+                  <li>• {lang === 'ar' ? 'عدد الأسئلة:' : 'Questions:'} {quizData[0]?.questions?.length || 0}</li>
+                  <li>• {lang === 'ar' ? 'الوقت المطلوب:' : 'Time Required:'} {lang === 'ar' ? 'غير محدد' : 'Unlimited'}</li>
+                  <li>• {lang === 'ar' ? 'الدرجة المطلوبة:' : 'Passing Score:'} {lang === 'ar' ? '70%' : '70%'}</li>
+                </ul>
+              </div>
               <div className="flex gap-3 w-full mt-4">
                 <button
                   onClick={() => {
