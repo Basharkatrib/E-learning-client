@@ -17,6 +17,7 @@ const CourseCard = ({
   level,
   category,
   thumbnail_url,
+  price,
   isDark,
   showSaveButton = true,
   isSavedPage = false
@@ -146,6 +147,11 @@ const CourseCard = ({
                   {duration}
                 </span>
               </div>
+              <div className="flex items-center gap-2">
+              <span className={`px-3 py-1 rounded-full text-sm ${badgeBg}`}>
+                {price} {t('SYP')}
+              </span>
+            </div>
             </div>
           </div>
         </div>

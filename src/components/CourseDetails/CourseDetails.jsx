@@ -5,7 +5,7 @@ import { selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import FAQ from '../FAQ/FAQ';
-import { useGetCourseQuery, useEnrollUserMutation, useUnenrollUserMutation, useCourseEnrollmentsQuery } from '../../redux/features/apiSlice';
+import { useGetCourseQuery, useEnrollUserMutation, useUnenrollUserMutation, useCourseEnrollmentsQuery, useCheckPaymentStatusQuery } from '../../redux/features/apiSlice';
 import { selectToken, selectCurrentUser } from '../../redux/features/authSlice';
 import { useParams, useNavigate } from 'react-router-dom';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
@@ -49,10 +49,35 @@ export default function CourseDetails() {
     const { data, error, isLoading, refetch } = useGetCourseQuery(id, { refetchOnMountOrArgChange: true });
     const [isEnrolled, { isLoading: isCheckingEnrollment }] = useIsEnrolledMutation();
     const [enrollmentStatus, setEnrollmentStatus] = useState(false);
+    const [localEnrollmentStatus, setLocalEnrollmentStatus] = useState(false); // Local state for immediate updates
+    const [localPaymentStatus, setLocalPaymentStatus] = useState(null); // Local state for payment status
+    const [isUnenrollingLocal, setIsUnenrollingLocal] = useState(false); // Track local unenroll state
     const [unenrollUser, { isLoading: isUnenrolling }] = useUnenrollUserMutation();
     const { data: enrollmentsData, refetch: refetchEnrollments, error: enrollmentsError } = useCourseEnrollmentsQuery({ id, token }, {
         skip: !token
     });
+    
+    // Check payment status for paid courses - only once when page loads
+    const { data: paymentStatusData, refetch: refetchPaymentStatus, isLoading: isPaymentStatusLoading, error: paymentStatusError } = useCheckPaymentStatusQuery(
+        { token, courseId: id },
+        { 
+            skip: !token || !id || !data?.price || data?.price <= 0,
+            refetchOnMountOrArgChange: true
+            // Removed pollingInterval to prevent repeated requests
+        }
+    );
+
+    // Debug payment status
+    useEffect(() => {
+        console.log('=== PAYMENT STATUS DEBUG ===');
+        console.log('Course ID:', id);
+        console.log('Course Price:', data?.price);
+        console.log('Token exists:', !!token);
+        console.log('Payment Status Data:', paymentStatusData);
+        console.log('Payment Status Error:', paymentStatusError);
+        console.log('Payment Status Loading:', isPaymentStatusLoading);
+        console.log('===========================');
+    }, [paymentStatusData, paymentStatusError, isPaymentStatusLoading, id, data?.price, token]);
     const [showRating, setShowRating] = useState(false);
     const [rating, setRating] = useState(0);
     const [review, setReview] = useState('');
@@ -73,15 +98,128 @@ export default function CourseDetails() {
                         token
                     }).unwrap();
                     console.log(response);
-                    setEnrollmentStatus(response.isEnrolled === true);
+                    const isEnrolled = response.isEnrolled === true;
+                    setEnrollmentStatus(isEnrolled);
+                    setLocalEnrollmentStatus(isEnrolled);
                 } catch (error) {
                     setEnrollmentStatus(false);
+                    setLocalEnrollmentStatus(false);
                 }
             }
         };
 
         checkEnrollmentStatus();
     }, [user, token, id]);
+
+
+
+    // Check payment status once when course data is loaded
+    useEffect(() => {
+        if (data?.price > 0 && token && id) {
+            // Only refetch if we don't have payment status data yet
+            if (!paymentStatusData && !isPaymentStatusLoading) {
+                refetchPaymentStatus();
+            }
+        }
+    }, [data, token, id, paymentStatusData, isPaymentStatusLoading, refetchPaymentStatus]);
+
+    // Update local payment status when API data changes
+    useEffect(() => {
+        if (paymentStatusData && data?.price > 0) {
+            setLocalPaymentStatus(paymentStatusData.paymentStatus);
+        }
+    }, [paymentStatusData, data?.price]);
+
+    // Update enrollment status when payment status changes
+    useEffect(() => {
+        if (data?.price > 0 && paymentStatusData) {
+            console.log('Payment status changed:', paymentStatusData);
+            if (paymentStatusData.paymentStatus === 'paid' || paymentStatusData.enrollmentStatus === 'accepted') {
+                setEnrollmentStatus(true);
+                setLocalEnrollmentStatus(true);
+                setLocalPaymentStatus(paymentStatusData.paymentStatus);
+                console.log('Setting enrollment status to true');
+            } else if (paymentStatusData.paymentStatus === 'rejected' || paymentStatusData.enrollmentStatus === 'rejected') {
+                setEnrollmentStatus(false);
+                setLocalEnrollmentStatus(false);
+                setLocalPaymentStatus(paymentStatusData.paymentStatus);
+                console.log('Setting enrollment status to false');
+            }
+        }
+    }, [paymentStatusData, data?.price]);
+
+    // Force refetch payment status when enrollment status changes (for paid courses)
+    useEffect(() => {
+        if (data?.price > 0 && !enrollmentStatus && token && id) {
+            // If enrollment status is false and it's a paid course, refetch payment status
+            refetchPaymentStatus();
+        }
+    }, [enrollmentStatus, data?.price, token, id, refetchPaymentStatus]);
+
+    // Update local payment status when local enrollment status changes (for immediate UI updates)
+    useEffect(() => {
+        if (!localEnrollmentStatus && data?.price > 0) {
+            // If user unenrolled, immediately set payment status to null
+            setLocalPaymentStatus(null);
+            console.log('Local enrollment status changed to false - setting payment status to null');
+        }
+    }, [localEnrollmentStatus, data?.price]);
+
+    // Helper function to determine if user can access course
+    const canAccessCourse = () => {
+        console.log('=== CAN ACCESS COURSE DEBUG ===');
+        console.log('Course Price:', data?.price);
+        console.log('Enrollment Status:', enrollmentStatus);
+        console.log('Local Enrollment Status:', localEnrollmentStatus);
+        console.log('Payment Status Data:', paymentStatusData);
+        console.log('Payment Status Error:', paymentStatusError);
+        
+        // If local enrollment status is false, user cannot access regardless of payment status
+        if (!localEnrollmentStatus) {
+            console.log('Local enrollment status is false - cannot access');
+            return false;
+        }
+        
+        if (data?.price <= 0) {
+            console.log('Free course - using local enrollment status:', localEnrollmentStatus);
+            return localEnrollmentStatus; // For free courses, use local enrollment status
+        } else {
+            // For paid courses, use payment status
+            if (!paymentStatusData) {
+                console.log('No payment status data - cannot access');
+                return false;
+            }
+            const canAccess = paymentStatusData.paymentStatus === 'paid' || paymentStatusData.enrollmentStatus === 'accepted';
+            console.log('Paid course - payment status:', paymentStatusData.paymentStatus, 'enrollment status:', paymentStatusData.enrollmentStatus, 'can access:', canAccess);
+            return canAccess;
+        }
+    };
+
+    // Helper function to get payment status for paid courses
+    const getPaymentStatus = () => {
+        console.log('=== GET PAYMENT STATUS DEBUG ===');
+        console.log('Course Price:', data?.price);
+        console.log('Payment Status Data:', paymentStatusData);
+        console.log('Local Payment Status:', localPaymentStatus);
+        console.log('Is Unenrolling Local:', isUnenrollingLocal);
+        console.log('Payment Status Error:', paymentStatusError);
+        
+        if (data?.price <= 0) {
+            console.log('Free course - no payment status');
+            return null;
+        }
+        
+        // If user is unenrolling locally, return null immediately
+        if (isUnenrollingLocal) {
+            console.log('User is unenrolling - returning null');
+            return null;
+        }
+        
+        // Use local payment status if available, otherwise use API data
+        const status = localPaymentStatus !== null ? localPaymentStatus : (paymentStatusData?.paymentStatus || null);
+        console.log('Final Payment Status:', status);
+        return status;
+    };
 
     useEffect(() => {
         if (myRatingData && myRatingData.rating) {
@@ -109,7 +247,12 @@ export default function CourseDetails() {
             setShowCongrats(true);
             toast.success(lang === 'ar' ? 'تم التسجيل بنجاح!' : 'Enrolled successfully!');
             refetchEnrollments();
+            
+            // Update local state immediately
             setEnrollmentStatus(true);
+            setLocalEnrollmentStatus(true);
+            setLocalPaymentStatus('paid'); // Set payment status to paid for free courses
+            
             setTimeout(() => {
                 setShowCongrats(false);
                 navigate(`/courses/${id}/videos`);
@@ -140,13 +283,33 @@ export default function CourseDetails() {
 
     const handleUnenrollConfirm = async () => {
         try {
+            setIsUnenrollingLocal(true); // Set local unenrolling state
             await unenrollUser({ id, token }).unwrap();
             setShowUnenrollConfirm(false);
             setShowUnenrollSuccess(true);
             toast.success(lang === 'ar' ? 'تم إلغاء التسجيل بنجاح' : 'Unenrolled successfully');
+            
+            // Update local state immediately - this will make canAccessCourse return false immediately
             setEnrollmentStatus(false);
+            setLocalEnrollmentStatus(false);
+            setLocalPaymentStatus(null); // Reset payment status immediately
+            
             refetchEnrollments();
+            
+            // Force refetch payment status to update buttons immediately
+            if (data?.price > 0) {
+                // Clear payment status data immediately to show checkout button
+                setTimeout(() => {
+                    refetchPaymentStatus();
+                }, 500); // Small delay to ensure backend has processed the unenroll
+            }
+            
+            // Reset local unenrolling state after a short delay
+            setTimeout(() => {
+                setIsUnenrollingLocal(false);
+            }, 1000);
         } catch (error) {
+            setIsUnenrollingLocal(false);
             toast.error(lang === 'ar' ? 'حدث خطأ أثناء الإلغاء' : 'Error during unenrollment');
             setShowUnenrollConfirm(false);
         }
@@ -271,6 +434,181 @@ export default function CourseDetails() {
         transition: { duration: 0.5 }
     };
 
+    // Helper function to render action buttons based on course access and payment status
+    const renderActionButtons = () => {
+        const canAccess = canAccessCourse();
+        console.log('=== RENDER ACTION BUTTONS DEBUG ===');
+        console.log('Can Access Course:', canAccess);
+        console.log('Course Price:', data?.price);
+        console.log('Payment Status:', getPaymentStatus());
+        console.log('===========================');
+
+        if (canAccess) {
+            // User can access the course - show unenroll and watch videos buttons
+            return (
+                <div className="flex gap-3 items-center">
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleUnenroll}
+                        disabled={isCheckingEnrollment}
+                        className={`px-3 md:px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-sm md:text-lg flex items-center gap-2
+                            bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white
+                            disabled:opacity-50 disabled:cursor-not-allowed
+                            ${isCheckingEnrollment ? 'bg-gray-400' : ''}`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        {isCheckingEnrollment
+                            ? (lang === 'ar' ? 'يرجى الانتظار...' : 'Please wait...')
+                            : (lang === 'ar' ? 'إلغاء التسجيل من الدورة' : 'Unenroll from course')}
+                    </motion.button>
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.97 }}
+                    >
+                        <Link
+                            to={`/courses/${id}/videos`}
+                            className={`px-3 md:px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-sm md:text-lg flex items-center gap-2
+                                bg-gradient-to-r from-primary to-blue-600 hover:from-blue-700 hover:to-primary text-white`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-5.197-3.027A1 1 0 008 9.027v5.946a1 1 0 001.555.832l5.197-3.027a1 1 0 000-1.664z" />
+                                <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="2" fill="none" />
+                            </svg>
+                            {lang === 'ar' ? 'مشاهدة الفيديوهات' : 'Watch Videos'}
+                        </Link>
+                    </motion.div>
+                </div>
+            );
+        }
+
+        // User cannot access the course
+        if (data.price > 0) {
+            // Paid course - check payment status
+            if (isPaymentStatusLoading) {
+                return (
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.97 }}
+                    >
+                        <button
+                            disabled
+                            className={`px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-lg flex items-center gap-2
+                                bg-gray-400 text-white opacity-50 cursor-not-allowed`}
+                        >
+                            <svg className="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            {lang === 'ar' ? 'جاري التحقق...' : 'Checking...'}
+                        </button>
+                    </motion.div>
+                );
+            }
+
+            const paymentStatus = getPaymentStatus();
+
+            if (paymentStatus === 'pending') {
+                return (
+                    <div className="flex flex-col gap-3">
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.97 }}
+                        >
+                            <div className={`px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-lg flex items-center gap-2
+                                bg-gradient-to-r from-yellow-500 to-orange-500 text-white`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {lang === 'ar' ? 'الدفع قيد المعالجة' : 'Payment Pending'}
+                            </div>
+                        </motion.div>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => {
+                                refetchPaymentStatus();
+                                toast.success(lang === 'ar' ? 'جاري تحديث حالة الدفع...' : 'Updating payment status...');
+                            }}
+                            className={`px-6 py-2 rounded-lg font-semibold shadow-md transition-all duration-300 text-sm flex items-center gap-2
+                                bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            {lang === 'ar' ? 'تحديث حالة الدفع' : 'Refresh Payment Status'}
+                        </motion.button>
+                    </div>
+                );
+            }
+
+            if (paymentStatus === 'rejected') {
+                return (
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.97 }}
+                    >
+                        <Link
+                            to={`/checkout/${id}`}
+                            className={`px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-lg flex items-center gap-2
+                                bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                            {lang === 'ar' ? 'إعادة الدفع' : 'Retry Payment'}
+                        </Link>
+                    </motion.div>
+                );
+            }
+
+            // Default: Show checkout button for paid courses
+            return (
+                <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.97 }}
+                >
+                    <Link
+                        to={`/checkout/${id}`}
+                        className={`px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-lg flex items-center gap-2
+                            bg-gradient-to-r from-primary to-blue-600 hover:from-blue-700 hover:to-primary text-white`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        {lang === 'ar' ? 'اذهب للدفع' : 'Go to Checkout'}
+                    </Link>
+                </motion.div>
+            );
+        } else {
+            // Free course - show register button
+            return (
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleRegister}
+                    disabled={isCheckingEnrollment}
+                    className={`px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-lg flex items-center gap-2
+                        bg-gradient-to-r from-primary to-blue-600 hover:from-blue-700 hover:to-primary text-white
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                        ${isCheckingEnrollment ? 'bg-gray-400' : ''}`}
+                >
+                    {isCheckingEnrollment
+                        ? (lang === 'ar' ? 'يرجى الانتظار...' : 'Please wait...')
+                        : (lang === 'ar' ? 'سجل مجاناً' : 'Register for free')
+                    }
+                    {!isCheckingEnrollment && (
+                        <span className="block text-xs font-normal mt-1">
+                            {lang === 'ar' ? 'تبدأ في' : 'Starts'} {dummyCourse.stats.startDate}
+                        </span>
+                    )}
+                </motion.button>
+            );
+        }
+    };
+
     return (
         <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen mt-22 w-full ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
             {showConfirm && (
@@ -369,7 +707,7 @@ export default function CourseDetails() {
                     <p className={`text-lg mb-2 font-medium text-gray-700 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.description?.[lang]}</p>
                     
                     {/* Rating Section - Compact Professional Design */}
-                    {enrollmentStatus && (
+                    {canAccessCourse() && (
                         <div className="mb-6">
                             {!hideRating && myRatingData && myRatingData.rating ? (
                                 <div className="flex items-center gap-4">
@@ -528,73 +866,37 @@ export default function CourseDetails() {
                             {data.teacher?.name || (lang === 'ar' ? 'غير محدد' : 'Not specified')}
                         </span>
                     </div>
+                    
+                    {/* Course Price */}
+                    {data.price && (
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="text-sm font-semibold text-primary">{lang === 'ar' ? 'السعر:' : 'Price:'}</span>
+                            <span className={`text-lg font-bold text-green-600 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                                {data.price} {t('SYP')}
+                            </span>
+                            {data.original_price && data.original_price > data.price && (
+                                <span className={`text-sm line-through text-gray-500 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                                    {data.original_price} {t('SYP')}
+                                </span>
+                            )}
+                        </div>
+                    )}
                     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-4">
-                        {!enrollmentStatus ? (
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.97 }}
-                                onClick={handleRegister}
-                                disabled={isCheckingEnrollment}
-                                className={`px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-lg flex items-center gap-2
-                                    bg-gradient-to-r from-primary to-blue-600 hover:from-blue-700 hover:to-primary text-white
-                                    disabled:opacity-50 disabled:cursor-not-allowed
-                                    ${isCheckingEnrollment ? 'bg-gray-400' : ''}`}
-                            >
-                                {isCheckingEnrollment
-                                    ? (lang === 'ar' ? 'يرجى الانتظار...' : 'Please wait...')
-                                    : (lang === 'ar' ? 'سجل مجاناً' : 'Register for free')}
-                                {!isCheckingEnrollment && (
-                                    <span className="block text-xs font-normal mt-1">
-                                        {lang === 'ar' ? 'تبدأ في' : 'Starts'} {dummyCourse.stats.startDate}
-                                    </span>
-                                )}
-                            </motion.button>
-                        ) : (
-                            <div className="flex gap-3 items-center">
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.97 }}
-                                    onClick={handleUnenroll}
-                                    disabled={isCheckingEnrollment}
-                                    className={`px-3 md:px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-sm md:text-lg flex items-center gap-2
-                                        bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white
-                                        disabled:opacity-50 disabled:cursor-not-allowed
-                                        ${isCheckingEnrollment ? 'bg-gray-400' : ''}`}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                    {isCheckingEnrollment
-                                        ? (lang === 'ar' ? 'يرجى الانتظار...' : 'Please wait...')
-                                        : (lang === 'ar' ? 'إلغاء التسجيل من الدورة' : 'Unenroll from course')}
-                                </motion.button>
-                                {/* زر مشاهدة الفيديوهات */}
-                                <motion.div
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.97 }}
-                                >
-                                    <Link
-                                        to={`/courses/${id}/videos`}
-                                        className={`px-3 md:px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 text-sm md:text-lg flex items-center gap-2
-                                            bg-gradient-to-r from-primary to-blue-600 hover:from-blue-700 hover:to-primary text-white
-                                            ${isDark ? '' : ''}`}
-                                    >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-5.197-3.027A1 1 0 008 9.027v5.946a1 1 0 001.555.832l5.197-3.027a1 1 0 000-1.664z" />
-                                        <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="2" fill="none" />
-                                    </svg>
-                                    {lang === 'ar' ? 'مشاهدة الفيديوهات' : 'Watch Videos'}
-                                    </Link>
-                                </motion.div>
-                            </div>
-                        )}
-
+                        {renderActionButtons()}
                         <span className={`text-xs text-gray-500 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mt-2 sm:mt-0`}>
                             {(enrollmentsData?.data?.length || 0).toLocaleString()} {lang === 'ar' ? 'مسجل بالفعل' : 'already registered'}
                         </span>
                     </div>
                     <div className={`text-sm text-gray-500 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>
-                        {lang === 'ar' ? 'جرّب مجاناً: سجّل لبدء تجربتك المجانية مع وصول كامل لمدة 7 أيام.' : 'Try for free: Sign up to start your free trial with full access for 7 days.'}
+                        {data.price > 0 && getPaymentStatus() === 'pending' ? (
+                            lang === 'ar' 
+                                ? 'تم إرسال طلب الدفع الخاص بك. يرجى انتظار تأكيد المدرس للدفع.'
+                                : 'Your payment request has been sent. Please wait for teacher confirmation.'
+                        ) : (
+                            lang === 'ar' 
+                                ? 'جرّب مجاناً: سجّل لبدء تجربتك المجانية مع وصول كامل لمدة 7 أيام.' 
+                                : 'Try for free: Sign up to start your free trial with full access for 7 days.'
+                        )}
                     </div>
                 </div>
                 <div className="flex-shrink-0 w-full md:w-80 h-48 md:h-64 rounded-2xl overflow-hidden shadow-xl bg-gray-200 dark:bg-gray-800">
@@ -636,6 +938,12 @@ export default function CourseDetails() {
                     <span className="font-bold text-lg">{t(dummyCourse.stats.schedule)}</span>
                     <span className={`text-xs text-gray-500 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{t('Learn at your own pace')}</span>
                 </div>
+                {data.price && (
+                    <div className="flex-1 flex flex-col items-center md:items-start">
+                        <span className="font-bold text-lg text-green-600">{data.price} {t('SYP')}</span>
+                        <span className={`text-xs text-gray-500 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{lang === 'ar' ? 'سعر الدورة' : 'Course Price'}</span>
+                    </div>
+                )}
             </motion.div>
 
             {/* Content Container for consistent padding */}
@@ -770,16 +1078,126 @@ export default function CourseDetails() {
 
                     {/* Call to Action */}
                     <div className="text-center mt-12">
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-8 py-4 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                        >
-                            {t('Start Learning Now')}
-                        </motion.button>
+                        {!canAccessCourse() ? (
+                            data.price > 0 ? (
+                                // Check payment status for paid courses
+                                (() => {
+                                    if (isPaymentStatusLoading) {
+                                        return (
+                                            <motion.div
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                <button
+                                                    disabled
+                                                    className="inline-block px-8 py-4 bg-gray-400 text-white font-bold rounded-xl shadow-lg opacity-50 cursor-not-allowed"
+                                                >
+                                                    <svg className="animate-spin h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    {lang === 'ar' ? 'جاري التحقق...' : 'Checking...'}
+                                                </button>
+                                            </motion.div>
+                                        );
+                                    }
+                                    
+                                    const paymentStatus = getPaymentStatus();
+                                    
+                                    if (paymentStatus === 'pending') {
+                                        return (
+                                            <div className="flex flex-col gap-3">
+                                                <motion.div
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                >
+                                                    <div className="inline-block px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl shadow-lg">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        {lang === 'ar' ? 'الدفع قيد المعالجة' : 'Payment Pending'}
+                                                    </div>
+                                                </motion.div>
+                                                <motion.button
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    onClick={() => {
+                                                        refetchPaymentStatus();
+                                                        toast.success(lang === 'ar' ? 'جاري تحديث حالة الدفع...' : 'Updating payment status...');
+                                                    }}
+                                                    className="inline-block px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                    {lang === 'ar' ? 'تحديث حالة الدفع' : 'Refresh Payment Status'}
+                                                </motion.button>
+                                            </div>
+                                        );
+                                    }
+                                    
+                                    if (paymentStatus === 'rejected') {
+                                        return (
+                                            <motion.div
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                <Link
+                                                    to={`/checkout/${id}`}
+                                                    className="inline-block px-8 py-4 bg-gradient-to-r from-red-500 to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                                                >
+                                                    {lang === 'ar' ? 'إعادة الدفع' : 'Retry Payment'} - {data.price} {t('SYP')}
+                                                </Link>
+                                            </motion.div>
+                                        );
+                                    }
+                                    
+                                    // Default: Show checkout button
+                                    return (
+                                        <motion.div
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                        >
+                                            <Link
+                                                to={`/checkout/${id}`}
+                                                className="inline-block px-8 py-4 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                                            >
+                                                {lang === 'ar' ? 'ابدأ التعلم الآن' : 'Start Learning Now'} - {data.price} {t('SYP')}
+                                            </Link>
+                                        </motion.div>
+                                    );
+                                })()
+                            ) : (
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={handleRegister}
+                                    className="px-8 py-4 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                                >
+                                    {t('Start Learning Now')}
+                                </motion.button>
+                            )
+                        ) : (
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <Link
+                                    to={`/courses/${id}/videos`}
+                                    className="inline-block px-8 py-4 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                                >
+                                    {lang === 'ar' ? 'متابعة التعلم' : 'Continue Learning'}
+                                </Link>
+                            </motion.div>
+                        )}
                         <p className={`text-sm mt-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                             {t('Join')} {(enrollmentsData?.length || 0).toLocaleString()} {t('students already enrolled')}
                         </p>
+                        {data.price && (
+                            <p className={`text-sm mt-2 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'} font-semibold`}>
+                                {lang === 'ar' ? 'سعر الدورة:' : 'Course Price:'} {data.price} {t('SYP')}
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>

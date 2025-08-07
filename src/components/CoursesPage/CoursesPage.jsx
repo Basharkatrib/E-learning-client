@@ -226,6 +226,7 @@ export default function CoursesPage() {
                 level={course.difficulty_level}
                 category={courseCategory}
                 thumbnail_url={course.thumbnail_url}
+                price={course.price}
                 isDark={theme === 'dark'}
               />
             );

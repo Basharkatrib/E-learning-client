@@ -5,9 +5,8 @@ import logo from './assets/images/navbar/logo.png'
 import { motion } from 'framer-motion';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
-
 import Home from './pages/Home/Home';
 import Register from './pages/Register/Register';
 import Login from './pages/login/login';
@@ -35,7 +34,8 @@ import QuizPage from './pages/QuizPage/QuizPage';
 import SavedCourses from './pages/SavedCourses/SavedCourses';
 import EmailVerificationBanner from './components/EmailVerificationBanner/EmailVerificationBanner';
 import EmailVerification from './pages/EmailVerification/EmailVerification';
-
+import Checkout from './pages/Checkout/Checkout';
+import { addNotification } from './redux/features/notificationsSlice';
 
 function App() {
   console.log('Pusher Key:', import.meta.env.VITE_PUSHER_API_KEY);
@@ -69,40 +69,40 @@ function App() {
 
   
 
-  // useEffect(() => {
-  //   Pusher.logToConsole = true;
+  useEffect(() => {
+    Pusher.logToConsole = true;
 
-  //   const pusher = new Pusher(import.meta.env.VITE_PUSHER_API_KEY, {
-  //     cluster: 'eu',
-  //   });
-  //   const channel = pusher.subscribe('channel-name');
-  //   channel.bind('my-event', function (data) {
-  //     // Add notification to Redux store
-  //     dispatch(addNotification({
-  //       id: Date.now(), // Use timestamp as unique ID
-  //       message: data.data.message || 'New notification received!',
-  //       read: false,
-  //       timestamp: new Date().toISOString()
-  //     }));
+    const pusher = new Pusher(import.meta.env.VITE_PUSHER_API_KEY, {
+      cluster: 'eu',
+    });
+    const channel = pusher.subscribe('channel-name');
+    channel.bind('my-event', function (data) {
+      // Add notification to Redux store
+      dispatch(addNotification({
+        id: Date.now(), // Use timestamp as unique ID
+        message: data.data.message || 'New notification received!',
+        read: false,
+        timestamp: new Date().toISOString()
+      }));
 
-  //     // Show toast notification
-  //     toast(data.data.message || 'New notification received!', {
-  //       duration: 4000,
-  //       position: 'top-right',
-  //       style: {
-  //         background: theme === 'dark' ? '#1F2937' : '#fff',
-  //         color: theme === 'dark' ? '#fff' : '#000',
-  //         border: '1px solid #6D28D9',
-  //       },
-  //       icon: '🔔',
-  //     });
-  //   });
+      // Show toast notification
+      toast(data.data.message || 'New notification received!', {
+        duration: 4000,
+        position: 'top-right',
+        style: {
+          background: theme === 'dark' ? '#1F2937' : '#fff',
+          color: theme === 'dark' ? '#fff' : '#000',
+          border: '1px solid #6D28D9',
+        },
+        icon: '🔔',
+      });
+    });
 
-  //   return () => {
-  //     channel.unbind_all();
-  //     channel.unsubscribe();
-  //   };
-  // }, [theme, dispatch]);
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+    };
+  }, [theme, dispatch]);
 
 
   
@@ -151,6 +151,11 @@ function App() {
         />
         <Route path=":id/quiz/:quizId" element={<QuizPage />} />
         </Route>
+        <Route path="/checkout/:id" element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        } />
         <Route path="/error" element={<ErrorPage />} />
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="/verify-email" element={<VerifyEmail />} />

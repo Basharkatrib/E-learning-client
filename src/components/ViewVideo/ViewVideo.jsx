@@ -12,6 +12,7 @@ import {
   useGetWatchedVideosQuery,
   useMarkVideoAsWatchedMutation,
   useGetQuizQuery,
+  useCheckPaymentStatusQuery,
 } from '../../redux/features/apiSlice';
 import { useTranslation } from 'react-i18next';
 import LoadingPage from '../../pages/LoadingPage/LoadingPage';
@@ -58,6 +59,15 @@ const ViewVideo = () => {
     { skip: !token || !id }
   );
 
+  // Check payment status for paid courses
+  const { data: paymentStatusData, isLoading: isPaymentStatusLoading } = useCheckPaymentStatusQuery(
+    { token, courseId: id },
+    { 
+      skip: !token || !id || !coursesData?.price || coursesData?.price <= 0,
+      refetchOnMountOrArgChange: true
+    }
+  );
+
   useEffect(() => {
     console.log('Courses Data:', coursesData?.is_sequential);
   }, [coursesData?.is_sequential]); // Only depend on is_sequential property
@@ -84,6 +94,29 @@ const ViewVideo = () => {
   
   // Add state for quiz section visibility
   const [showQuizSection, setShowQuizSection] = useState(false);
+
+  // Helper function to check if user can access the course
+  const canAccessCourse = useCallback(() => {
+    // If course is free, always allow access
+    if (!coursesData?.price || coursesData.price <= 0) {
+      return true;
+    }
+    
+    // For paid courses, check payment status
+    if (!paymentStatusData) {
+      return false;
+    }
+    
+    const canAccess = paymentStatusData.paymentStatus === 'paid' || paymentStatusData.enrollmentStatus === 'accepted';
+    console.log('Course access check:', {
+      coursePrice: coursesData?.price,
+      paymentStatus: paymentStatusData?.paymentStatus,
+      enrollmentStatus: paymentStatusData?.enrollmentStatus,
+      canAccess
+    });
+    
+    return canAccess;
+  }, [coursesData?.price, paymentStatusData]);
 
   // Helper function to get all videos in sequential order
   const getAllVideosInOrder = useCallback(() => {
@@ -763,12 +796,12 @@ const ViewVideo = () => {
     console.log('==================');
   }, [quizData?.length, progress, previousProgress, id, token, showFinalQuizPopup]); // Use quizData.length instead of entire quizData object
 
-  if (isLoading || progressLoading || quizLoading) return <LoadingPage />;
+  if (isLoading || progressLoading || quizLoading || (coursesData?.price > 0 && isPaymentStatusLoading)) return <LoadingPage />;
   
   // Check if course data exists and is valid
   if (error || progressError || !coursesData || !coursesData.id) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh] px-4">
+      <div className="flex justify-center items-center min-h-[60vh] px-4 mt-18">
         <div className={`${isDark ? 'bg-[#1f2937]' : 'bg-white'} border border-red-600 text-red-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
           <svg className="mx-auto h-12 w-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 4a8 8 0 100 16 8 8 0 000-16z" />
@@ -795,7 +828,7 @@ const ViewVideo = () => {
   // Check if course has sections and videos
   if (!coursesData.sections || coursesData.sections.length === 0) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh] px-4">
+      <div className="flex justify-center items-center min-h-[60vh] px-4 mt-18">
         <div className={`${isDark ? 'bg-[#1f2937]' : 'bg-white'} border border-yellow-600 text-yellow-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
           <svg className="mx-auto h-12 w-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -814,6 +847,41 @@ const ViewVideo = () => {
           >
             {lang === 'ar' ? 'العودة إلى الدورات' : 'Back to Courses'}
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user can access the course (for paid courses)
+  if (coursesData?.price > 0 && !canAccessCourse()) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh] px-4 mt-18">
+        <div className={`${isDark ? 'bg-[#1f2937]' : 'bg-white'} border border-red-600 text-red-400 rounded-xl p-6 max-w-md w-full shadow-lg text-center space-y-3`}>
+          <svg className="mx-auto h-12 w-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <h2 className="text-xl font-semibold text-red-500">
+            {lang === 'ar' ? 'الدورة غير متاحة' : 'Course Not Available'}
+          </h2>
+          <p className="text-sm text-gray-400">
+            {lang === 'ar' 
+              ? 'عذراً، لا يمكنك الوصول لهذه الدورة حتى يتم تأكيد الدفع.' 
+              : 'Sorry, you cannot access this course until payment is confirmed.'}
+          </p>
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={() => navigate(`/courses/${id}`)}
+              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              {lang === 'ar' ? 'العودة للدورة' : 'Back to Course'}
+            </button>
+            <button
+              onClick={() => navigate('/courses')}
+              className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              {lang === 'ar' ? 'جميع الدورات' : 'All Courses'}
+            </button>
+          </div>
         </div>
       </div>
     );
