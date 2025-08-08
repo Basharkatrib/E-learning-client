@@ -147,7 +147,7 @@ function Courses() {
                                 <span className={`text-sm ${
                                     theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                                 }`}>
-                                    By {course.teacher?.name || 'Unknown Teacher'}
+                                    By {course.teacher?.first_name + ' ' + course.teacher?.last_name || 'Unknown Teacher'}
                                 </span>
                                 <Link
                                     to={`/courses/${course.id}`}

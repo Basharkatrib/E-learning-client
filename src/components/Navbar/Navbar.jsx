@@ -256,7 +256,7 @@ function Navbar() {
                                             className={`fixed top-0 right-0 h-full w-80 max-w-full z-50 ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'} shadow-2xl md:hidden flex flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-700 dark:scrollbar-track-gray-900`}
                                         >
                                             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-inherit z-10">
-                                                <span className={`text-lg font-bold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Notifications</span>
+                                                <span className={`text-lg font-bold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>{t('Notifications')}</span>
                                                 <button onClick={() => setIsNotifOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors">
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -350,14 +350,14 @@ function Navbar() {
                                             className={`hidden md:flex fixed top-0 right-0 h-full w-[30rem] max-w-full z-50 ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'} shadow-2xl flex-col overflow-y-auto`}
                                         >
                                             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-inherit z-10">
-                                                <span className={`text-lg font-bold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Notifications</span>
+                                                <span className={`text-lg font-bold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>{t('Notifications')}</span>
                                                 <div className="flex items-center gap-2">
                                                     {notifications.length > 0 && (
                                                         <button
                                                             onClick={handleMarkAllAsRead}
                                                             className="text-sm text-primary hover:text-primary/80 transition-colors duration-200"
                                                         >
-                                                            Mark all read
+                                                            {t('Mark all read')}
                                                         </button>
                                                     )}
                                                     <button onClick={() => setIsNotifOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors">
