@@ -75,9 +75,9 @@
   "Contact Us": "التواصل معنا",
   "We’re always happy to hear from you! Whether you have a question, need support, or simply want to share your feedback, our team is here and ready to help. Please don’t hesitate to get in touch — we’ll do our best to respond as quickly and efficiently as possible.": "يسعدنا دائمًا التواصل معكم! سواءً كان لديكم سؤال، أو تحتاجون إلى دعم، أو ترغبون ببساطة في مشاركة ملاحظاتكم، فإن فريقنا جاهز لمساعدتكم. لا تترددوا في التواصل معنا، وسنبذل قصارى جهدنا للرد عليكم بأسرع وقت وبأعلى كفاءة ممكنة.",
   "First Name": "الاسم الأول",
-  "Enter First Name": "أدخل الاسم الأول",
+  "Enter your first name": "أدخل الاسم الأول",
   "Last Name": "اسم العائلة",
-  "Enter Last Name": "أدخل اسم العائلة",
+  "Enter your Last Name": "أدخل اسم العائلة",
   "Email": "البريد الإلكتروني",
   "Enter Your Email": "أدخل بريدك الإلكتروني",
   "Enter Your Password": "أدخل كلمة المرور",
@@ -244,7 +244,8 @@
   "Not specified": "غير محدد",
   "Specialty": "التخصص",
   "Profile Information": "معلومات الملف الشخصي",
-  "Profile Picture": "صورة الملف الشخصي"
+  "Profile Picture": "صورة الملف الشخصي",
+  "Continue with Google":"التسجيل باستخدام Google"
 
  
 }
