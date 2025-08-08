@@ -222,8 +222,15 @@ addContact: builder.mutation({
           Authorization: `Bearer ${token}`,
         },
       }),
-      // Skip the request if no token is available
-      skip: (arg) => !arg?.token,
+    }),
+        checkPaymentStatus: builder.query({
+      query: ({ token, courseId }) => ({
+        url: `v1/courses/${courseId}/payment-status`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
     }),
     courseMyProgress: builder.query({
       query: ({ token, courseId }) => ({
@@ -328,10 +335,17 @@ addContact: builder.mutation({
       }),
       transformResponse: (response) => {
         console.log('Quiz API Response:', response);
+        if (!response) return [];
         return Array.isArray(response) ? response : response.data || [];
       },
       transformErrorResponse: (response) => {
         console.error('Quiz API Error:', response);
+        if (!response) {
+          return {
+            status: 500,
+            message: 'Failed to fetch quiz'
+          };
+        }
         return {
           status: response.status,
           message: response?.data?.message || 'Failed to fetch quiz'
@@ -538,9 +552,20 @@ addContact: builder.mutation({
         }),
     }),
 
-  }),
+    checkPaymentStatus: builder.query({
+      query: ({ token, courseId }) => ({
+        url: `v1/courses/${courseId}/payment-status`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
 
-});export const {
+  }),
+});
+
+export const {
   useGetCategoriesQuery,
   useRegisterMutation,
   useLoginMutation,
@@ -583,5 +608,6 @@ addContact: builder.mutation({
   useSubmitQuizAttemptMutation,
   useGetCertificateMutation,
   useGoogleLoginMutation,
-  useGetQuizResultsMutation
+  useGetQuizResultsMutation,
+  useCheckPaymentStatusQuery
 } = apiSlice;

@@ -5,9 +5,8 @@ import logo from './assets/images/navbar/logo.png'
 import { motion } from 'framer-motion';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
-
 import Home from './pages/Home/Home';
 import Register from './pages/Register/Register';
 import Login from './pages/login/login';
@@ -35,7 +34,8 @@ import QuizPage from './pages/QuizPage/QuizPage';
 import SavedCourses from './pages/SavedCourses/SavedCourses';
 import EmailVerificationBanner from './components/EmailVerificationBanner/EmailVerificationBanner';
 import EmailVerification from './pages/EmailVerification/EmailVerification';
-
+import Checkout from './pages/Checkout/Checkout';
+import { addNotification } from './redux/features/notificationsSlice';
 
 function App() {
   console.log('Pusher Key:', import.meta.env.VITE_PUSHER_API_KEY);
@@ -67,6 +67,75 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    Pusher.logToConsole = true;
+
+    const pusher = new Pusher(import.meta.env.VITE_PUSHER_API_KEY, {
+      cluster: 'eu',
+    });
+    const channel = pusher.subscribe('user-notifications-' + currentUser.id);
+    channel.bind('enrollment-accepted', function (data) {
+      // Add notification to Redux store
+      dispatch(addNotification({
+        id: Date.now(), // Use timestamp as unique ID
+        message: data.data.message || 'New notification received!',
+        read: false,
+        timestamp: new Date().toISOString()
+      }));
+
+      // Show toast notification
+      toast(data.data.message || 'New notification received!', {
+        duration: 4000,
+        position: 'top-right',
+        style: {
+          background: theme === 'dark' ? '#1F2937' : '#fff',
+          color: theme === 'dark' ? '#fff' : '#000',
+          border: '1px solid #6D28D9',
+        },
+        icon: '🔔',
+      });
+    });
+
+    // Listen for role update events on the same channel
+    channel.bind('role-updated', (payload) => {
+      const message =
+        payload?.data?.message ??
+        payload?.message ??
+        payload?.data?.data?.message ??
+        'تم تحديث صلاحيات حسابك.';
+
+      dispatch(addNotification({
+        id: Date.now(),
+        message,
+        read: false,
+        timestamp: new Date().toISOString(),
+      }));
+
+      toast(message, {
+        duration: 4000,
+        position: 'top-right',
+        style: {
+          background: theme === 'dark' ? '#1F2937' : '#fff',
+          color: theme === 'dark' ? '#fff' : '#000',
+          border: '1px solid #6D28D9',
+        },
+        icon: '🔄',
+      });
+    });
+
+    return () => {
+      channel.unbind('enrollment-accepted');
+      channel.unbind('role-updated');
+      channel.unsubscribe();
+      pusher.disconnect();
+    };
+  }, [currentUser?.id, theme, dispatch]);
+
+
+  
   if (showSplash) {
     return (
       <div className="relative w-full h-screen overflow-hidden bg-gray-900">
@@ -81,42 +150,6 @@ function App() {
       </div>
     );
   }
-  
-
-  // useEffect(() => {
-  //   Pusher.logToConsole = true;
-
-  //   const pusher = new Pusher(import.meta.env.VITE_PUSHER_API_KEY, {
-  //     cluster: 'eu',
-  //   });
-  //   const channel = pusher.subscribe('channel-name');
-  //   channel.bind('my-event', function (data) {
-  //     // Add notification to Redux store
-  //     dispatch(addNotification({
-  //       id: Date.now(), // Use timestamp as unique ID
-  //       message: data.data.message || 'New notification received!',
-  //       read: false,
-  //       timestamp: new Date().toISOString()
-  //     }));
-
-  //     // Show toast notification
-  //     toast(data.data.message || 'New notification received!', {
-  //       duration: 4000,
-  //       position: 'top-right',
-  //       style: {
-  //         background: theme === 'dark' ? '#1F2937' : '#fff',
-  //         color: theme === 'dark' ? '#fff' : '#000',
-  //         border: '1px solid #6D28D9',
-  //       },
-  //       icon: '🔔',
-  //     });
-  //   });
-
-  //   return () => {
-  //     channel.unbind_all();
-  //     channel.unsubscribe();
-  //   };
-  // }, [theme, dispatch]);
 
 
   return (
@@ -148,6 +181,11 @@ function App() {
         />
         <Route path=":id/quiz/:quizId" element={<QuizPage />} />
         </Route>
+        <Route path="/checkout/:id" element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        } />
         <Route path="/error" element={<ErrorPage />} />
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="/verify-email" element={<VerifyEmail />} />

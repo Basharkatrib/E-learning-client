@@ -332,44 +332,42 @@ function Navbar() {
                                             </div>
                                         </motion.div>
 
-                                        {/* Desktop Dropdown Notifications */}
+                                        {/* Desktop overlay */}
                                         <motion.div
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            className={`hidden md:fixed md:absolute right-0 mt-2 w-[calc(100vw-2rem)] md:w-80 lg:w-96 rounded-xl shadow-lg z-50 
-                                                ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}
-                                                border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}
-                                                max-h-[calc(100vh-8rem)] flex flex-col md:block`}
+                                            className="hidden md:block fixed inset-0 z-40 bg-black/30"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            onClick={() => setIsNotifOpen(false)}
+                                        />
+
+                                        {/* Desktop Sidebar Notifications */}
+                                        <motion.div
+                                            initial={{ x: '100%' }}
+                                            animate={{ x: 0 }}
+                                            exit={{ x: '100%' }}
+                                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                            className={`hidden md:flex fixed top-0 right-0 h-full w-[30rem] max-w-full z-50 ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'} shadow-2xl flex-col overflow-y-auto`}
                                         >
-                                            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-inherit z-10">
+                                            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-inherit z-10">
+                                                <span className={`text-lg font-bold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Notifications</span>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-lg font-bold">Notifications</span>
-                                                    {unreadCount > 0 && (
-                                                        <span className="bg-primary text-white text-xs font-bold rounded-full px-2 py-0.5">
-                                                            {unreadCount} new
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                {notifications.length > 0 && (
-                                                    <div className="flex items-center gap-2">
+                                                    {notifications.length > 0 && (
                                                         <button
                                                             onClick={handleMarkAllAsRead}
                                                             className="text-sm text-primary hover:text-primary/80 transition-colors duration-200"
                                                         >
                                                             Mark all read
                                                         </button>
-                                                        <button
-                                                            onClick={() => dispatch(clearAllNotifications())}
-                                                            className="text-sm text-red-500 hover:text-red-600 transition-colors duration-200"
-                                                        >
-                                                            Clear all
-                                                        </button>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                    <button onClick={() => setIsNotifOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
                                             </div>
-
-                                            <div className="overflow-y-auto flex-1">
+                                            <div className="flex-1 overflow-y-auto">
                                                 {notifications.length === 0 ? (
                                                     <div className="flex flex-col items-center justify-center p-8 text-center">
                                                         <svg
