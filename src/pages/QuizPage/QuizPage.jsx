@@ -299,10 +299,10 @@ const QuizPage = () => {
         setCertificateStatus('view');
         toast.success(t('Certificate generated successfully!'));
         window.open(response.data.certificateUrl, '_blank');
-      } else if (response.certificateUrl) {
-        setCertificateUrl(response.certificateUrl);
+      } else if (response.data?.certificateUrl) {
+        setCertificateUrl(response.data.certificateUrl);
         setCertificateStatus('view');
-        window.open(response.certificateUrl, '_blank');
+        window.open(response.data.certificateUrl, '_blank');
         toast.success(t('Opening your certificate...'));
       }
     } catch (error) {
