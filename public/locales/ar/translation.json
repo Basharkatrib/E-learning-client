@@ -244,13 +244,5 @@
   "Not specified": "غير محدد",
   "Specialty": "التخصص",
   "Profile Information": "معلومات الملف الشخصي",
-  "Profile Picture": "صورة الملف الشخصي",
-<<<<<<< HEAD
-  "Continue with Google":"التسجيل باستخدام Google"
-=======
-  "SYP": "ليرة سورية",
-  "Price": "السعر"
->>>>>>> 45721365e918f028475cdf5f493d8e4d3f33cc40
-
- 
+  "Profile Picture": "صورة الملف الشخصي"
 }
