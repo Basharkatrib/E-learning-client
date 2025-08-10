@@ -90,26 +90,28 @@ export default function CourseDetails() {
 
     useEffect(() => {
         const checkEnrollmentStatus = async () => {
-            if (user && token) {
-                try {
-                    const response = await isEnrolled({
-                        userId: user.id,
-                        courseId: id,
-                        token
-                    }).unwrap();
-                    console.log(response);
-                    const isEnrolled = response.isEnrolled === true;
-                    setEnrollmentStatus(isEnrolled);
-                    setLocalEnrollmentStatus(isEnrolled);
-                } catch (error) {
-                    setEnrollmentStatus(false);
-                    setLocalEnrollmentStatus(false);
-                }
+            // Only check enrollment automatically for free courses once data is available
+            if (!user || !token || !data) return;
+            if ((data.price ?? 0) > 0) return; // Skip for paid courses
+
+            try {
+                const response = await isEnrolled({
+                    userId: user.id,
+                    courseId: id,
+                    token,
+                }).unwrap();
+                console.log(response);
+                const isUserEnrolled = response.isEnrolled === true;
+                setEnrollmentStatus(isUserEnrolled);
+                setLocalEnrollmentStatus(isUserEnrolled);
+            } catch (error) {
+                setEnrollmentStatus(false);
+                setLocalEnrollmentStatus(false);
             }
         };
 
         checkEnrollmentStatus();
-    }, [user, token, id]);
+    }, [user, token, id, data]);
 
 
 
