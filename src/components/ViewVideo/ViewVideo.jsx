@@ -918,7 +918,7 @@ const ViewVideo = () => {
   const course = coursesData;
 
   return (
-    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full mt-22 flex flex-col min-h-screen ${isDark ? 'bg-[#0A0A0A] text-white' : 'bg-[#F9FAFB] text-gray-900'} `}>
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full mt-22 flex flex-col ${isDark ? 'bg-[#0A0A0A] text-white' : 'bg-[#F9FAFB] text-gray-900'} `}>
       {/* Top Navigation Bar */}
       <div className={`sticky top-0 z-40 w-full ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-md border-b ${isDark ? 'border-gray-800' : 'border-gray-200'} px-4 py-3`}>
         <div className="max-w-[1920px] mx-auto flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
@@ -997,9 +997,9 @@ const ViewVideo = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-h-0">
         {/* Sidebar - Desktop */}
-        <div className={`hidden lg:block w-80 xl:w-96 flex-shrink-0 h-[calc(100vh-64px)] sticky top-16 ${isDark ? 'bg-gray-900' : 'bg-white'} border-r ${isDark ? 'border-gray-800' : 'border-gray-200'} overflow-y-auto`}>
+        <div className={`hidden lg:block w-80 xl:w-96 flex-shrink-0 h-[calc(100dvh-64px)] sticky top-16 ${isDark ? 'bg-gray-900' : 'bg-white'} border-r ${isDark ? 'border-gray-800' : 'border-gray-200'} overflow-y-auto`}>
           <div className="p-4">
                       <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -1100,7 +1100,7 @@ const ViewVideo = () => {
 
         {/* Main Content */}
         <div className="flex-1 min-w-0">
-          <div className={`p-2 sm:p-4 lg:p-8 space-y-4 sm:space-y-8 text-white ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
+          <div className={`p-2 sm:p-4 lg:p-8 space-y-4 sm:space-y-8 text-white ${isDark ? 'bg-gray-900' : 'bg-gray-100'} min-h-0` }>
             {/* Video Player Container */}
             <div className="w-full max-w-[1200px] mx-auto">
               {/* Responsive Video Wrapper */}
