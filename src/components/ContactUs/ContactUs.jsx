@@ -134,28 +134,32 @@ const ContactUs = () => {
     isDark ? linked_w : linked
   ];
 
-  const inputClasses = `w-full mt-3 rounded-sm p-4 border focus:outline-none focus:ring-2 focus:ring-primary ${
-    isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200 text-black'
+  const inputClasses = `w-full mt-2 rounded-xl p-4 border transition-shadow focus:outline-none focus:ring-4 ${
+    isDark
+      ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-400 focus:ring-primary/20'
+      : 'bg-white border-gray-200 text-black focus:ring-primary/30'
   }`;
 
   return (
-    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`w-full mt-14 pt-16 pb-14 px-4 sm:px-6 lg:px-8 flex flex-col justify-around items-center ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
-      <div className='p-3 flex flex-col lg:flex-row justify-around items-center gap-8 text-center lg:text-left'>
-        <h1 className='text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent'>{t('Contact Us')}</h1>
-        <div className='w-full lg:w-1/2'>
-          <p>{t('We\'re always happy to hear from you! Whether you have a question, need support, or simply want to share your feedback, our team is here and ready to help. Please don\'t hesitate to get in touch — we\'ll do our best to respond as quickly and efficiently as possible.')}</p>
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`relative w-full mt-14 pt-16 pb-20 px-4 sm:px-6 lg:px-8 ${isDark ? 'bg-gray-950 text-white' : 'bg-gradient-to-b from-white via-gray-50 to-white text-black'}`}>
+      <div className='p-3 flex flex-col lg:flex-row justify-between items-center gap-8 text-center lg:text-left max-w-6xl mx-auto'>
+        <h1 className='text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent'>
+          {t('Contact Us')}
+        </h1>
+        <div className='w-full lg:w-2/3'>
+          <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t("We're always happy to hear from you! Whether you have a question, need support, or simply want to share your feedback, our team is here and ready to help. Please don't hesitate to get in touch — we'll do our best to respond as quickly and efficiently as possible.")}</p>
         </div>
       </div>
 
       <hr className={`w-full my-8 ${isDark ? 'bg-gray-600' : 'bg-gray-400'}`} />
 
-      <div className={`w-full flex flex-col lg:flex-row justify-between items-center gap-12 container mt-4 p-6 md:p-12 drop-shadow-lg rounded-md ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
+      <div className={`w-full max-w-6xl mx-auto flex flex-col lg:flex-row justify-between items-start gap-8 mt-8 p-6 md:p-10 rounded-2xl backdrop-blur shadow-xl ring-1 ${isDark ? 'bg-gray-900/70 text-white ring-white/10' : 'bg-white/90 text-black ring-black/5'}`}>
         <form onSubmit={handleSubmit} className='w-full lg:w-2/3'>
           <div className='flex flex-col items-center gap-10'>
             <div className='w-full flex flex-col gap-5'>
               <div className='flex flex-col md:flex-row gap-5'>
                 <div className='w-full'>
-                  <h3>{t('First Name')} *</h3>
+                  <h3 className='text-sm text-gray-600 dark:text-gray-300'>{t('First Name')} *</h3>
                   <input
                     type='text'
                     name="firstName"
@@ -167,7 +171,7 @@ const ContactUs = () => {
                   />
                 </div>
                 <div className='w-full'>
-                  <h3>{t('Last Name')} *</h3>
+                  <h3 className='text-sm text-gray-600 dark:text-gray-300'>{t('Last Name')} *</h3>
                   <input
                     type='text'
                     name="lastName"
@@ -182,7 +186,7 @@ const ContactUs = () => {
 
               <div className='flex flex-col md:flex-row gap-5'>
                 <div className='w-full'>
-                  <h3>{t('Email')} *</h3>
+                  <h3 className='text-sm text-gray-600 dark:text-gray-300'>{t('Email')} *</h3>
                   <input
                     type='email'
                     name="email"
@@ -194,7 +198,7 @@ const ContactUs = () => {
                   />
                 </div>
                 <div className='w-full'>
-                  <h3>{t('Phone')}</h3>
+                  <h3 className='text-sm text-gray-600 dark:text-gray-300'>{t('Phone')}</h3>
                   <input
                     type='text'
                     name="phone"
@@ -207,7 +211,7 @@ const ContactUs = () => {
               </div>
 
               <div>
-                <h3>{t('Subject')} *</h3>
+                <h3 className='text-sm text-gray-600 dark:text-gray-300'>{t('Subject')} *</h3>
                 <input
                   type='text'
                   name="subject"
@@ -220,7 +224,7 @@ const ContactUs = () => {
               </div>
 
               <div>
-                <h3>{t('Message')} *</h3>
+                <h3 className='text-sm text-gray-600 dark:text-gray-300'>{t('Message')} *</h3>
                 <textarea
                   name="message"
                   value={formData.message}
@@ -235,40 +239,36 @@ const ContactUs = () => {
             <motion.button
               type="submit"
               disabled={isLoading}
-              whileHover={{ scale: isLoading ? 1 : 1.05 }}
-              whileTap={{ scale: isLoading ? 1 : 0.95 }}
-              className={`bg-primary text-white px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
-                isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-primary/90'
-              }`}
+              whileHover={{ scale: isLoading ? 1 : 1.02 }}
+              whileTap={{ scale: isLoading ? 1 : 0.98 }}
+              className={`inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md ${
+                isDark ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-gradient-to-r from-primary to-purple-600 hover:brightness-110 text-white'
+              } ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {isLoading ? t('Sending...') : t('Send Your Message')}
             </motion.button>
           </div>
         </form>
 
-        <div className='w-full lg:w-1/3 flex flex-col items-center gap-6'>
+        <div className='w-full lg:w-1/3 flex flex-col items-stretch gap-6'>
           {contactIcons.map((item, index) => (
-            <div key={index} className='flex flex-col items-center gap-3'>
-              <motion.a href="#" whileHover={{ scale: 1.2 }}>
-                <div className='w-10 h-10 rounded-full flex items-center justify-center'>
-                  <img src={item.icon} alt="icon" />
-                </div>
-              </motion.a>
-              <h3 className='text-center'>{t(item.text)}</h3>
+            <div key={index} className={`flex items-center gap-4 rounded-xl px-4 py-3 w-full ${isDark ? 'bg-gray-800/80' : 'bg-gray-50'}`}>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isDark ? 'bg-primary/10' : 'bg-primary/10'} ring-1 ${isDark ? 'ring-white/10' : 'ring-primary/10'}`}>
+                <img src={item.icon} alt="icon" className='w-6 h-6' />
+              </div>
+              <h3 className={`text-sm md:text-base ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t(item.text)}</h3>
             </div>
           ))}
 
-          <div className='flex flex-col items-center gap-2'>
-            <div className='flex gap-4'>
+          <div className='flex flex-col items-start gap-3'>
+            <h3 className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t('Social Profiles')}</h3>
+            <div className='flex gap-3'>
               {socialIcons.map((icon, i) => (
-                <motion.a key={i} href="#" whileHover={{ scale: 1.2 }}>
-                  <div className='w-8 h-8 rounded-full flex items-center justify-center'>
-                    <img src={icon} alt="social" />
-                  </div>
+                <motion.a key={i} href="#" whileHover={{ scale: 1.08 }} className={`rounded-xl p-2 ${isDark ? 'bg-gray-800/80 hover:bg-gray-800' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}>
+                  <img src={icon} alt="social" className='w-5 h-5' />
                 </motion.a>
               ))}
             </div>
-            <h3>{t('Social Profiles')}</h3>
           </div>
         </div>
       </div>

@@ -18,7 +18,7 @@ export default function CoursesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedDuration, setSelectedDuration] = useState('all');
+  const [selectedPricing, setSelectedPricing] = useState('all');
 
   // تحديث selectedCategory من الكويري بارامز
   React.useEffect(() => {
@@ -54,30 +54,18 @@ export default function CoursesPage() {
     ];
   }, [coursesData, lang, t]);
 
-  const durations = useMemo(() => {
-    if (!coursesData?.data) return [{ value: 'all', label: t('All') }];
-    
-    const uniqueDurations = new Set(
-      coursesData.data.map(course => 
-        course.duration?.[lang] || course.duration?.en || 'Unknown Duration'
-      )
-    );
-    
-    return [
-      { value: 'all', label: t('All') },
-      ...Array.from(uniqueDurations).map(dur => ({ 
-        value: dur.toLowerCase(), 
-        label: dur 
-      }))
-    ];
-  }, [coursesData, lang, t]);
+  // Pricing filter options
+  const pricingOptions = useMemo(() => ([
+    { value: 'all', label: t('All') },
+    { value: 'free', label: t('Free') },
+    { value: 'paid', label: t('Paid') },
+  ]), [t]);
 
   const filteredCourses = useMemo(() => {
     if (!coursesData?.data) return [];
 
     return coursesData.data.filter(course => {
       const courseTitle = (course.title?.[lang] || course.title?.en || '').toLowerCase();
-      const courseDuration = (course.duration?.[lang] || course.duration?.en || '').toLowerCase();
       const courseCategory = (course.category?.name?.[lang] || course.category?.name?.en || '').toLowerCase();
       const courseLevel = (course.difficulty_level || '').toLowerCase();
 
@@ -87,11 +75,14 @@ export default function CoursesPage() {
 
       const matchesLevel = selectedLevel === 'all' || courseLevel === selectedLevel;
       const matchesCategory = selectedCategory === 'all' || courseCategory === selectedCategory;
-      const matchesDuration = selectedDuration === 'all' || courseDuration === selectedDuration;
+      const matchesPricing =
+        selectedPricing === 'all' ||
+        (selectedPricing === 'free' && Number(course.price) === 0) ||
+        (selectedPricing === 'paid' && Number(course.price) > 0);
 
-      return matchesSearch && matchesLevel && matchesCategory && matchesDuration;
+      return matchesSearch && matchesLevel && matchesCategory && matchesPricing;
     });
-  }, [coursesData, searchQuery, selectedLevel, selectedCategory, selectedDuration, lang]);
+  }, [coursesData, searchQuery, selectedLevel, selectedCategory, selectedPricing, lang]);
 
   if (isLoading) {
     return <LoadingPage />;
@@ -153,57 +144,75 @@ export default function CoursesPage() {
           {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Level Filter */}
-            <select
-              dir="ltr"
-              value={selectedLevel}
-              onChange={(e) => setSelectedLevel(e.target.value)}
-              className={`w-full px-4 py-3 rounded-lg border appearance-none ${
-                theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
-              } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
-            >
-              {levels.map((level) => (
-                <option key={level.value} value={level.value}>
-                  {level.label}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="levelFilter" className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                {t('Level')}
+              </label>
+              <select
+                id="levelFilter"
+                dir="ltr"
+                value={selectedLevel}
+                onChange={(e) => setSelectedLevel(e.target.value)}
+                className={`w-full px-4 py-3 rounded-lg border appearance-none ${
+                  theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
+                } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
+              >
+                {levels.map((level) => (
+                  <option key={level.value} value={level.value}>
+                    {level.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* Category Filter */}
-            <select
-              dir="ltr"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className={`w-full px-4 py-3 rounded-lg border appearance-none ${
-                theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
-              } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
-            >
-              {categories.map((category) => (
-                <option key={category.value} value={category.value}>
-                  {category.label}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="categoryFilter" className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                {t('Category')}
+              </label>
+              <select
+                id="categoryFilter"
+                dir="ltr"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className={`w-full px-4 py-3 rounded-lg border appearance-none ${
+                  theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
+                } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
+              >
+                {categories.map((category) => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            {/* Duration Filter */}
-            <select
-              dir="ltr"
-              value={selectedDuration}
-              onChange={(e) => setSelectedDuration(e.target.value)}
-              className={`w-full px-4 py-3 rounded-lg border appearance-none ${
-                theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
-              } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
-            >
-              {durations.map((duration) => (
-                <option key={duration.value} value={duration.value}>
-                  {duration.label}
-                </option>
-              ))}
-            </select>
+            {/* Pricing Filter */}
+            <div className="flex flex-col gap-1">
+              <label htmlFor="pricingFilter" className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                {t('Pricing')}
+              </label>
+              <select
+                id="pricingFilter"
+                dir="ltr"
+                value={selectedPricing}
+                onChange={(e) => setSelectedPricing(e.target.value)}
+                className={`w-full px-4 py-3 rounded-lg border appearance-none ${
+                  theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'
+                } focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300`}
+              >
+                {pricingOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Results Count */}
           <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            {t('Showing')} {filteredCourses.length === 0 ?  0 : filteredCourses.length - 1} {t('courses')}
+            {t('Showing')} {filteredCourses.length === 0 ?  0 : filteredCourses.length} {t('courses')}
           </div>
         </div>
 
@@ -221,7 +230,7 @@ export default function CoursesPage() {
                 id={course.id}
                 title={courseTitle}
                 description={courseDescription}
-                author={course.teacher?.name || 'Unknown Teacher'}
+                author={course.teacher?.first_name + ' ' + course.teacher?.last_name || 'Unknown Teacher'}
                 duration={courseDuration}
                 level={course.difficulty_level}
                 category={courseCategory}

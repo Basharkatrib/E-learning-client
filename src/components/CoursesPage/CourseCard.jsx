@@ -149,7 +149,7 @@ const CourseCard = ({
               </div>
               <div className="flex items-center gap-2">
               <span className={`px-3 py-1 rounded-full text-sm ${badgeBg}`}>
-                {price} {t('SYP')}
+                {price == 0? t('Free') : price + ' ' + t('SYP')}
               </span>
             </div>
             </div>

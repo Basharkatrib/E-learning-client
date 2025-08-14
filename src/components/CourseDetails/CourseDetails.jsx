@@ -861,9 +861,9 @@ export default function CourseDetails() {
                     )}
 
                     <div className="flex items-center gap-2 mb-4">
-                        <span className="text-sm font-semibold text-primary">Teacher:</span>
+                        <span className="text-sm font-semibold text-primary">{t('Teacher')}:</span>
                         <span className={`text-sm font-medium text-gray-800 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                            {data.teacher?.name || (lang === 'ar' ? 'غير محدد' : 'Not specified')}
+                            {data.teacher?.first_name + ' ' + data.teacher?.last_name || (lang === 'ar' ? 'غير محدد' : 'Not specified')}
                         </span>
                     </div>
                     
@@ -1059,7 +1059,7 @@ export default function CourseDetails() {
                                         {/* Status */}
                                         <div className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                                             }`}>
-                                            {section.videos?.length || 0} {t('lessons')}
+                                            {section.videos?.length || 0} {t('Lessons')}
                                         </div>
                                     </div>
 
@@ -1076,129 +1076,7 @@ export default function CourseDetails() {
                         )}
                     </div>
 
-                    {/* Call to Action */}
-                    <div className="text-center mt-12">
-                        {!canAccessCourse() ? (
-                            data.price > 0 ? (
-                                // Check payment status for paid courses
-                                (() => {
-                                    if (isPaymentStatusLoading) {
-                                        return (
-                                            <motion.div
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                            >
-                                                <button
-                                                    disabled
-                                                    className="inline-block px-8 py-4 bg-gray-400 text-white font-bold rounded-xl shadow-lg opacity-50 cursor-not-allowed"
-                                                >
-                                                    <svg className="animate-spin h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    {lang === 'ar' ? 'جاري التحقق...' : 'Checking...'}
-                                                </button>
-                                            </motion.div>
-                                        );
-                                    }
-                                    
-                                    const paymentStatus = getPaymentStatus();
-                                    
-                                    if (paymentStatus === 'pending') {
-                                        return (
-                                            <div className="flex flex-col gap-3">
-                                                <motion.div
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                >
-                                                    <div className="inline-block px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl shadow-lg">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                        </svg>
-                                                        {lang === 'ar' ? 'الدفع قيد المعالجة' : 'Payment Pending'}
-                                                    </div>
-                                                </motion.div>
-                                                <motion.button
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    onClick={() => {
-                                                        refetchPaymentStatus();
-                                                        toast.success(lang === 'ar' ? 'جاري تحديث حالة الدفع...' : 'Updating payment status...');
-                                                    }}
-                                                    className="inline-block px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                                    </svg>
-                                                    {lang === 'ar' ? 'تحديث حالة الدفع' : 'Refresh Payment Status'}
-                                                </motion.button>
-                                            </div>
-                                        );
-                                    }
-                                    
-                                    if (paymentStatus === 'rejected') {
-                                        return (
-                                            <motion.div
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                            >
-                                                <Link
-                                                    to={`/checkout/${id}`}
-                                                    className="inline-block px-8 py-4 bg-gradient-to-r from-red-500 to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                                                >
-                                                    {lang === 'ar' ? 'إعادة الدفع' : 'Retry Payment'} - {data.price} {t('SYP')}
-                                                </Link>
-                                            </motion.div>
-                                        );
-                                    }
-                                    
-                                    // Default: Show checkout button
-                                    return (
-                                        <motion.div
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                        >
-                                            <Link
-                                                to={`/checkout/${id}`}
-                                                className="inline-block px-8 py-4 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                                            >
-                                                {lang === 'ar' ? 'ابدأ التعلم الآن' : 'Start Learning Now'} - {data.price} {t('SYP')}
-                                            </Link>
-                                        </motion.div>
-                                    );
-                                })()
-                            ) : (
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={handleRegister}
-                                    className="px-8 py-4 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                                >
-                                    {t('Start Learning Now')}
-                                </motion.button>
-                            )
-                        ) : (
-                            <motion.div
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                <Link
-                                    to={`/courses/${id}/videos`}
-                                    className="inline-block px-8 py-4 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                                >
-                                    {lang === 'ar' ? 'متابعة التعلم' : 'Continue Learning'}
-                                </Link>
-                            </motion.div>
-                        )}
-                        <p className={`text-sm mt-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {t('Join')} {(enrollmentsData?.length || 0).toLocaleString()} {t('students already enrolled')}
-                        </p>
-                        {data.price && (
-                            <p className={`text-sm mt-2 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'} font-semibold`}>
-                                {lang === 'ar' ? 'سعر الدورة:' : 'Course Price:'} {data.price} {t('SYP')}
-                            </p>
-                        )}
-                    </div>
+                   
                 </div>
             </div>
             <FAQ Faqs={data.faqs} />
