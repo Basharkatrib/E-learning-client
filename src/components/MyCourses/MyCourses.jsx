@@ -52,37 +52,60 @@ const MyCourses = () => {
                         {courses.map((course) => (
                             <div
                                 key={course.courseId}
-                                className={`rounded-2xl overflow-hidden shadow-md transform transition duration-300 hover:scale-105 hover:shadow-2xl
-                                ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}
+                                className={`rounded-2xl overflow-hidden shadow-md transform transition duration-300 ${
+                                    isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
+                                } ${course.status === 'pending' ? 'opacity-90 ring-1 ring-yellow-400' : 'hover:scale-105 hover:shadow-2xl'}`}
                             >
-                                <img
-                                    src={course.courseThumbnailUrl || "https://via.placeholder.com/400x200?text=Course+Thumbnail"}
-                                    alt={course.courseTitle}
-                                    className="w-full h-48 object-cover"
-                                />
+                                <div className="relative">
+                                    <img
+                                        src={course.courseThumbnailUrl || "https://via.placeholder.com/400x200?text=Course+Thumbnail"}
+                                        alt={course.courseTitle}
+                                        className="w-full h-48 object-cover"
+                                    />
+                                    {course.status === 'pending' && (
+                                        <span className="absolute top-2 left-2 px-2 py-1 text-xs font-semibold rounded bg-yellow-500 text-white shadow">
+                                            {lang === 'ar' ? 'قيد الانتظار' : 'Pending'}
+                                        </span>
+                                    )}
+                                </div>
                                 <div className="p-5">
                                     <h3 className="text-xl font-bold mb-2">{(lang === "en" ? course.courseTitle.en : course.courseTitle.ar)}</h3>
                                     <p className={`text-sm mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                                         {(lang === "en" ? course.courseDescription.en : course.courseDescription.ar)}
                                     </p>
                                     <div className='flex items-center justify-between w-full'>
-                                    <Link
-                                        to={`/courses/${course.courseId}/videos`}
-                                        className="mt-2 text-sm font-semibold text-blue-500 hover:text-blue-700 transition flex items-center gap-1"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-5.197-3.027A1 1 0 008 9.027v5.946a1 1 0 001.555.832l5.197-3.027a1 1 0 000-1.664z" />
-                                            <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="2" fill="none" />
-                                        </svg>
-                                        {(lang === "en") ? " Go to Course" : "الذهاب الى الدورة "}
-                                    </Link>
-                                    <Link
-                                        to={`/courses/${course.courseId}`}
-                                        className="inline-block mt-2 text-sm font-semibold text-blue-500 hover:text-blue-700 transition"
-                                    >
-                                        {(lang === "en") ? "View details" : "عرض التفاصيل"}
-                                    </Link>
-
+                                        {course.status === 'accepted' ? (
+                                            <>
+                                                <Link
+                                                    to={`/courses/${course.courseId}/videos`}
+                                                    className="mt-2 text-sm font-semibold text-blue-500 hover:text-blue-700 transition flex items-center gap-1"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-5.197-3.027A1 1 0 008 9.027v5.946a1 1 0 001.555.832l5.197-3.027a1 1 0 000-1.664z" />
+                                                        <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="2" fill="none" />
+                                                    </svg>
+                                                    {(lang === "en") ? " Go to Course" : "الذهاب الى الدورة "}
+                                                </Link>
+                                                <Link
+                                                    to={`/courses/${course.courseId}`}
+                                                    className="inline-block mt-2 text-sm font-semibold text-blue-500 hover:text-blue-700 transition"
+                                                >
+                                                    {(lang === "en") ? "View details" : "عرض التفاصيل"}
+                                                </Link>
+                                            </>
+                                        ) : (
+                                            <div className="w-full mt-2">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-yellow-600">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    {lang === 'ar' ? 'عملية الدفع قيد الانتظار' : 'Payment is pending'}
+                                                </div>
+                                                <div className="mt-2 text-xs text-gray-500">
+                                                    {lang === 'ar' ? 'سيتم تفعيل الوصول بعد تأكيد المعلم للدفع' : 'Access will be enabled after teacher confirmation'}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                     
                                 </div>

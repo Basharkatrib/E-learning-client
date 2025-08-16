@@ -90,26 +90,28 @@ export default function CourseDetails() {
 
     useEffect(() => {
         const checkEnrollmentStatus = async () => {
-            if (user && token) {
-                try {
-                    const response = await isEnrolled({
-                        userId: user.id,
-                        courseId: id,
-                        token
-                    }).unwrap();
-                    console.log(response);
-                    const isEnrolled = response.isEnrolled === true;
-                    setEnrollmentStatus(isEnrolled);
-                    setLocalEnrollmentStatus(isEnrolled);
-                } catch (error) {
-                    setEnrollmentStatus(false);
-                    setLocalEnrollmentStatus(false);
-                }
+            // Only check enrollment automatically for free courses once data is available
+            if (!user || !token || !data) return;
+            if ((data.price ?? 0) > 0) return; // Skip for paid courses
+
+            try {
+                const response = await isEnrolled({
+                    userId: user.id,
+                    courseId: id,
+                    token,
+                }).unwrap();
+                console.log(response);
+                const isUserEnrolled = response.isEnrolled === true;
+                setEnrollmentStatus(isUserEnrolled);
+                setLocalEnrollmentStatus(isUserEnrolled);
+            } catch (error) {
+                setEnrollmentStatus(false);
+                setLocalEnrollmentStatus(false);
             }
         };
 
         checkEnrollmentStatus();
-    }, [user, token, id]);
+    }, [user, token, id, data]);
 
 
 
@@ -695,9 +697,19 @@ export default function CourseDetails() {
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="relative flex flex-col md:flex-row justify-between items-center md:items-start gap-8 pb-20 px-4 sm:px-6 lg:px-8 pt-9 bg-gradient-to-br from-primary/10 via-blue-200/30 to-white dark:from-gray-900 dark:via-primary/10 dark:to-gray-950"
+                className="relative overflow-hidden rounded-b-2xl flex flex-col md:flex-row justify-between items-center md:items-start gap-8 pb-20 px-4 sm:px-6 lg:px-8 pt-9 bg-gradient-to-br from-primary/10 via-blue-200/30 to-white dark:from-gray-900 dark:via-primary/10 dark:to-gray-950"
             >
-                <div className="flex-1 max-w-2xl">
+                {data.thumbnail_url && (
+                    <>
+                        <img
+                            src={data.thumbnail_url}
+                            alt="banner"
+                            className="absolute inset-0 w-full h-full object-cover opacity-20"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-transparent" />
+                    </>
+                )}
+                <div className="relative z-10 flex-1 max-w-2xl">
                     <motion.h1
                         {...fadeInUp}
                         className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent drop-shadow-lg"
@@ -899,17 +911,15 @@ export default function CourseDetails() {
                         )}
                     </div>
                 </div>
-                <div className="flex-shrink-0 w-full md:w-80 h-48 md:h-64 rounded-2xl overflow-hidden shadow-xl bg-gray-200 dark:bg-gray-800">
-                    {data.thumbnail_url ? (
-                        <img src={data.thumbnail_url} alt="course" className="w-full h-full object-cover" />
-                    ) : (
+                {!data.thumbnail_url && (
+                    <div className="relative z-10 flex-shrink-0 w-full md:w-80 h-48 md:h-64 rounded-2xl overflow-hidden shadow-xl bg-gray-200 dark:bg-gray-800">
                         <div className="w-full h-full flex items-center justify-center">
                             <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </motion.div>
 
             {/* Stats Bar */}

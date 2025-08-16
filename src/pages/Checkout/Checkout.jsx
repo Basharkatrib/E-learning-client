@@ -5,7 +5,7 @@ import { selectTheme } from '../../redux/features/themeSlice';
 import { selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useGetCourseQuery, useEnrollUserMutation, useCheckPaymentStatusQuery } from '../../redux/features/apiSlice';
+import { useGetCourseQuery, useEnrollUserMutation } from '../../redux/features/apiSlice';
 import { selectToken, selectCurrentUser } from '../../redux/features/authSlice';
 import LoadingPage from '../LoadingPage/LoadingPage';
 import toast from 'react-hot-toast';
@@ -22,12 +22,11 @@ export default function Checkout() {
     const token = useSelector(selectToken);
     const user = useSelector(selectCurrentUser);
 
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('syriatel');
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [enrollmentData, setEnrollmentData] = useState(null);
     const [enrollUser, { isLoading: isEnrolling }] = useEnrollUserMutation();
     const { data: courseData, error, isLoading } = useGetCourseQuery(id, { refetchOnMountOrArgChange: true });
-    const { data: paymentStatus, refetch: refetchPaymentStatus } = useCheckPaymentStatusQuery({ token, courseId: id }, { skip: !token || !id });
 
     useEffect(() => {
         if (!token) {
@@ -78,14 +77,7 @@ export default function Checkout() {
         }
     };
 
-    const handleCheckPaymentStatus = async () => {
-        try {
-            await refetchPaymentStatus();
-            toast.info(lang === 'ar' ? 'الدفع لا يزال في انتظار التأكيد' : 'Payment is still pending confirmation');
-        } catch (error) {
-            toast.error(lang === 'ar' ? 'حدث خطأ أثناء التحقق من حالة الدفع' : 'Error checking payment status');
-        }
-    };
+    // Removed manual check payment status; status will be updated by teacher and reflected when user revisits
 
     if (isLoading) return <LoadingPage />;
 
@@ -209,119 +201,177 @@ export default function Checkout() {
                         {!enrollmentData ? (
                             <div className="space-y-4">
                                 <div className="space-y-3">
-                                   {/* Syriatel Cash */}
-                                  <label className="flex flex-col gap-4 p-5 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-primary cursor-pointer transition-all w-full shadow-md hover:shadow-lg">
-  <div className="flex items-center gap-4">
-    <input
-      type="radio"
-      name="paymentMethod"
-      value="syriatel"
-      checked={selectedPaymentMethod === 'syriatel'}
-      onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-      className="text-primary focus:ring-primary"
-    />
+                                    {/* Syriatel Cash */}
+                                    <motion.label
+                                        layout
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        onClick={() => setSelectedPaymentMethod(prev => (prev === 'syriatel' ? null : 'syriatel'))}
+                                        className={`relative flex flex-col gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all w-full shadow-md ${
+                                            selectedPaymentMethod === 'syriatel'
+                                                ? 'border-primary ring-2 ring-primary/30 bg-gradient-to-b from-primary/5 to-transparent'
+                                                : 'border-gray-200 dark:border-gray-700 hover:border-primary hover:ring-1 hover:ring-primary/20'
+                                        } ${isDark ? 'dark:bg-gray-800' : 'bg-white'}`}
+                                    >
+                                        {selectedPaymentMethod === 'syriatel' && (
+                                            <motion.span
+                                                initial={{ scale: 0, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                className="absolute top-4 right-4 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs shadow"
+                                            >
+                                                ✓
+                                            </motion.span>
+                                        )}
 
-    {/* شعار Syriatel */}
-    <div className="relative w-14 h-14 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 overflow-hidden shadow-lg">
-      <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-md"></div>
-      <img
-        src={CashSyr}
-        alt="Syriatel Cash"
-        className="w-10 h-10 object-contain relative z-10"
-      />
-    </div>
+                                        <div className="flex items-center gap-4">
+                                            <input
+                                                type="radio"
+                                                name="paymentMethod"
+                                                value="syriatel"
+                                                checked={selectedPaymentMethod === 'syriatel'}
+                                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                                                className="text-primary focus:ring-primary"
+                                            />
 
-    {/* العنوان */}
-    <div>
-      <div className="font-bold text-lg">Syriatel Cash</div>
-      <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-        {lang === 'ar' ? 'دفع عبر سيرياتيل كاش' : 'Pay via Syriatel Cash'}
-      </div>
-    </div>
-  </div>
+                                            {/* شعار Syriatel */}
+                                            <div className="relative w-14 h-14 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 overflow-hidden shadow-lg">
+                                                <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-md"></div>
+                                                <img
+                                                    src={CashSyr}
+                                                    alt="Syriatel Cash"
+                                                    className="w-10 h-10 object-contain relative z-10"
+                                                />
+                                            </div>
 
-  {/* خطوات الدفع */}
-  {selectedPaymentMethod === 'syriatel' && (
-    <div className={`mt-2 p-4 rounded-xl text-sm space-y-3 ${isDark ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>
-      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">📱</div>
-        <span>{lang === 'ar' ? 'افتح تطبيق "أقرب إليك"' : 'Open the "Aqrab Elik" app'}</span>
-      </div>
+                                            {/* العنوان */}
+                                            <div>
+                                                <div className="font-bold text-lg">Syriatel Cash</div>
+                                                <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                    {lang === 'ar' ? 'دفع عبر سيرياتيل كاش' : 'Pay via Syriatel Cash'}
+                                                </div>
+                                            </div>
+                                        </div>
 
-      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">🔑</div>
-        <span>{lang === 'ar' ? 'اذهب إلى سيرياتيل كاش وأدخل كلمة المرور' : 'Go to Syriatel Cash and enter your password'}</span>
-      </div>
+                                        {/* خطوات الدفع */}
+                                        <AnimatePresence initial={false}>
+                                            {selectedPaymentMethod === 'syriatel' && (
+                                                <motion.div
+                                                    key="syriatel-steps"
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                                    className={`mt-2 p-4 rounded-xl text-sm space-y-3 ${isDark ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-700'}`}
+                                                >
+                                                    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
+                                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">📱</div>
+                                                        <span>{lang === 'ar' ? 'افتح تطبيق "أقرب إليك"' : 'Open the "Aqrab Elik" app'}</span>
+                                                    </div>
 
-      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">📞</div>
-        <span>{lang === 'ar' ? 'أدخل رقم هاتفك ' : 'Enter your phone number'}</span>
-      </div>
+                                                    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
+                                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">🔑</div>
+                                                        <span>{lang === 'ar' ? 'اذهب إلى سيرياتيل كاش وأدخل كلمة المرور' : 'Go to Syriatel Cash and enter your password'}</span>
+                                                    </div>
 
-      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">💰</div>
-        <span>{lang === 'ar' ? 'أدخل المبلغ المطلوب' : 'Enter the required amount'}</span>
-      </div>
-    </div>
-  )}
-</label>
+                                                    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
+                                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">📞</div>
+                                                        <span>{lang === 'ar' ? 'أدخل رقم هاتفك ' : 'Enter your phone number'}</span>
+                                                    </div>
 
-{/* MTN Cash */}
-<label className="flex flex-col gap-4 p-5 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-primary cursor-pointer transition-all w-full shadow-md hover:shadow-lg">
-  <div className="flex items-center gap-4">
-    <input
-      type="radio"
-      name="paymentMethod"
-      value="mtn"
-      checked={selectedPaymentMethod === 'mtn'}
-      onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-      className="text-primary focus:ring-primary"
-    />
+                                                    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
+                                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">💰</div>
+                                                        <span>{lang === 'ar' ? 'أدخل المبلغ المطلوب' : 'Enter the required amount'}</span>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </motion.label>
 
-    {/* شعار MTN */}
-    <div className="relative w-14 h-14 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 overflow-hidden shadow-lg">
-      <div className="absolute inset-0 rounded-full bg-yellow-500/20 blur-md"></div>
-      <img
-        src={CashMtn}
-        alt="MTN Cash"
-        className="w-10 h-10 object-contain relative z-10"
-      />
-    </div>
+                                    {/* MTN Cash */}
+                                    <motion.label
+                                        layout
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        onClick={() => setSelectedPaymentMethod(prev => (prev === 'mtn' ? null : 'mtn'))}
+                                        className={`relative flex flex-col gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all w-full shadow-md ${
+                                            selectedPaymentMethod === 'mtn'
+                                                ? 'border-primary ring-2 ring-primary/30 bg-gradient-to-b from-primary/5 to-transparent'
+                                                : 'border-gray-200 dark:border-gray-700 hover:border-primary hover:ring-1 hover:ring-primary/20'
+                                        } ${isDark ? 'dark:bg-gray-800' : 'bg-white'}`}
+                                    >
+                                        {selectedPaymentMethod === 'mtn' && (
+                                            <motion.span
+                                                initial={{ scale: 0, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                className="absolute top-4 right-4 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs shadow"
+                                            >
+                                                ✓
+                                            </motion.span>
+                                        )}
 
-    {/* العنوان */}
-    <div>
-      <div className="font-bold text-lg">MTN Cash</div>
-      <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-        {lang === 'ar' ? 'دفع عبر MTN كاش' : 'Pay via MTN Cash'}
-      </div>
-    </div>
-  </div>
+                                        <div className="flex items-center gap-4">
+                                            <input
+                                                type="radio"
+                                                name="paymentMethod"
+                                                value="mtn"
+                                                checked={selectedPaymentMethod === 'mtn'}
+                                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                                                className="text-primary focus:ring-primary"
+                                            />
 
-  {/* خطوات الدفع */}
-  {selectedPaymentMethod === 'mtn' && (
-    <div className={`mt-2 p-4 rounded-xl text-sm space-y-3 ${isDark ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>
-      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">📱</div>
-        <span>{lang === 'ar' ? 'افتح تطبيق MTN Cash' : 'Open the MTN Cash app'}</span>
-      </div>
+                                            {/* شعار MTN */}
+                                            <div className="relative w-14 h-14 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 overflow-hidden shadow-lg">
+                                                <div className="absolute inset-0 rounded-full bg-yellow-500/20 blur-md"></div>
+                                                <img
+                                                    src={CashMtn}
+                                                    alt="MTN Cash"
+                                                    className="w-10 h-10 object-contain relative z-10"
+                                                />
+                                            </div>
 
-      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">🔑</div>
-        <span>{lang === 'ar' ? 'أدخل كلمة المرور الخاصة بك' : 'Enter your password'}</span>
-      </div>
+                                            {/* العنوان */}
+                                            <div>
+                                                <div className="font-bold text-lg">MTN Cash</div>
+                                                <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                    {lang === 'ar' ? 'دفع عبر MTN كاش' : 'Pay via MTN Cash'}
+                                                </div>
+                                            </div>
+                                        </div>
 
-      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">📞</div>
-        <span>{lang === 'ar' ? 'أدخل رقم هاتفك ' : 'Enter your phone number'}</span>
-      </div>
+                                        {/* خطوات الدفع */}
+                                        <AnimatePresence initial={false}>
+                                            {selectedPaymentMethod === 'mtn' && (
+            										<motion.div
+                                                    key="mtn-steps"
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                                    className={`mt-2 p-4 rounded-xl text-sm space-y-3 ${isDark ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-700'}`}
+                                                >
+                                                    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
+                                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">📱</div>
+                                                        <span>{lang === 'ar' ? 'افتح تطبيق MTN Cash' : 'Open the MTN Cash app'}</span>
+                                                    </div>
 
-      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">💰</div>
-        <span>{lang === 'ar' ? 'أدخل المبلغ المطلوب' : 'Enter the required amount'}</span>
-      </div>
-    </div>
-  )}
-</label>
+                                                    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
+                                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">🔑</div>
+                                                        <span>{lang === 'ar' ? 'أدخل كلمة المرور الخاصة بك' : 'Enter your password'}</span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
+                                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">📞</div>
+                                                        <span>{lang === 'ar' ? 'أدخل رقم هاتفك ' : 'Enter your phone number'}</span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 transition-colors">
+                                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white text-lg shadow">💰</div>
+                                                        <span>{lang === 'ar' ? 'أدخل المبلغ المطلوب' : 'Enter the required amount'}</span>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </motion.label>
 
                                 </div>
 
@@ -384,17 +434,9 @@ export default function Checkout() {
 
                                 {/* Action Buttons */}
                                 <div className="flex gap-3">
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={handleCheckPaymentStatus}
-                                        className="flex-1 py-2 px-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                                    >
-                                        {lang === 'ar' ? 'فحص حالة الدفع' : 'Check Payment Status'}
-                                    </motion.button>
                                     <Link
                                         to={`/courses/${id}`}
-                                        className="flex-1 py-2 px-4 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-center"
+                                        className="w-full py-2 px-4 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-center"
                                     >
                                         {lang === 'ar' ? 'العودة للدورات' : 'Back to Courses'}
                                     </Link>

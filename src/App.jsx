@@ -24,7 +24,7 @@ import { useGetCurrentUserQuery } from './redux/features/apiSlice';
 import { setCredentials, logout, selectToken } from './redux/features/authSlice';
 import { selectTheme } from './redux/features/themeSlice';
 import Chat from './components/Chat/Chat';
-// import Pusher from 'pusher-js';
+import Pusher from 'pusher-js';
 import AboutUsPage from './pages/AboutUsPage/AboutUsPage';
 import ProtectedCourseRoute from './components/ProtectedCourse/ProtectedCourseRoute';
 import ViewMyCourses from './pages/ViewMyCourses/ViewMyCourses';
@@ -38,7 +38,7 @@ import Checkout from './pages/Checkout/Checkout';
 import { addNotification } from './redux/features/notificationsSlice';
 
 function App() {
-  // console.log('Pusher Key:', import.meta.env.VITE_PUSHER_API_KEY);
+  console.log('Pusher Key:', import.meta.env.VITE_PUSHER_API_KEY);
   const theme = useSelector(selectTheme);
   const dispatch = useDispatch();
   const token = useSelector(selectToken);
@@ -99,32 +99,32 @@ function App() {
   //     });
   //   });
 
-    // Listen for role update events on the same channel
-    // channel.bind('role-updated', (payload) => {
-    //   const message =
-    //     payload?.data?.message ??
-    //     payload?.message ??
-    //     payload?.data?.data?.message ??
-    //     'تم تحديث صلاحيات حسابك.';
+  //   // Listen for role update events on the same channel
+  //   channel.bind('role-updated', (payload) => {
+  //     const message =
+  //       payload?.data?.message ??
+  //       payload?.message ??
+  //       payload?.data?.data?.message ??
+  //       'تم تحديث صلاحيات حسابك.';
 
-    //   dispatch(addNotification({
-    //     id: Date.now(),
-    //     message,
-    //     read: false,
-    //     timestamp: new Date().toISOString(),
-    //   }));
+  //     dispatch(addNotification({
+  //       id: Date.now(),
+  //       message,
+  //       read: false,
+  //       timestamp: new Date().toISOString(),
+  //     }));
 
-    //   toast(message, {
-    //     duration: 4000,
-    //     position: 'top-right',
-    //     style: {
-    //       background: theme === 'dark' ? '#1F2937' : '#fff',
-    //       color: theme === 'dark' ? '#fff' : '#000',
-    //       border: '1px solid #6D28D9',
-    //     },
-    //     icon: '🔄',
-    //   });
-    // });
+  //     toast(message, {
+  //       duration: 4000,
+  //       position: 'top-right',
+  //       style: {
+  //         background: theme === 'dark' ? '#1F2937' : '#fff',
+  //         color: theme === 'dark' ? '#fff' : '#000',
+  //         border: '1px solid #6D28D9',
+  //       },
+  //       icon: '🔄',
+  //     });
+  //   });
 
   //   return () => {
   //     channel.unbind('enrollment-accepted');
