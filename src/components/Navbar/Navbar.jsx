@@ -561,7 +561,6 @@ function Navbar() {
                                 </div>
                             )}
                         </div>
-
                         <button
                             onClick={() => setIsOpen(!isOpen)}
                             className={`md:hidden inline-flex items-center justify-center p-2 rounded-md ${theme === 'dark'

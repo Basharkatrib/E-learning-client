@@ -140,7 +140,9 @@
 .testimonials-swiper .swiper-slide-active .motion-div {
   animation: fadeInScale 0.5s ease forwards;
 }
-
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none !important;
+}
 @keyframes fadeInScale {
   from {
     opacity: 0;
