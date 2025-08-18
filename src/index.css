@@ -143,6 +143,66 @@
 input[type="password"]::-webkit-textfield-decoration-container {
   display: none !important;
 }
+
+/* Hide password reveal button in Edge and other WebKit browsers */
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+}
+
+input[type="password"]::-webkit-contacts-auto-fill-button {
+  display: none !important;
+}
+
+/* Additional rules for Edge and modern browsers */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+/* For Firefox */
+input[type="password"]::-moz-textfield-decoration-container {
+  display: none !important;
+}
+
+/* More specific rules for Edge */
+input[type="password"]::-webkit-outer-spin-button,
+input[type="password"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Hide all password reveal buttons */
+input[type="password"]::-webkit-text-security {
+  -webkit-text-security: none;
+}
+
+/* Force hide any password reveal elements */
+input[type="password"]::before,
+input[type="password"]::after {
+  display: none !important;
+}
+
+/* Additional Edge-specific selectors */
+input[type="password"]::-webkit-search-decoration,
+input[type="password"]::-webkit-search-cancel-button,
+input[type="password"]::-webkit-search-results-button,
+input[type="password"]::-webkit-search-results-decoration {
+  display: none !important;
+}
+
+/* Ultimate solution - hide all password field decorations */
+input[type="password"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Hide any remaining password reveal elements */
+input[type="password"]::-webkit-calendar-picker-indicator,
+input[type="password"]::-webkit-list-button,
+input[type="password"]::-webkit-media-slider-thumb {
+  display: none !important;
+}
 @keyframes fadeInScale {
   from {
     opacity: 0;
