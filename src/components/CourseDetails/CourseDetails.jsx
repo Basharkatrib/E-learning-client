@@ -76,8 +76,9 @@ export default function CourseDetails() {
         console.log('Payment Status Data:', paymentStatusData);
         console.log('Payment Status Error:', paymentStatusError);
         console.log('Payment Status Loading:', isPaymentStatusLoading);
+        console.log('Course data:', data);
         console.log('===========================');
-    }, [paymentStatusData, paymentStatusError, isPaymentStatusLoading, id, data?.price, token]);
+    }, [paymentStatusData, paymentStatusError, isPaymentStatusLoading, id, data?.price, token, data]);
     const [showRating, setShowRating] = useState(false);
     const [rating, setRating] = useState(0);
     const [review, setReview] = useState('');
