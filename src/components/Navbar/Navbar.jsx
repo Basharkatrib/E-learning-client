@@ -14,7 +14,6 @@ import { logout as logoutAction, selectToken, selectCurrentUser } from '../../re
 import { selectNotifications, selectUnreadCount, removeNotification, markAsRead, markAllAsRead, clearAllNotifications } from '../../redux/features/notificationsSlice';
 import { Menu } from '@headlessui/react';
 import { FaGraduationCap, FaBookmark } from 'react-icons/fa';
-
 function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
