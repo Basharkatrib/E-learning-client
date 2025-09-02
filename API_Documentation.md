@@ -1,147 +1,143 @@
-## توثيق الدفع وواجهات API
+## Mobile Google Sign-In API (Flutter)
 
-### الهدف
-شرح تدفق الدفع في المنصّة، ما هي واجهات الـ API المستخدمة، كيف تم استخدامها في الواجهة الأمامية، ولماذا تم اتخاذ هذه القرارات.
+### Overview
+Authenticate users from a Flutter app using a Google ID token. The backend verifies the token server‑side and returns a Sanctum token plus user data. No redirects involved.
 
----
-
-### نظرة عامة على تدفق الدفع
-- **الدورات المجانية**
-  - عند فتح صفحة الدورة، نتحقق تلقائياً من حالة تسجيل المستخدم في الدورة.
-  - إذا كان مسجلاً نعرض فوراً أزرار «مشاهدة الفيديوهات / إلغاء التسجيل».
-  - عند الضغط على «سجّل مجاناً» يتم تسجيله مباشرة بدون أي خطوات دفع.
-
-- **الدورات المدفوعة**
-  - من صفحة الدورة نُحوِّل المستخدم إلى صفحة Checkout.
-  - عند الضغط على «إتمام الدفع» يتم إنشاء «طلب دفع» يعرض QR للمدرّس حسب الوسيلة المختارة (Syriatel أو MTN).
-  - حالة الدفع تكون Pending حتى يقبل المدرّس الطلب يدويّاً من لوحة التحكم، ثم تتحول إلى Paid/Accepted ويصبح بإمكان المستخدم مشاهدة الفيديوهات.
-
-لماذا هذا التدفق؟
-- لأن قبول الدفع يتم يدوياً بعد استلام الحوالة، فتم فصل «إنشاء الطلب» عن «التفعيل»، مع نقطة تحقق لاحقة لحالة الدفع.
-
----
-
-### واجهات API الأساسية (Backend)
-
-
-
-2) التسجيل/إنشاء طلب دفع
+### Endpoint
 - Method: POST
-- Path: `/api/v1/courses/{course}/enroll`
-- Auth: Bearer token
-- السلوك:
-  - إن كانت الدورة مجانية: تفعيل فوري وإرجاع نجاح.
-  - إن كانت مدفوعة: يتم إنشاء «طلب دفع»، وقد تعود الاستجابة بحالة 200 أو 402 مع تفاصيل QR.
+- URL: /auth/google/mobile
+- Body (JSON):
+  - id_token: string (Google ID token from the device)
 
-مثال استجابة لحالة «Payment Required»:
+### Response
+Success 200:
 ```json
 {
-  "status": "payment_required",
-  "payment_details": {
-    "teacherQRCodes": {
-      "syriatel": "https://.../qr-syr.png",
-      "mtn": "https://.../qr-mtn.png"
-    },
-    "amount": 25000,
-    "currency": "SYP"
+  "token": "<sanctum_token>",
+  "user": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "phone_number": null,
+    "email": "john@example.com",
+    "profile_image": "https://...",
+    "email_verified_at": "2025-09-02T09:50:00.000000Z",
+    "role": "student"
   }
 }
 ```
 
-3) حالة الدفع (مدفوع فقط)
-- Method: GET
-- Path: `/api/v1/courses/{course}/payment-status`
-- Auth: Bearer token
-- يحدد الحالة الحالية:
-```json
-{
-  "paymentStatus": "pending",    // pending | paid | rejected
-  "enrollmentStatus": "waiting"   // waiting | accepted | rejected
+Error examples:
+- 401 Invalid token
+- 400 Missing claims
+- 500 Server error
+
+### Flutter Setup
+Add dependencies in `pubspec.yaml`:
+```yaml
+dependencies:
+  google_sign_in: ^6.2.1
+  http: ^1.2.1
+```
+
+Android: configure SHA‑1/256 in Firebase Console and download the updated `google-services.json` if you use Firebase Auth to assist Google Sign-In. iOS: add reversed client id in URL Types if needed.
+
+### Obtain Google ID Token (Flutter)
+```dart
+import 'package:google_sign_in/google_sign_in.dart';
+
+final _googleSignIn = GoogleSignIn(
+  scopes: [
+    'email',
+    'openid',
+    'profile',
+  ],
+  // clientId optional on Android, required on iOS/macOS/Web if not inferred
+  // clientId: 'YOUR_IOS_OR_WEB_CLIENT_ID.apps.googleusercontent.com',
+);
+
+Future<String?> getGoogleIdToken() async {
+  final acct = await _googleSignIn.signIn();
+  if (acct == null) return null; // user cancelled
+  final auth = await acct.authentication;
+  return auth.idToken; // <-- send this to backend
 }
 ```
 
-4) فحص الاشتراك (مخصّص للمجاني)
-- Method: POST
-- Path: `/api/v1/enrollment/check`
-- Auth: Bearer token
-- Body:
-```json
-{ "userId": 5, "courseId": 12 }
+### Call Backend API
+```dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+const baseUrl = 'https://YOUR_DOMAIN_OR_IP';
+
+Future<Map<String, dynamic>> signInWithGoogleMobile(String idToken) async {
+  final res = await http.post(
+    Uri.parse('$baseUrl/auth/google/mobile'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: jsonEncode({'id_token': idToken}),
+  );
+
+  if (res.statusCode == 200) {
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  throw Exception('Login failed: ${res.statusCode} ${res.body}');
+}
 ```
 
+### Persist Token and Use in Subsequent Calls
+Use any secure storage (e.g., `flutter_secure_storage`).
+```dart
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+final storage = FlutterSecureStorage();
 
-// Pusher code
+Future<void> saveToken(String token) async {
+  await storage.write(key: 'auth_token', value: token);
+}
 
-اطلبي من Chat gpt يعملك تحويل هاد الكود الى كود فلاتر واسأليه شو المكتبة يلي لازم تنزليا عندك بالفرونت
+Future<http.Response> getProtectedResource(String path) async {
+  final token = await storage.read(key: 'auth_token');
+  final res = await http.get(
+    Uri.parse('$baseUrl$path'),
+    headers: {
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    },
+  );
+  return res;
+}
+```
 
-ال Api key
+### Full Example Flow
+```dart
+Future<void> mobileGoogleLoginFlow() async {
+  final idToken = await getGoogleIdToken();
+  if (idToken == null) return; // cancelled
 
-VITE_PUSHER_API_KEY=3bf9a9c0257b12e21397
+  final result = await signInWithGoogleMobile(idToken);
+  final token = result['token'] as String;
+  final user = result['user'] as Map<String, dynamic>;
 
-useEffect(() => {
-    if (!currentUser?.id) return;
-    Pusher.logToConsole = true;
+  await saveToken(token);
+  // Use `user` as needed in app state
+}
+```
 
-    const pusher = new Pusher(import.meta.env.VITE_PUSHER_API_KEY, {
-      cluster: 'eu',
-    });
-    const channel = pusher.subscribe('user-notifications-' + currentUser.id);
-    channel.bind('enrollment-accepted', function (data) {
-      // Add notification to Redux store
-      dispatch(addNotification({
-        id: Date.now(), // Use timestamp as unique ID
-        message: data.data.message || 'New notification received!',
-        read: false,
-        timestamp: new Date().toISOString()
-      }));
+### cURL (for quick testing)
+```bash
+curl -X POST \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -d '{"id_token":"YOUR_GOOGLE_ID_TOKEN"}' \
+  https://YOUR_DOMAIN_OR_IP/auth/google/mobile
+```
 
-      // Show toast notification
-      toast(data.data.message || 'New notification received!', {
-        duration: 4000,
-        position: 'top-right',
-        style: {
-          background: theme === 'dark' ? '#1F2937' : '#fff',
-          color: theme === 'dark' ? '#fff' : '#000',
-          border: '1px solid #6D28D9',
-        },
-        icon: '🔔',
-      });
-    });
-
-    // Listen for role update events on the same channel
-    channel.bind('role-updated', (payload) => {
-      const message =
-        payload?.data?.message ??
-        payload?.message ??
-        payload?.data?.data?.message ??
-        'تم تحديث صلاحيات حسابك.';
-
-      dispatch(addNotification({
-        id: Date.now(),
-        message,
-        read: false,
-        timestamp: new Date().toISOString(),
-      }));
-
-      toast(message, {
-        duration: 4000,
-        position: 'top-right',
-        style: {
-          background: theme === 'dark' ? '#1F2937' : '#fff',
-          color: theme === 'dark' ? '#fff' : '#000',
-          border: '1px solid #6D28D9',
-        },
-        icon: '🔄',
-      });
-    });
-
-    return () => {
-      channel.unbind('enrollment-accepted');
-      channel.unbind('role-updated');
-      channel.unsubscribe();
-      pusher.disconnect();
-    };
-  }, [currentUser?.id, theme, dispatch]);
-
+### Notes
+- Ensure `services.google.client_id` in backend matches the client used by the Flutter app.
+- Use the returned Sanctum token in the `Authorization: Bearer <token>` header for protected endpoints (`/api/v1/...`).
 

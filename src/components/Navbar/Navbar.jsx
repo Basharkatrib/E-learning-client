@@ -466,9 +466,6 @@ function Navbar() {
                                             <span className={`font-medium text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
                                                 {user?.first_name || user?.firstName}
                                             </span>
-                                            <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                {user.email}
-                                            </span>
                                         </div>
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
