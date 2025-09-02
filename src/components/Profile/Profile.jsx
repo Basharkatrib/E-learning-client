@@ -4,11 +4,12 @@ import { useSelector, useDispatch } from 'react-redux';
 import { selectTheme } from '../../redux/features/themeSlice';
 import { selectCurrentUser } from '../../redux/features/authSlice';
 import { setCredentials } from '../../redux/features/authSlice';
+import { updateUser } from '../../redux/features/authSlice';
 import profilePic from '../../assets/images/navbar/profilepic.jpg';
 import { selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
 import coverImg from '../../assets/images/navbar/logo.png';
-import { useUpdateProfileMutation, useGetCurrentUserQuery } from '../../redux/features/apiSlice';
+import { useUpdateProfileMutation, useGetCurrentUserQuery,useRemoveProfileImageMutation } from '../../redux/features/apiSlice';
 import { toast } from 'react-hot-toast';
 
 function ProfilePage() {
@@ -23,7 +24,7 @@ function ProfilePage() {
   const token = useSelector(state => state.auth.token);
   const { data: userData, refetch } = useGetCurrentUserQuery(token);
   const [profileImage, setProfileImage] = useState(null);
-
+  const [removeProfileImage] = useRemoveProfileImageMutation();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -211,6 +212,74 @@ function ProfilePage() {
       });
     }
   };
+const handleRemoveImage = async () => {
+  // الحالة 1: صورة محلية فقط (قبل الحفظ)
+  if (profileImage && !userData?.profile_image) {
+    setProfileImage(null);
+    toast.success(t('Local image removed successfully!'), {
+      duration: 3000,
+      style: {
+        background: isDark ? '#1F2937' : '#FFFFFF',
+        color: isDark ? '#FFFFFF' : '#1F2937',
+        border: `1px solid ${isDark ? '#065F46' : '#D1FAE5'}`,
+        padding: '16px',
+        borderRadius: '12px',
+      },
+      icon: '🗑️',
+    });
+    return;
+  }
+
+  // الحالة 2: صورة محفوظة في السيرفر
+  if (userData?.profile_image) {
+    try {
+      await removeProfileImage(token).unwrap();
+      setProfileImage(null);
+      dispatch(updateUser({ profile_image: null }));
+      await refetch();
+
+      toast.success(t('Profile image removed successfully!'), {
+        duration: 4000,
+        style: {
+          background: isDark ? '#1F2937' : '#FFFFFF',
+          color: isDark ? '#FFFFFF' : '#1F2937',
+          border: `1px solid ${isDark ? '#065F46' : '#D1FAE5'}`,
+          padding: '16px',
+          borderRadius: '12px',
+        },
+        icon: '🗑️',
+      });
+    } catch (err) {
+      console.error('Remove image error:', err);
+      toast.error(t('Failed to remove profile image'), {
+        duration: 4000,
+        style: {
+          background: isDark ? '#1F2937' : '#FFFFFF',
+          color: isDark ? '#FFFFFF' : '#1F2937',
+          border: `1px solid ${isDark ? '#991B1B' : '#FEE2E2'}`,
+          padding: '16px',
+          borderRadius: '12px',
+        },
+        icon: '❌',
+      });
+    }
+    return;
+  }
+
+  // الحالة 3: لا صورة أصلًا (افتراضية فقط)
+  toast.error(t('No profile image to remove'), {
+    duration: 3000,
+    style: {
+      background: isDark ? '#1F2937' : '#FFFFFF',
+      color: isDark ? '#FFFFFF' : '#1F2937',
+      border: `1px solid ${isDark ? '#991B1B' : '#FEE2E2'}`,
+      padding: '16px',
+      borderRadius: '12px',
+    },
+    icon: '⚠️',
+  });
+};
+
 
   return (
     <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen flex items-center justify-center px-4 mt-22 py-8 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -228,19 +297,31 @@ function ProfilePage() {
         <div className="flex flex-col lg:flex-row lg:items-stretch gap-0">
           {/* Left: User Info */}
           <div className={`lg:w-2/5 flex flex-col items-center lg:items-start px-6 pt-16 pb-8 relative ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className={`absolute top-2 lg:-top-16 left-1/2 ${lang === 'ar' ? 'lg:right-12' : 'lg:left-12'} transform -translate-x-1/2 lg:translate-x-0 z-10`}>
-              <img
-                src={profileImage ? URL.createObjectURL(profileImage) : (userData && userData.profile_image) ? userData.profile_image : profilePic}
-                alt="Profile"
-                className={`w-32 h-32 object-cover rounded-full ring-4 ring-primary/40 shadow-xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
-                style={{ cursor: editMode ? 'pointer' : 'default' }}
-                onClick={() => {
-                  if (editMode) {
-                    document.getElementById('profile-image-input').click();
-                  }
-                }}
-              />
-            </div>
+           <div className={`absolute top-2 lg:-top-16 left-1/2 ${lang === 'ar' ? 'lg:right-12' : 'lg:left-12'} transform -translate-x-1/2 lg:translate-x-0 z-10`}>
+  <div className="relative">
+    <img
+      src={profileImage ? URL.createObjectURL(profileImage) : (userData && userData.profile_image) ? userData.profile_image : profilePic}
+      alt="Profile"
+      className={`w-32 h-32 object-cover rounded-full ring-4 ring-primary/40 shadow-xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
+      style={{ cursor: editMode ? 'pointer' : 'default' }}
+      onClick={() => {
+        if (editMode) {
+          document.getElementById('profile-image-input').click();
+        }
+      }}
+    />
+    {editMode && (profileImage || userData?.profile_image) && (
+  <button
+    type="button"
+    onClick={handleRemoveImage}
+    className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-md"
+  >
+    ✕
+  </button>
+  )}
+  </div>
+</div>
+
             <div className="mt-20 lg:mt-16 w-full">
               <h2 className={`text-2xl font-bold mb-3 text-center ${lang === 'ar' ? 'lg:text-right' : 'lg:text-left'} ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 {userData?.first_name && userData?.last_name 

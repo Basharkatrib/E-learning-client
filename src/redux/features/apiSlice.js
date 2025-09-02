@@ -552,7 +552,15 @@ addContact: builder.mutation({
             }
         }),
     }),
-
+    removeProfileImage:builder.mutation({
+    query: (token) => ({
+    url: 'v1/profile/image',
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }),
+    }),
     checkPaymentStatus: builder.query({
       query: ({ token, courseId }) => ({
         url: `v1/courses/${courseId}/payment-status`,
@@ -610,5 +618,6 @@ export const {
   useGetCertificateMutation,
   useGoogleLoginMutation,
   useGetQuizResultsMutation,
-  useCheckPaymentStatusQuery
+  useCheckPaymentStatusQuery,
+  useRemoveProfileImageMutation,
 } = apiSlice;
