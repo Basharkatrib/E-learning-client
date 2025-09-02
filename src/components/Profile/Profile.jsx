@@ -311,13 +311,22 @@ const handleRemoveImage = async () => {
       }}
     />
     {editMode && (profileImage || userData?.profile_image) && (
-  <button
-    type="button"
-    onClick={handleRemoveImage}
-    className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-md"
-  >
-    ✕
-  </button>
+  <div className="absolute top-1 right-1 group">
+    <button
+      type="button"
+      aria-label="Remove profile image"
+      title={t('Remove profile image')}
+      onClick={handleRemoveImage}
+      className="relative inline-flex items-center justify-center h-9 w-9 rounded-full bg-red-500/90 hover:bg-red-600 text-white shadow-lg ring-2 ring-white/40 backdrop-blur-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 100 2h.293l.853 10.233A2 2 0 007.14 18h5.72a2 2 0 001.994-1.767L15.707 6H16a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zm-1 6a1 1 0 112 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 112 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
+      </svg>
+    </button>
+    <span className={`pointer-events-none absolute -bottom-8 right-0 whitespace-nowrap rounded-md px-2 py-1 text-xs shadow-md opacity-0 group-hover:opacity-100 transition ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-800 border border-gray-200'}`}>
+      {t('Remove')}
+    </span>
+  </div>
   )}
   </div>
 </div>
