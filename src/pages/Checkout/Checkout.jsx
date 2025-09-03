@@ -121,8 +121,8 @@ export default function Checkout() {
     }
 
     return (
-        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen mt-22 w-full ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen mt-22 w-full ${isDark ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white' : 'bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900'}`}>
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -213,25 +213,17 @@ export default function Checkout() {
                                                 : 'border-gray-200 dark:border-gray-700 hover:border-primary hover:ring-1 hover:ring-primary/20'
                                         } ${isDark ? 'dark:bg-gray-800' : 'bg-white'}`}
                                     >
-                                        {selectedPaymentMethod === 'syriatel' && (
-                                            <motion.span
-                                                initial={{ scale: 0, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                className="absolute top-4 right-4 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs shadow"
-                                            >
-                                                ✓
-                                            </motion.span>
-                                        )}
+                                     
 
                                         <div className="flex items-center gap-4">
-                                            <input
+                                            {/* <input
                                                 type="radio"
                                                 name="paymentMethod"
                                                 value="syriatel"
                                                 checked={selectedPaymentMethod === 'syriatel'}
                                                 onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                                                 className="text-primary focus:ring-primary"
-                                            />
+                                            /> */}
 
                                             {/* شعار Syriatel */}
                                             <div className="relative w-14 h-14 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 overflow-hidden shadow-lg">
@@ -299,25 +291,17 @@ export default function Checkout() {
                                                 : 'border-gray-200 dark:border-gray-700 hover:border-primary hover:ring-1 hover:ring-primary/20'
                                         } ${isDark ? 'dark:bg-gray-800' : 'bg-white'}`}
                                     >
-                                        {selectedPaymentMethod === 'mtn' && (
-                                            <motion.span
-                                                initial={{ scale: 0, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                className="absolute top-4 right-4 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs shadow"
-                                            >
-                                                ✓
-                                            </motion.span>
-                                        )}
+                                      
 
                                         <div className="flex items-center gap-4">
-                                            <input
+                                            {/* <input
                                                 type="radio"
                                                 name="paymentMethod"
                                                 value="mtn"
                                                 checked={selectedPaymentMethod === 'mtn'}
                                                 onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                                                 className="text-primary focus:ring-primary"
-                                            />
+                                            /> */}
 
                                             {/* شعار MTN */}
                                             <div className="relative w-14 h-14 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 overflow-hidden shadow-lg">

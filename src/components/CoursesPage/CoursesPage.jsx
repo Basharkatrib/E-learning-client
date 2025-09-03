@@ -29,6 +29,7 @@ export default function CoursesPage() {
     }
   }, [location.search]);
 
+
   const levels = useMemo(() => [
     { value: 'all', label: t('All') },
     { value: 'beginner', label: t('beginner') },

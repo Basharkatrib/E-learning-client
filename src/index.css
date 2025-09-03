@@ -213,3 +213,62 @@ input[type="password"]::-webkit-media-slider-thumb {
     transform: scale(1);
   }
 }
+
+/* Arabic font size increase - only on medium screens and up */
+@media (min-width: 768px) {
+  .arabic-font-size p {
+    font-size: calc(1rem + 2px) !important;
+  }
+
+  .arabic-font-size span {
+    font-size: calc(1rem + 2px) !important;
+  }
+
+  .arabic-font-size input {
+    font-size: calc(1rem + 2px) !important;
+  }
+
+  .arabic-font-size textarea {
+    font-size: calc(1rem + 2px) !important;
+  }
+
+  .arabic-font-size label {
+    font-size: calc(1rem + 4px) !important;
+  }
+
+  .arabic-font-size li {
+    font-size: calc(1rem + 4px) !important;
+  }
+
+  /* .arabic-font-size h1 {
+    font-size: calc(2.25rem + 2px) !important;
+  }
+
+  .arabic-font-size h2 {
+    font-size: calc(1.875rem + 2px) !important;
+  }
+
+  .arabic-font-size h3 {
+    font-size: calc(1.5rem + 4px) !important;
+  }
+
+  .arabic-font-size h4 {
+    font-size: calc(1.25rem + 4px) !important;
+  }
+
+  .arabic-font-size h5 {
+    font-size: calc(1.125rem + 4px) !important;
+  }
+
+  .arabic-font-size h6 {
+    font-size: calc(1rem + 4px) !important;
+  } */
+
+  /* .arabic-font-size button {
+    font-size: calc(1rem + 4px) !important;
+  } */
+
+  /* .arabic-font-size a {
+    font-size: calc(1rem + 4px) !important;
+  } */
+}

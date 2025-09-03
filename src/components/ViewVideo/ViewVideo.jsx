@@ -1067,7 +1067,7 @@ const ViewVideo = () => {
                                 </svg>
                               )}
                             </div>
-                            <div className="flex-1 text-left">
+                            <div className={`flex-1  text-right`}>
                               <p className="line-clamp-1">{video.title?.[lang] || video.title?.en || video.title || (lang === 'ar' ? 'فيديو بدون عنوان' : 'Untitled Video')}</p>
                               <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 {video.duration || '0'} {lang === 'ar' ? 'دقيقة' : 'min'}
