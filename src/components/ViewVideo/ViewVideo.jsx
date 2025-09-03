@@ -1103,62 +1103,129 @@ const ViewVideo = () => {
           <div className={`p-2 sm:p-4 lg:p-8 space-y-4 sm:space-y-8 text-white ${isDark ? 'bg-gray-900' : 'bg-gray-100'} min-h-0` }>
             {/* Video Player Container */}
             <div className="w-full max-w-[1200px] mx-auto">
-              {/* Responsive Video Wrapper */}
-              <div className="relative w-full rounded-lg sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl">
-                <div className={`relative w-full ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
-                  {showCover && course?.thumbnail_url ? (
-                    <div 
-                      className="absolute inset-0 bg-cover bg-center"
-                      style={{ 
-                        backgroundImage: `url(${course.thumbnail_url})`,
-                        paddingBottom: '56.25%' // 16:9 aspect ratio
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                        <button
-                          onClick={() => setShowCover(false)}
-                          className="transform hover:scale-110 transition-transform duration-300"
-                        >
-                          <svg className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-white opacity-90 hover:opacity-100" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M8 5v14l11-7z"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                      <iframe
-                        ref={videoPlayerRef}
-                        className="absolute inset-0 w-full h-full"
-                        src={currentVideo?.video_url || course?.sections?.[0]?.videos?.[0]?.video_url}
-                        allow="autoplay; fullscreen; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
+  {/* Responsive Video Wrapper */}
+  <div className="relative w-full rounded-lg sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl">
+    <div className={`relative w-full ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
+      {showCover && course?.thumbnail_url ? (
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ 
+            backgroundImage: `url(${course.thumbnail_url})`,
+            paddingBottom: '56.25%' // 16:9 aspect ratio
+          }}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+            <button
+              onClick={() => setShowCover(false)}
+              className="transform hover:scale-110 transition-transform duration-300"
+            >
+              <svg className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-white opacity-90 hover:opacity-100" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+          <iframe
+            ref={videoPlayerRef}
+            className="absolute inset-0 w-full h-full"
+            src={currentVideo?.video_url || course?.sections?.[0]?.videos?.[0]?.video_url}
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      )}
+    </div>
+  </div>
 
-              {/* Video Details */}
-              <div className="mt-4 sm:mt-6 space-y-4">
-                <div className={`p-4 sm:p-6 rounded-xl ${isDark ? 'bg-gray-900/50' : 'bg-white'} shadow-lg backdrop-blur-sm`}>
-                  <h2 className={`text-lg sm:text-xl md:text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {currentVideo?.title?.[lang] || currentVideo?.title?.en || currentVideo?.title || 
-                     course?.sections?.[0]?.videos?.[0]?.title?.[lang] || 
-                     course?.sections?.[0]?.videos?.[0]?.title?.en || 
-                     course?.sections?.[0]?.videos?.[0]?.title || 
-                     (lang === 'ar' ? 'فيديو بدون عنوان' : 'Untitled Video')}
-                  </h2>
-                  <p className={`text-sm sm:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {currentVideo?.description?.[lang] || currentVideo?.description?.en || currentVideo?.description || 
-                     course?.sections?.[0]?.videos?.[0]?.description?.[lang] || 
-                     course?.sections?.[0]?.videos?.[0]?.description?.en || 
-                     course?.sections?.[0]?.videos?.[0]?.description || 
-                     (lang === 'ar' ? 'لا يوجد وصف متاح لهذا الفيديو' : 'No description available for this video')}
-                  </p>
-                </div>
-              </div>
+  {/* Video Details */}
+  <div className="mt-4 sm:mt-6 space-y-4">
+    <div className={`p-4 sm:p-6 rounded-xl ${isDark ? 'bg-gray-900/50' : 'bg-white'} shadow-lg backdrop-blur-sm`}>
+      <h2 className={`text-lg sm:text-xl md:text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+        {currentVideo?.title?.[lang] || currentVideo?.title?.en || currentVideo?.title || 
+         course?.sections?.[0]?.videos?.[0]?.title?.[lang] || 
+         course?.sections?.[0]?.videos?.[0]?.title?.en || 
+         course?.sections?.[0]?.videos?.[0]?.title || 
+         (lang === 'ar' ? 'فيديو بدون عنوان' : 'Untitled Video')}
+      </h2>
+      <p className={`text-sm sm:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+        {currentVideo?.description?.[lang] || currentVideo?.description?.en || currentVideo?.description || 
+         course?.sections?.[0]?.videos?.[0]?.description?.[lang] || 
+         course?.sections?.[0]?.videos?.[0]?.description?.en || 
+         course?.sections?.[0]?.videos?.[0]?.description || 
+         (lang === 'ar' ? 'لا يوجد وصف متاح لهذا الفيديو' : 'No description available for this video')}
+      </p>
+    </div>
+  </div>
+
+{/* Course Documents */}
+{course?.documents && course.documents.length > 0 && (
+  <motion.div 
+    className="mt-12"
+    initial={{ opacity: 0, y: 40 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.7, type: "spring" }}
+  >
+    <h3 className={`text-2xl sm:text-3xl font-extrabold mb-8 text-center tracking-tight ${
+      isDark ? 'text-white' : 'text-gray-900'
+    }`}>
+      {lang === 'ar' ? '📂 مستندات الدورة اضغط على اي واحد منهم لرؤية المحتوى' : '📂 Course documents Click on any one of them to view the content'}
+    </h3>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {course.documents.map((doc, index) => (
+        <motion.div
+          key={index}
+          className={`group relative rounded-2xl overflow-hidden shadow-lg cursor-pointer 
+            ${isDark 
+              ? 'bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700' 
+              : 'bg-gradient-to-br from-white to-gray-50 border border-gray-200'
+            }`}
+          whileHover={{ y: -6 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          onClick={() => window.open(doc.url, "_blank")}
+        >
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 
+            bg-gradient-to-tr from-blue-500/40 via-purple-500/40 to-pink-500/40 blur-xl" 
+          />
+
+          <div className="relative p-6 flex flex-col items-center text-center space-y-4">
+            <div className={`w-16 h-16 flex items-center justify-center rounded-xl transition 
+              ${isDark ? 'bg-gray-700' : 'bg-gray-100'}
+              group-hover:scale-110 duration-300
+            `}>
+              {doc.type?.toLowerCase().includes("pdf") ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0L3.515 3.515 0 12l3.515 8.485L12 24l8.485-3.515L24 12l-3.515-8.485z"/>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/>
+                </svg>
+              )}
             </div>
+            <h4 className={`text-lg font-semibold line-clamp-1 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              {doc.title || (lang === 'ar' ? 'مستند غير مسمى' : 'Untitled Document')}
+            </h4>
+            <p className={`text-sm line-clamp-1 ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              {doc.type || (lang === 'ar' ? 'غير محدد' : 'Unknown')}
+            </p>
+          </div>
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-black transition duration-500" />
+        </motion.div>
+      ))}
+    </div>
+  </motion.div>
+)}
+  {/* Course Documents */}
+
+</div>
+
 
 
 

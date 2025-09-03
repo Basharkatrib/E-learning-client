@@ -141,7 +141,7 @@ const ContactUs = () => {
   }`;
 
   return (
-    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`relative w-full mt-14 pt-16 pb-20 px-4 sm:px-6 lg:px-8 ${isDark ? 'bg-gray-950 text-white' : 'bg-gradient-to-b from-white via-gray-50 to-white text-black'}`}>
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`relative w-full mt-14 pt-16 pb-20 px-4 sm:px-6 lg:px-8 ${isDark ? 'bg-gray-900 text-white' : 'bg-gradient-to-b from-white via-gray-50 to-white text-black'}`}>
       <div className='p-3 flex flex-col lg:flex-row justify-between items-center gap-8 text-center lg:text-left max-w-6xl mx-auto'>
         <h1 className='text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent'>
           {t('Contact Us')}
