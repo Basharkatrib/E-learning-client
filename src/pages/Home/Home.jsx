@@ -1,6 +1,7 @@
 import Banner from "../../components/Banner/Banner";
 import Benefits from "../../components/Benefits/Benefits";
 import Courses from "../../components/Courses/Courses";
+import DownloadApp from "../../components/DownloadApp/DownloadApp";
 import FAQ from "../../components/FAQ/FAQ";
 import Footer from "../../components/Footer/Footer";
 import Slider from "../../components/Slider/Slider";
@@ -19,6 +20,7 @@ function Home() {
             <Courses />
             <Testimonials />
             <FAQ />
+            <DownloadApp/>
         </div>
     )
 }
