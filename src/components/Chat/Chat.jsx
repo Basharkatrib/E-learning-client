@@ -121,7 +121,7 @@ const Chat = () => {
                   whileTap={{ scale: 0.95 }}
                   onClick={sendMessage}
                   disabled={loading || !input.trim()}
-                  className={`px-4 py-2 rounded-lg bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`px-2 py-2 rounded-lg bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {loading ? (
                     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">

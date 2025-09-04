@@ -50,7 +50,7 @@ function App() {
   
   useEffect(() => {
     if (error) {
-      console.log("CurrentUser error:", error);
+      console.log("CurrentUser error:", error.status);
     }
   }, [error]);
   
