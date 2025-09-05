@@ -5,6 +5,7 @@ import { selectTheme } from '../../redux/features/themeSlice';
 import { motion } from 'framer-motion';
 import { toggleLanguage, selectTranslate } from '../../redux/features/translateSlice';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 const Error = () => {
     const theme = useSelector(selectTheme);
@@ -36,7 +37,9 @@ const Error = () => {
                 whileTap={{ scale: 0.95 }}
                 className="bg-primary text-white px-5 py-2.5 rounded-md text-sm sm:text-base hover:bg-primary/90 transition-colors duration-200 font-medium"
             >
-                {t('Go Back')}
+                <Link to="/">
+                    {t('Go Back')}
+                </Link>
             </motion.button>
         </div>
     );

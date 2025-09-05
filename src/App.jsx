@@ -139,7 +139,7 @@ function App() {
   
   if (showSplash) {
     return (
-      <div className="relative w-full h-screen overflow-hidden bg-gray-900">
+      <div className={`relative w-full h-screen overflow-hidden ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'}`}>
         <motion.img
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: [0, 1, 0.8, 1], scale: [0.8, 1.6, 1.4, 1.6] }}
