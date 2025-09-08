@@ -14,7 +14,7 @@ const DownloadApp = () => {
   const lang = useSelector(selectTranslate);
   const { t } = useTranslation();
 
-  const androidUrl = "";
+  const androidUrl = "https://drive.google.com/file/d/14NpjYMaUKfSd8g4VxtSz0iAd5QAGG8Ec/view?usp=drivesdk";
 
   return (
     <div

@@ -6,6 +6,8 @@ import { Autoplay } from 'swiper/modules'
 import { selectTheme } from '../../redux/features/themeSlice'
 import { useGetCategoriesQuery } from '../../redux/features/apiSlice'
 import { Link, useNavigate } from 'react-router-dom'
+import { selectTranslate } from '../../redux/features/translateSlice';
+
 
 
 
@@ -14,6 +16,9 @@ const Slider = () => {
   const { data, isLoading, isError, error } = useGetCategoriesQuery();
   const categories = data?.data || [];
   const navigate = useNavigate();
+  const lang = useSelector(selectTranslate);
+
+
 
   const allChildren = categories.flatMap(cat => Array.isArray(cat.children) ? cat.children : []);
 
@@ -70,7 +75,7 @@ const Slider = () => {
                       ${theme === 'dark' ? 'text-gray-400 group-hover:text-white' : ' text-black group-hover:text-primary'}`}
                     onClick={() => handleCategoryClick(child)}
                   >
-                    {child.name?.en || child.name?.ar || child.name}
+                    {lang == 'en'? child.name?.en : child.name?.ar}
                   </div>
                 </div>
               </SwiperSlide>
