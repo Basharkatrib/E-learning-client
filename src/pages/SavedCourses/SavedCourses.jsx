@@ -93,6 +93,7 @@ export default function SavedCourses() {
                                 level={course.difficulty_level}
                                 category={course.category?.name?.[lang] || course.category?.name?.en}
                                 thumbnail_url={course.thumbnail_url}
+                                price={course.price}
                                 isDark={theme === 'dark'}
                                 showSaveButton={true}
                                 isSavedPage={true}
