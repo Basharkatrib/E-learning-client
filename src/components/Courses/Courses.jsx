@@ -75,15 +75,6 @@ function Courses() {
                         {t('Discover our highest-rated courses chosen by students')}
                     </motion.p>
                 </div>
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-primary text-white px-6 py-3 rounded-md whitespace-nowrap hover:bg-primary/90 transition-all duration-200 font-medium shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40"
-                >
-                    <Link to='/courses'>
-                        {t('View All Courses')}
-                    </Link>
-                </motion.button>
             </motion.div>
 
             <motion.div

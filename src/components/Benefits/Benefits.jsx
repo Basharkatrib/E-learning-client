@@ -103,13 +103,7 @@ function Benefits() {
                         {t('Discover the advantages that set our learning platform apart and help you achieve your educational goals.')}
                     </motion.p>
                 </div>
-                <motion.button 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-primary text-white px-6 py-3 rounded-md whitespace-nowrap hover:bg-primary/90 transition-all duration-200 font-medium shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40"
-                >
-                    {t('Explore All Benefits')}
-                </motion.button>
+               
             </motion.div>
 
             <motion.div 
